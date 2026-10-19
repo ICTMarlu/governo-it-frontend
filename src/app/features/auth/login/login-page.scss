@@ -1,0 +1,52 @@
+// Mobile first: la scheda occupa tutta la larghezza, da tablet in su resta centrata e compatta.
+.login {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 100%;
+  padding: 1rem;
+  background: var(--mat-sys-surface-container-low);
+}
+
+.login__card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.login__title {
+  margin: 0;
+  font: var(--mat-sys-headline-small);
+}
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-block-start: 1rem;
+}
+
+.login__error {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.login__submit {
+  min-height: 48px;
+
+  mat-progress-spinner {
+    display: inline-block;
+    margin-inline-end: 0.5rem;
+    vertical-align: middle;
+  }
+}
+
+@media (min-width: 600px) {
+  .login {
+    align-items: center;
+    padding: 2rem;
+  }
+}

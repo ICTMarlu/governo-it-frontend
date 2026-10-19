@@ -1,0 +1,102 @@
+// Mobile first: stili di base per smartphone, poi tablet e desktop con min-width.
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.skip-link {
+  position: absolute;
+  left: 0.5rem;
+  top: -3rem;
+  z-index: 1000;
+  padding: 0.5rem 1rem;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+  border-radius: 0.25rem;
+
+  &:focus {
+    top: 0.5rem;
+  }
+}
+
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  gap: 0.25rem;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+
+.brand {
+  color: inherit;
+  text-decoration: none;
+  font: var(--mat-sys-title-large);
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+// Su smartphone il nome utente occupa troppo spazio: compare da tablet in su
+.user {
+  display: none;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+  margin-inline-end: 0.5rem;
+
+  &__name {
+    font: var(--mat-sys-label-large);
+  }
+
+  &__role {
+    font: var(--mat-sys-label-small);
+    opacity: 0.85;
+  }
+}
+
+.container {
+  flex: 1 1 auto;
+}
+
+.sidenav {
+  width: min(80vw, 280px);
+}
+
+.active {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.content {
+  box-sizing: border-box;
+  padding: 1rem;
+  max-width: 1440px;
+  margin-inline: auto;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+@media (min-width: 600px) {
+  .user {
+    display: flex;
+  }
+
+  .content {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sidenav {
+    width: 240px;
+  }
+
+  .content {
+    padding: 2rem;
+  }
+}

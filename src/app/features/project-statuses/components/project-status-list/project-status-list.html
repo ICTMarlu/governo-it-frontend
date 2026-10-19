@@ -1,0 +1,51 @@
+<!-- Mobile -->
+<ul class="cards" aria-label="Stati progetto">
+  @for (status of statuses(); track status.id) {
+    <li class="card">
+      <span class="badge" [style.--badge-color]="status.color">{{ status.label }}</span>
+      <dl class="card__details">
+        <div>
+          <dt>Codice</dt>
+          <dd>{{ status.code }}</dd>
+        </div>
+        <div>
+          <dt>Stato finale</dt>
+          <dd>{{ status.terminal ? 'Sì' : 'No' }}</dd>
+        </div>
+        <div>
+          <dt>Conta per avanzamento</dt>
+          <dd>{{ status.countsForProgress ? 'Sì' : 'No' }}</dd>
+        </div>
+      </dl>
+    </li>
+  }
+</ul>
+
+<!-- Tablet e desktop -->
+<table class="table">
+  <caption class="visually-hidden">
+    Stati progetto
+  </caption>
+  <thead>
+    <tr>
+      <th scope="col">Ordine</th>
+      <th scope="col">Stato</th>
+      <th scope="col">Codice</th>
+      <th scope="col">Stato finale</th>
+      <th scope="col">Conta per avanzamento</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (status of statuses(); track status.id) {
+      <tr>
+        <td>{{ status.sortOrder }}</td>
+        <td>
+          <span class="badge" [style.--badge-color]="status.color">{{ status.label }}</span>
+        </td>
+        <td>{{ status.code }}</td>
+        <td>{{ status.terminal ? 'Sì' : 'No' }}</td>
+        <td>{{ status.countsForProgress ? 'Sì' : 'No' }}</td>
+      </tr>
+    }
+  </tbody>
+</table>

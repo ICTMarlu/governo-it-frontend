@@ -1,0 +1,67 @@
+<main class="login">
+  <mat-card class="login__card" appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>
+        <h1 class="login__title">Governo IT</h1>
+      </mat-card-title>
+      <mat-card-subtitle>Master Plan IT · accedi per continuare</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form class="login__form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <mat-form-field appearance="outline">
+          <mat-label>Utente</mat-label>
+          <input matInput formControlName="username" autocomplete="username" required />
+          @if (form.controls.username.hasError('required')) {
+            <mat-error>Inserisci il nome utente</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            formControlName="password"
+            [type]="passwordVisible() ? 'text' : 'password'"
+            autocomplete="current-password"
+            required
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            [attr.aria-label]="passwordVisible() ? 'Nascondi password' : 'Mostra password'"
+            [attr.aria-pressed]="passwordVisible()"
+            (click)="togglePasswordVisibility()"
+          >
+            <mat-icon aria-hidden="true">{{
+              passwordVisible() ? 'visibility_off' : 'visibility'
+            }}</mat-icon>
+          </button>
+          @if (form.controls.password.hasError('required')) {
+            <mat-error>Inserisci la password</mat-error>
+          }
+        </mat-form-field>
+
+        @if (errorMessage(); as message) {
+          <p class="login__error" role="alert">{{ message }}</p>
+        }
+
+        <button
+          mat-flat-button
+          class="login__submit"
+          type="submit"
+          [disabled]="loading()"
+          [attr.aria-busy]="loading()"
+        >
+          @if (loading()) {
+            <mat-progress-spinner diameter="20" mode="indeterminate" aria-hidden="true" />
+            <span>Accesso in corso…</span>
+          } @else {
+            <span>Accedi</span>
+          }
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</main>
