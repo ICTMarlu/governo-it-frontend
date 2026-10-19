@@ -1,0 +1,54 @@
+// Mobile first: una colonna; da 600px due colonne (i campi "full" occupano la riga intera).
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 1rem;
+  padding-block-start: 0.5rem;
+}
+
+.checkbox {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 56px;
+  margin-block-end: 1rem;
+
+  &__hint {
+    margin: 0 0 0 2.5rem;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.swatch {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-inline-end: 0.75rem;
+  border-radius: 50%;
+  border: 1px solid var(--mat-sys-outline);
+}
+
+.error {
+  margin: 0.5rem 0 0;
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+mat-progress-spinner {
+  display: inline-block;
+  margin-inline-end: 0.5rem;
+  vertical-align: middle;
+}
+
+@media (min-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .full {
+    grid-column: 1 / -1;
+  }
+}

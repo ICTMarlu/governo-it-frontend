@@ -16,17 +16,19 @@ import { PageHeader } from '../../shared/components/page-header/page-header';
     />
 
     <section class="shortcuts" aria-label="Accessi rapidi">
-      <a class="shortcut" routerLink="/project-statuses">
-        <mat-card appearance="outlined" class="shortcut__card">
-          <mat-card-content class="shortcut__content">
-            <mat-icon aria-hidden="true">flag</mat-icon>
-            <span>
-              <strong>Stati progetto</strong>
-              <span class="shortcut__hint">Lista valori letta dal backend</span>
-            </span>
-          </mat-card-content>
-        </mat-card>
-      </a>
+      @for (item of shortcuts; track item.link) {
+        <a class="shortcut" [routerLink]="item.link">
+          <mat-card appearance="outlined" class="shortcut__card">
+            <mat-card-content class="shortcut__content">
+              <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+              <span>
+                <strong>{{ item.label }}</strong>
+                <span class="shortcut__hint">{{ item.hint }}</span>
+              </span>
+            </mat-card-content>
+          </mat-card>
+        </a>
+      }
     </section>
   `,
   styles: `
@@ -73,4 +75,31 @@ import { PageHeader } from '../../shared/components/page-header/page-header';
 })
 export class HomePage {
   protected readonly currentUser = inject(AuthService).currentUser;
+
+  protected readonly shortcuts = [
+    {
+      label: 'Progetti',
+      hint: 'Portafoglio Project, AMS, Continuous, Admin',
+      icon: 'work',
+      link: '/projects',
+    },
+    {
+      label: 'Risorse',
+      hint: 'Team, capacità, ore extra e tariffe',
+      icon: 'groups',
+      link: '/resources',
+    },
+    {
+      label: 'Richiedenti',
+      hint: 'Chi chiede i progetti',
+      icon: 'contact_mail',
+      link: '/requesters',
+    },
+    {
+      label: 'Anagrafiche e liste',
+      hint: 'Società, fornitori, sedi, liste valori',
+      icon: 'tune',
+      link: '/master-data',
+    },
+  ] as const;
 }

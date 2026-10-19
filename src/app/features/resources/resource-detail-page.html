@@ -1,0 +1,66 @@
+<a mat-button routerLink="/resources" class="back">
+  <mat-icon aria-hidden="true">arrow_back</mat-icon>
+  Tutte le risorse
+</a>
+
+@switch (state()) {
+  @case ('loading') {
+    <div class="state" role="status">
+      <mat-progress-spinner diameter="32" mode="indeterminate" aria-hidden="true" />
+      <span>Caricamento…</span>
+    </div>
+  }
+  @case ('error') {
+    <p class="state state--error" role="alert">Risorsa non trovata o backend non raggiungibile.</p>
+  }
+  @case ('ready') {
+    @if (resource(); as row) {
+      <div class="header">
+        <gov-page-header
+          [title]="'' + row['fullName']"
+          [subtitle]="row['active'] === false ? 'Risorsa non attiva' : undefined"
+        />
+        @if (canEdit()) {
+          <button mat-stroked-button type="button" (click)="edit()">
+            <mat-icon aria-hidden="true">edit</mat-icon>
+            Modifica dati
+          </button>
+        }
+      </div>
+
+      <dl class="details">
+        @for (item of details(); track item.label) {
+          <div class="details__item">
+            <dt>{{ item.label }}</dt>
+            <dd>{{ item.value }}</dd>
+          </div>
+        }
+      </dl>
+
+      <mat-tab-group mat-stretch-tabs="false" dynamicHeight>
+        <mat-tab label="Capacità">
+          <p class="tab-intro">
+            Ore al giorno e giorni a settimana per periodo: 7,5 h × 5 giorni = 5 giornate a
+            settimana. I periodi non si sovrappongono.
+          </p>
+          <gov-crud-section [config]="capacityConfig()" />
+        </mat-tab>
+        <mat-tab label="Ore extra">
+          <p class="tab-intro">
+            Ore in più a settimana dalla data indicata fino alla riga successiva. Per chiudere
+            l'extra inserisci una riga con 0.
+          </p>
+          <gov-crud-section [config]="extraConfig()" />
+        </mat-tab>
+        @if (canViewCosts()) {
+          <mat-tab label="Tariffe">
+            <p class="tab-intro">
+              Tariffa giornaliera per periodo, visibile solo a chi gestisce i costi.
+            </p>
+            <gov-crud-section [config]="ratesConfig()" />
+          </mat-tab>
+        }
+      </mat-tab-group>
+    }
+  }
+}

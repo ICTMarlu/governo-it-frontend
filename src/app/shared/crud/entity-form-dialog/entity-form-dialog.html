@@ -1,0 +1,127 @@
+<h2 mat-dialog-title>{{ title }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()" novalidate>
+  <mat-dialog-content class="content">
+    <div class="grid">
+      @for (field of visibleFields(); track field.key) {
+        @switch (field.type) {
+          @case ('checkbox') {
+            <div class="checkbox" [class.full]="field.fullWidth">
+              <mat-checkbox [formControlName]="field.key">{{ field.label }}</mat-checkbox>
+              @if (field.hint) {
+                <p class="checkbox__hint">{{ field.hint }}</p>
+              }
+            </div>
+          }
+          @case ('select') {
+            <mat-form-field appearance="outline" [class.full]="field.fullWidth">
+              <mat-label>{{ field.label }}</mat-label>
+              <mat-select [formControlName]="field.key" [required]="field.required === true">
+                @if (!field.required) {
+                  <mat-option [value]="null">—</mat-option>
+                }
+                @for (option of optionsByKey[field.key](); track option.value) {
+                  <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                }
+              </mat-select>
+              @if (field.hint) {
+                <mat-hint>{{ field.hint }}</mat-hint>
+              }
+              @if (control(field.key).hasError('required')) {
+                <mat-error>Campo obbligatorio</mat-error>
+              }
+            </mat-form-field>
+          }
+          @case ('multiselect') {
+            <mat-form-field appearance="outline" [class.full]="field.fullWidth">
+              <mat-label>{{ field.label }}</mat-label>
+              <mat-select
+                [formControlName]="field.key"
+                multiple
+                [required]="field.required === true"
+              >
+                @for (option of optionsByKey[field.key](); track option.value) {
+                  <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                }
+              </mat-select>
+              @if (field.hint) {
+                <mat-hint>{{ field.hint }}</mat-hint>
+              }
+              @if (control(field.key).hasError('required')) {
+                <mat-error>Scegli almeno un valore</mat-error>
+              }
+            </mat-form-field>
+          }
+          @case ('textarea') {
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>{{ field.label }}</mat-label>
+              <textarea
+                matInput
+                [formControlName]="field.key"
+                rows="3"
+                [required]="field.required === true"
+              ></textarea>
+              @if (field.hint) {
+                <mat-hint>{{ field.hint }}</mat-hint>
+              }
+              @if (control(field.key).hasError('maxlength')) {
+                <mat-error>Massimo {{ field.maxLength }} caratteri</mat-error>
+              }
+            </mat-form-field>
+          }
+          @default {
+            <mat-form-field appearance="outline" [class.full]="field.fullWidth">
+              <mat-label>{{ field.label }}</mat-label>
+              <input
+                matInput
+                [type]="inputType(field)"
+                [formControlName]="field.key"
+                [required]="field.required === true"
+                [attr.step]="field.step ?? null"
+                [attr.min]="field.min ?? null"
+                [attr.max]="field.max ?? null"
+                [attr.placeholder]="field.type === 'color' ? '#RRGGBB' : null"
+              />
+              @if (field.type === 'color' && control(field.key).value) {
+                <span
+                  matSuffix
+                  class="swatch"
+                  aria-hidden="true"
+                  [style.background]="control(field.key).value"
+                ></span>
+              }
+              @if (field.hint) {
+                <mat-hint>{{ field.hint }}</mat-hint>
+              }
+              @if (control(field.key).hasError('required')) {
+                <mat-error>Campo obbligatorio</mat-error>
+              } @else if (control(field.key).hasError('pattern')) {
+                <mat-error>{{ field.pattern?.message }}</mat-error>
+              } @else if (control(field.key).hasError('maxlength')) {
+                <mat-error>Massimo {{ field.maxLength }} caratteri</mat-error>
+              } @else if (control(field.key).hasError('min')) {
+                <mat-error>Valore minimo {{ field.min }}</mat-error>
+              } @else if (control(field.key).hasError('max')) {
+                <mat-error>Valore massimo {{ field.max }}</mat-error>
+              }
+            </mat-form-field>
+          }
+        }
+      }
+    </div>
+
+    @if (errorMessage(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Annulla</button>
+    <button mat-flat-button type="submit" [disabled]="saving()" [attr.aria-busy]="saving()">
+      @if (saving()) {
+        <mat-progress-spinner diameter="18" mode="indeterminate" aria-hidden="true" />
+      }
+      Salva
+    </button>
+  </mat-dialog-actions>
+</form>

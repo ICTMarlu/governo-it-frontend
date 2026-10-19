@@ -1,0 +1,75 @@
+<div class="toolbar">
+  @if (config().searchKeys.length > 0) {
+    <mat-form-field appearance="outline" class="toolbar__search" subscriptSizing="dynamic">
+      <mat-label>Cerca</mat-label>
+      <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+      <input
+        matInput
+        type="search"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        autocomplete="off"
+      />
+    </mat-form-field>
+  }
+
+  @for (quickFilter of filterOptions(); track quickFilter.key) {
+    <mat-form-field appearance="outline" class="toolbar__filter" subscriptSizing="dynamic">
+      <mat-label>{{ quickFilter.label }}</mat-label>
+      <mat-select
+        [value]="filters()[quickFilter.key] ?? ''"
+        (valueChange)="setFilter(quickFilter.key, $event)"
+      >
+        <mat-option value="">Tutti</mat-option>
+        @for (value of quickFilter.values; track value) {
+          <mat-option [value]="value">{{ value }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+
+  @if (hasInactive()) {
+    <mat-slide-toggle [checked]="showInactive()" (change)="showInactive.set($event.checked)">
+      Mostra disattivati
+    </mat-slide-toggle>
+  }
+
+  <span class="toolbar__spacer"></span>
+
+  @if (canWrite() && config().canCreate !== false) {
+    <button mat-flat-button type="button" class="toolbar__new" (click)="openForm()">
+      <mat-icon aria-hidden="true">add</mat-icon>
+      Nuovo
+    </button>
+  }
+</div>
+
+@switch (state()) {
+  @case ('loading') {
+    <div class="state" role="status">
+      <mat-progress-spinner diameter="32" mode="indeterminate" aria-hidden="true" />
+      <span>Caricamento…</span>
+    </div>
+  }
+  @case ('error') {
+    <div class="state state--error" role="alert">
+      <span>Impossibile caricare i dati. Verifica che il backend sia avviato.</span>
+      <button mat-button type="button" (click)="reload()">Riprova</button>
+    </div>
+  }
+  @case ('ready') {
+    <p class="count" aria-live="polite">
+      {{ visibleRows().length }} {{ visibleRows().length === 1 ? 'elemento' : 'elementi' }}
+    </p>
+    <gov-entity-table
+      [rows]="visibleRows()"
+      [columns]="config().columns"
+      [caption]="config().title"
+      [canEdit]="canWrite()"
+      [canDelete]="canWrite() && config().canDelete === true"
+      [rowLink]="config().rowLink"
+      (edit)="openForm($event)"
+      (remove)="confirmDelete($event)"
+    />
+  }
+}

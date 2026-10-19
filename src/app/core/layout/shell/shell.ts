@@ -56,7 +56,10 @@ export class Shell {
 
   protected readonly navItems: readonly NavItem[] = [
     { label: 'Home', icon: 'home', route: '/home' },
-    { label: 'Stati progetto', icon: 'flag', route: '/project-statuses' },
+    { label: 'Progetti', icon: 'work', route: '/projects' },
+    { label: 'Risorse', icon: 'groups', route: '/resources' },
+    { label: 'Richiedenti', icon: 'contact_mail', route: '/requesters' },
+    { label: 'Anagrafiche e liste', icon: 'tune', route: '/master-data' },
   ];
 
   protected onNavigate(sidenav: MatSidenav): void {

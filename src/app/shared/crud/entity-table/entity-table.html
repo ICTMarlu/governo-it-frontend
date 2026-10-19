@@ -1,0 +1,115 @@
+<ng-template #cell let-row let-column="column">
+  @if (column.type === 'badge' && text(row, column) !== '—') {
+    <span class="badge" [style.--badge-color]="color(row, column)">{{ text(row, column) }}</span>
+  } @else {
+    {{ text(row, column) }}
+  }
+</ng-template>
+
+<ng-template #actions let-row>
+  @if (canEdit()) {
+    <button
+      mat-icon-button
+      type="button"
+      [attr.aria-label]="'Modifica ' + rowTitle(row)"
+      matTooltip="Modifica"
+      (click)="edit.emit(row)"
+    >
+      <mat-icon aria-hidden="true">edit</mat-icon>
+    </button>
+  }
+  @if (canDelete()) {
+    <button
+      mat-icon-button
+      type="button"
+      [attr.aria-label]="'Elimina ' + rowTitle(row)"
+      matTooltip="Elimina"
+      (click)="remove.emit(row)"
+    >
+      <mat-icon aria-hidden="true">delete</mat-icon>
+    </button>
+  }
+</ng-template>
+
+<ng-template #title let-row>
+  @if (rowLink(); as link) {
+    <a class="link" [routerLink]="link(row)">{{ rowTitle(row) }}</a>
+  } @else {
+    {{ rowTitle(row) }}
+  }
+</ng-template>
+
+@if (rows().length === 0) {
+  <p class="empty">Nessun elemento da mostrare.</p>
+} @else {
+  <!-- Mobile -->
+  <ul class="cards" [attr.aria-label]="caption()">
+    @for (row of rows(); track row.id) {
+      <li class="card" [class.card--inactive]="row['active'] === false">
+        <div class="card__header">
+          <span class="card__title">
+            <ng-container *ngTemplateOutlet="title; context: { $implicit: row }" />
+          </span>
+          <span class="card__actions">
+            <ng-container *ngTemplateOutlet="actions; context: { $implicit: row }" />
+          </span>
+        </div>
+        <dl class="card__details">
+          @for (column of detailColumns(); track column.key) {
+            <div>
+              <dt>{{ column.label }}</dt>
+              <dd>
+                <ng-container
+                  *ngTemplateOutlet="cell; context: { $implicit: row, column: column }"
+                />
+              </dd>
+            </div>
+          }
+        </dl>
+      </li>
+    }
+  </ul>
+
+  <!-- Tablet e desktop -->
+  <div class="table-wrapper">
+    <table class="table">
+      <caption class="visually-hidden">
+        {{
+          caption()
+        }}
+      </caption>
+      <thead>
+        <tr>
+          @for (column of columns(); track column.key) {
+            <th scope="col">{{ column.label }}</th>
+          }
+          @if (hasActions()) {
+            <th scope="col"><span class="visually-hidden">Azioni</span></th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.id) {
+          <tr [class.inactive]="row['active'] === false">
+            @for (column of columns(); track column.key) {
+              <td>
+                @if (column === primaryColumn()) {
+                  <ng-container *ngTemplateOutlet="title; context: { $implicit: row }" />
+                } @else {
+                  <ng-container
+                    *ngTemplateOutlet="cell; context: { $implicit: row, column: column }"
+                  />
+                }
+              </td>
+            }
+            @if (hasActions()) {
+              <td class="actions">
+                <ng-container *ngTemplateOutlet="actions; context: { $implicit: row }" />
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

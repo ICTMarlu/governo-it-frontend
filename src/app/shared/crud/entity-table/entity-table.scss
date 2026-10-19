@@ -1,0 +1,124 @@
+// Mobile first: schede; la tabella compare da 768px.
+.empty {
+  padding: 1rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.cards {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 0.75rem;
+  background: var(--mat-sys-surface-container-lowest);
+
+  &--inactive {
+    opacity: 0.6;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__title {
+    font: var(--mat-sys-title-medium);
+    overflow-wrap: anywhere;
+  }
+
+  &__actions {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  &__details {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0.5rem 0 0;
+
+    div {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    dt {
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    dd {
+      margin: 0;
+      font-weight: 500;
+      text-align: end;
+      overflow-wrap: anywhere;
+    }
+  }
+}
+
+.link {
+  color: var(--mat-sys-primary);
+  font-weight: 500;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.125rem 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid var(--badge-color, var(--mat-sys-outline));
+  color: var(--mat-sys-on-surface);
+  background: color-mix(in srgb, var(--badge-color, transparent) 15%, transparent);
+  font: var(--mat-sys-label-large);
+  white-space: nowrap;
+}
+
+.table-wrapper {
+  display: none;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 0.5rem 0.75rem;
+    text-align: start;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    vertical-align: middle;
+  }
+
+  th {
+    font: var(--mat-sys-title-small);
+    color: var(--mat-sys-on-surface-variant);
+    white-space: nowrap;
+  }
+
+  .inactive td {
+    opacity: 0.6;
+  }
+
+  .actions {
+    width: 1%;
+    white-space: nowrap;
+    text-align: end;
+  }
+}
+
+@media (min-width: 768px) {
+  .cards {
+    display: none;
+  }
+
+  .table-wrapper {
+    display: block;
+  }
+}
