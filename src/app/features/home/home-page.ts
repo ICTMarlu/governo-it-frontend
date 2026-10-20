@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { PageHeader } from '../../shared/components/page-header/page-header';
+import { HOME_HELP } from '../../shared/help/help-content';
 
 @Component({
   selector: 'gov-home-page',
@@ -13,6 +14,7 @@ import { PageHeader } from '../../shared/components/page-header/page-header';
     <gov-page-header
       [title]="'Benvenuto, ' + (currentUser()?.displayName ?? '')"
       subtitle="Master Plan IT: portafoglio, piano settimanale e capacità del team"
+      [help]="help"
     />
 
     <section class="shortcuts" aria-label="Accessi rapidi">
@@ -74,6 +76,7 @@ import { PageHeader } from '../../shared/components/page-header/page-header';
   `,
 })
 export class HomePage {
+  protected readonly help = HOME_HELP;
   protected readonly currentUser = inject(AuthService).currentUser;
 
   protected readonly shortcuts = [

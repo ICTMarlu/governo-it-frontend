@@ -24,6 +24,7 @@ import {
   extraCapacitiesConfig,
   ratesConfig,
 } from './resources.configs';
+import { RESOURCE_DETAIL_HELP } from '../../shared/help/help-content';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -46,6 +47,7 @@ type LoadState = 'loading' | 'ready' | 'error';
   styleUrl: './resource-detail-page.scss',
 })
 export class ResourceDetailPage {
+  protected readonly help = RESOURCE_DETAIL_HELP;
   private readonly api = inject(CrudApiService);
   private readonly dialog = inject(MatDialog);
   private readonly currentUser = inject(AuthService).currentUser;

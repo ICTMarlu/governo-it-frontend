@@ -1,10 +1,8 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
 
+import { BackLink } from '../../shared/components/back-link/back-link';
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { CrudApiService } from '../../shared/crud/crud-api.service';
 import { CrudSection } from '../../shared/crud/crud-section/crud-section';
@@ -13,22 +11,17 @@ import { HOLIDAY_CALENDARS_CONFIG, holidaysConfig } from './master-data.configs'
 /** Festività di un calendario (D-14), modificabili dall'Admin. */
 @Component({
   selector: 'gov-holiday-calendar-page',
-  imports: [RouterLink, PageHeader, CrudSection, MatButtonModule, MatIconModule],
+  imports: [BackLink, PageHeader, CrudSection],
   template: `
-    <a mat-button routerLink="/master-data/holiday-calendars" class="back">
-      <mat-icon aria-hidden="true">arrow_back</mat-icon>
-      Tutti i calendari
-    </a>
+    <gov-back-link
+      [target]="{ link: '/master-data/holiday-calendars', label: 'Calendari festività' }"
+    />
     <gov-page-header
       [title]="'Festività · ' + calendarName()"
+      [help]="config().help"
       subtitle="Ogni festività che cade da lunedì a venerdì riduce la capacità della settimana per le risorse della sede, in base alle ore giornaliere di ciascuna. Le date vanno verificate."
     />
     <gov-crud-section [config]="config()" />
-  `,
-  styles: `
-    .back {
-      margin-block-end: 0.5rem;
-    }
   `,
 })
 export class HolidayCalendarPage {

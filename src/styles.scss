@@ -30,6 +30,16 @@ body {
   outline-offset: 2px;
 }
 
+// Trascinamento (colonne): l'anteprima vive fuori dai componenti
+.cdk-drag-preview {
+  box-shadow: var(--mat-sys-level3);
+  background: var(--mat-sys-surface);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.4;
+}
+
 // Testo letto dagli screen reader ma non visibile
 .visually-hidden {
   position: absolute !important;

@@ -25,6 +25,10 @@
     flex: 1 1 100%;
     min-height: 48px;
   }
+
+  &__columns {
+    flex: 1 1 100%;
+  }
 }
 
 .count {
@@ -62,7 +66,8 @@
       flex: 1 1 auto;
     }
 
-    &__new {
+    &__new,
+    &__columns {
       flex: 0 0 auto;
     }
   }

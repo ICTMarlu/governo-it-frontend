@@ -1,6 +1,9 @@
+<gov-back-link [target]="{ link: '/master-data', label: 'Anagrafiche e liste' }" />
+
 <gov-page-header
   title="Codici progetto"
   subtitle="ICT + anno + codice breve del sistema + numero. Il numero è unico per tutti i sistemi e riparte ogni anno."
+  [help]="help"
 />
 
 @if (counter(); as data) {
@@ -38,16 +41,46 @@
   </section>
 
   <section aria-labelledby="systems-title">
-    <h2 id="systems-title" class="section-title">Prossimo codice per sistema</h2>
+    <h2 id="systems-title" class="section-title">Codice breve e prossimo codice per sistema</h2>
     <p class="hint">
-      I sistemi senza codice breve non possono ricevere codici: impostalo in
-      <a routerLink="/master-data/lookups/main-systems">Sistemi</a>.
+      Il codice breve (2-5 lettere o numeri, es. ERP) entra nel codice progetto. Finché manca, i
+      progetti del sistema restano senza codice.
     </p>
     <ul class="systems">
       @for (system of data.systems; track system.mainSystemId) {
         <li class="system" [class.system--missing]="!system.shortCode">
-          <span class="system__name">{{ system.mainSystemLabel }}</span>
-          <span class="system__code">{{ system.nextCode ?? 'codice breve mancante' }}</span>
+          <div class="system__info">
+            <span class="system__name">{{ system.mainSystemLabel }}</span>
+            <span class="system__code">{{ system.nextCode ?? 'codice breve mancante' }}</span>
+            @if (system.projectsWithoutCode > 0) {
+              <span class="system__pending">
+                {{ system.projectsWithoutCode }}
+                {{ system.projectsWithoutCode === 1 ? 'progetto' : 'progetti' }} senza codice
+              </span>
+            }
+          </div>
+          @if (isAdmin()) {
+            <form class="system__edit" (ngSubmit)="saveShortCode(system)">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic" class="system__field">
+                <mat-label>Codice breve</mat-label>
+                <input
+                  matInput
+                  maxlength="5"
+                  [name]="'short-' + system.mainSystemId"
+                  [ngModel]="shortCodes()[system.mainSystemId]"
+                  (ngModelChange)="setShortCodeDraft(system, $event)"
+                  [attr.aria-label]="'Codice breve di ' + system.mainSystemLabel"
+                />
+              </mat-form-field>
+              <button
+                mat-stroked-button
+                type="submit"
+                [disabled]="busy() || !shortCodeChanged(system)"
+              >
+                Salva
+              </button>
+            </form>
+          }
         </li>
       }
     </ul>
@@ -55,10 +88,14 @@
 
   @if (isAdmin()) {
     <section class="generate" aria-labelledby="generate-title">
-      <h2 id="generate-title" class="section-title">Progetti senza codice</h2>
+      <h2 id="generate-title" class="section-title">
+        Progetti senza codice: {{ data.projectsWithoutCode }}
+      </h2>
       <p class="hint">
-        Assegna il codice a tutti i progetti che ne sono privi, nell'ordine del numero storico
-        dell'Excel. I progetti dei sistemi senza codice breve restano senza codice.
+        Il pulsante assegna un codice a ogni progetto che non ce l'ha e il cui sistema ha il codice
+        breve, in ordine di numero storico dell'Excel, usando il contatore unico. I progetti dei
+        sistemi senza codice breve restano senza codice: imposta il codice breve qui sopra e premi
+        di nuovo il pulsante. I codici già assegnati non cambiano mai.
       </p>
       <button mat-flat-button type="button" [disabled]="busy()" (click)="generateMissing()">
         <mat-icon aria-hidden="true">auto_fix_high</mat-icon>

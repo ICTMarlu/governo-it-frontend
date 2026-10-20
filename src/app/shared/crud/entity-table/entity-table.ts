@@ -1,10 +1,13 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 
+import { columnId } from '../column-layout';
 import { ColumnConfig, EntityRow, readPath } from '../crud.model';
 
 const DATE_FORMAT = new Intl.DateTimeFormat('it-IT', {
@@ -13,15 +16,33 @@ const DATE_FORMAT = new Intl.DateTimeFormat('it-IT', {
   year: 'numeric',
 });
 const NUMBER_FORMAT = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 2 });
+const COLLATOR = new Intl.Collator('it', { numeric: true, sensitivity: 'base' });
+
+export type SortDirection = 'asc' | 'desc';
+
+interface SortState {
+  /** Identificativo della colonna (resta valido se le colonne vengono spostate). */
+  readonly id: string;
+  readonly direction: SortDirection;
+}
 
 /**
  * Elenco generico (componente di presentazione: riceve righe e colonne, emette le azioni).
- * - Mobile: schede impilate, la colonna "primary" fa da titolo.
- * - Da 768px: tabella.
+ * - Mobile: schede impilate, la colonna "primary" fa da titolo; ordinamento da tendina.
+ * - Da 768px: tabella, ordinamento cliccando sull'intestazione
+ *   (crescente → decrescente → ordine iniziale).
  */
 @Component({
   selector: 'gov-entity-table',
-  imports: [RouterLink, NgTemplateOutlet, MatButtonModule, MatIconModule, MatTooltipModule],
+  imports: [
+    RouterLink,
+    NgTemplateOutlet,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatSelectModule,
+    MatTooltipModule,
+  ],
   templateUrl: './entity-table.html',
   styleUrl: './entity-table.scss',
 })
@@ -36,6 +57,8 @@ export class EntityTable {
   readonly edit = output<EntityRow>();
   readonly remove = output<EntityRow>();
 
+  protected readonly sort = signal<SortState | null>(null);
+
   protected readonly primaryColumn = computed(
     () => this.columns().find((column) => column.primary) ?? this.columns()[0],
   );
@@ -43,6 +66,79 @@ export class EntityTable {
     this.columns().filter((column) => column !== this.primaryColumn() && !column.hideOnMobile),
   );
   protected readonly hasActions = computed(() => this.canEdit() || this.canDelete());
+
+  /** Righe nell'ordine scelto; senza ordinamento restano nell'ordine ricevuto. */
+  protected readonly sortedRows = computed(() => {
+    const rows = this.rows();
+    const sort = this.sort();
+    const column = sort ? this.columns().find((c) => columnId(c) === sort.id) : undefined;
+    if (!sort || !column) {
+      return rows;
+    }
+    const factor = sort.direction === 'asc' ? 1 : -1;
+    return [...rows].sort((a, b) => {
+      const left = this.sortValue(a, column);
+      const right = this.sortValue(b, column);
+      // I valori vuoti vanno sempre in fondo, in entrambe le direzioni
+      if (left === null || right === null) {
+        return left === right ? 0 : left === null ? 1 : -1;
+      }
+      const result =
+        typeof left === 'number' && typeof right === 'number'
+          ? left - right
+          : COLLATOR.compare(String(left), String(right));
+      return result * factor;
+    });
+  });
+
+  /** Clic sull'intestazione: crescente, poi decrescente, poi ordine iniziale. */
+  protected toggleSort(column: ColumnConfig): void {
+    const id = columnId(column);
+    const current = this.sort();
+    if (current?.id !== id) {
+      this.sort.set({ id, direction: 'asc' });
+    } else if (current.direction === 'asc') {
+      this.sort.set({ id, direction: 'desc' });
+    } else {
+      this.sort.set(null);
+    }
+  }
+
+  /** Ordinamento scelto dalla tendina su mobile. */
+  protected setSortColumn(id: string | null): void {
+    this.sort.set(id === null ? null : { id, direction: this.sort()?.direction ?? 'asc' });
+  }
+
+  protected columnId(column: ColumnConfig): string {
+    return columnId(column);
+  }
+
+  protected isSorted(column: ColumnConfig): boolean {
+    return this.sort()?.id === columnId(column);
+  }
+
+  protected toggleDirection(): void {
+    const current = this.sort();
+    if (current) {
+      this.sort.set({ ...current, direction: current.direction === 'asc' ? 'desc' : 'asc' });
+    }
+  }
+
+  protected ariaSort(column: ColumnConfig): 'ascending' | 'descending' | 'none' {
+    const sort = this.sort();
+    if (sort?.id !== columnId(column)) {
+      return 'none';
+    }
+    return sort.direction === 'asc' ? 'ascending' : 'descending';
+  }
+
+  protected sortIcon(column: ColumnConfig): string {
+    const sort = this.sort();
+    if (sort?.id !== columnId(column)) {
+      return 'unfold_more';
+    }
+    return sort.direction === 'asc' ? 'arrow_upward' : 'arrow_downward';
+  }
 
   /** Testo della cella: formattazione per tipo (date e numeri all'italiana, liste, sì/no). */
   protected text(row: EntityRow, column: ColumnConfig): string {
@@ -73,5 +169,34 @@ export class EntityTable {
 
   protected rowTitle(row: EntityRow): string {
     return this.text(row, this.primaryColumn());
+  }
+
+  /** Valore su cui ordinare: numeri come numeri, date ISO e testi come testo; vuoto = null. */
+  private sortValue(row: EntityRow, column: ColumnConfig): number | string | null {
+    if (column.sortKey) {
+      const key = readPath(row, column.sortKey);
+      if (key === null || key === undefined || key === '') {
+        return null;
+      }
+      return typeof key === 'number' ? key : String(key);
+    }
+    if (column.format) {
+      const formatted = column.format(readPath(row, column.key), row);
+      return formatted === '—' ? null : formatted;
+    }
+    const value = readPath(row, column.key);
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    if (Array.isArray(value)) {
+      return value.length > 0 ? value.join(', ') : null;
+    }
+    if (column.type === 'number') {
+      return Number(value);
+    }
+    if (column.type === 'boolean') {
+      return value ? 1 : 0;
+    }
+    return String(value);
   }
 }

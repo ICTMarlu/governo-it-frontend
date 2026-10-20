@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { LOOKUP_CONFIGS } from './master-data.configs';
+import { MASTER_DATA_HELP } from '../../shared/help/help-content';
 
 interface Shortcut {
   readonly label: string;
@@ -21,6 +22,7 @@ interface Shortcut {
     <gov-page-header
       title="Anagrafiche e liste"
       subtitle="Dati di base usati da progetti e risorse. Le modifiche sono riservate agli amministratori."
+      [help]="help"
     />
 
     @for (group of groups; track group.title) {
@@ -97,6 +99,7 @@ interface Shortcut {
   `,
 })
 export class MasterDataPage {
+  protected readonly help = MASTER_DATA_HELP;
   protected readonly groups: readonly {
     readonly id: string;
     readonly title: string;

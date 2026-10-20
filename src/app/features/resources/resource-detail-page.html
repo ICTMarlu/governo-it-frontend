@@ -19,6 +19,7 @@
         <gov-page-header
           [title]="'' + row['fullName']"
           [subtitle]="row['active'] === false ? 'Risorsa non attiva' : undefined"
+          [help]="help"
         />
         @if (canEdit()) {
           <button mat-stroked-button type="button" (click)="edit()">

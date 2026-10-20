@@ -1,4 +1,5 @@
 import { EntityConfig, ROLES } from '../../shared/crud/crud.model';
+import { RESOURCES_HELP } from '../../shared/help/help-content';
 
 const RESOURCE_TYPES = [
   { value: 'INTERNAL', label: 'Interna' },
@@ -16,6 +17,7 @@ export const RESOURCES_CONFIG: EntityConfig = {
   singular: 'Risorsa',
   subtitle: 'Interni, consulenti e fornitori. Apri una risorsa per capacità, ore extra e tariffe.',
   endpoint: '/resources',
+  help: RESOURCES_HELP,
   writeRoles: RESOURCE_WRITE_ROLES,
   searchKeys: ['fullName', 'alias', 'email', 'vendorName', 'mainSystemLabels'],
   quickFilters: [

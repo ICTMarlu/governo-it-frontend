@@ -1,0 +1,122 @@
+// Mobile first: le risposte rientrano poco su smartphone, di più da tablet in su.
+.wall__title {
+  margin: 0 0 0.75rem;
+  font: var(--mat-sys-title-large);
+}
+
+.list,
+.replies {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list {
+  display: grid;
+  gap: 0.75rem;
+  margin-block-start: 1rem;
+}
+
+.comment {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 0.75rem;
+  background: var(--mat-sys-surface-container-lowest);
+
+  &--reply {
+    margin-block-start: 0.5rem;
+    border-style: none none none solid;
+    border-width: 0 0 0 3px;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+  }
+
+  &__author {
+    font: var(--mat-sys-title-small);
+  }
+
+  &__date {
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-body-small);
+  }
+
+  // Gli a capo si conservano solo nel testo scritto, non negli spazi del template
+  &__body {
+    margin: 0.5rem 0 0;
+    overflow-wrap: anywhere;
+
+    .text {
+      white-space: pre-wrap;
+    }
+
+    &--deleted {
+      font-style: italic;
+      color: var(--mat-sys-on-surface-variant);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-inline-start: -0.75rem;
+  }
+}
+
+.replies {
+  margin-inline-start: 0.5rem;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+  font: var(--mat-sys-label-large);
+
+  &--small {
+    width: 1.5rem;
+    height: 1.5rem;
+    font: var(--mat-sys-label-small);
+  }
+}
+
+.mention {
+  padding: 0 0.25rem;
+  border-radius: 0.25rem;
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  font-weight: 500;
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-block-start: 1rem;
+  color: var(--mat-sys-on-surface-variant);
+
+  &--error {
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    background: var(--mat-sys-error-container);
+    color: var(--mat-sys-on-error-container);
+  }
+}
+
+@media (min-width: 600px) {
+  .replies {
+    margin-inline-start: 2.5rem;
+  }
+}

@@ -1,0 +1,140 @@
+<section class="wall" aria-labelledby="comments-title">
+  <h2 id="comments-title" class="wall__title">Commenti</h2>
+
+  <gov-comment-composer
+    #newComposer
+    [candidates]="candidates()"
+    [busy]="busy()"
+    (submitted)="publish($event)"
+  />
+
+  <ng-template #body let-comment>
+    <p class="comment__body">
+      @for (segment of segments(comment); track $index) {
+        @if (segment.kind === 'mention') {
+          <span class="mention">&#64;{{ segment.name }}</span>
+        } @else {
+          <span class="text">{{ segment.text }}</span>
+        }
+      }
+    </p>
+  </ng-template>
+
+  @if (loadError()) {
+    <p class="state state--error" role="alert">Impossibile caricare i commenti.</p>
+  } @else if (comments() === null) {
+    <div class="state" role="status">
+      <mat-progress-spinner diameter="24" mode="indeterminate" aria-hidden="true" />
+      <span>Caricamento…</span>
+    </div>
+  } @else if (comments()!.length === 0) {
+    <p class="state">Nessun commento: scrivi il primo.</p>
+  } @else {
+    <ol class="list" aria-label="Discussione">
+      @for (comment of comments(); track comment.id) {
+        <li class="comment">
+          <header class="comment__header">
+            <span class="avatar" aria-hidden="true">{{ comment.authorName.charAt(0) }}</span>
+            <span class="comment__author">{{ comment.authorName }}</span>
+            <span class="comment__date">
+              {{ when(comment) }}
+              @if (comment.edited) {
+                · modificato
+              }
+            </span>
+          </header>
+
+          @if (comment.deleted) {
+            <p class="comment__body comment__body--deleted">Commento eliminato</p>
+          } @else if (editing() === comment.id) {
+            <gov-comment-composer
+              label="Modifica il commento"
+              submitLabel="Salva"
+              [initialBody]="comment.body"
+              [candidates]="candidates()"
+              [busy]="busy()"
+              [cancellable]="true"
+              (submitted)="saveEdit(comment, $event)"
+              (cancelled)="editing.set(null)"
+            />
+          } @else {
+            <ng-container *ngTemplateOutlet="body; context: { $implicit: comment }" />
+          }
+
+          @if (!comment.deleted && editing() !== comment.id) {
+            <div class="comment__actions">
+              <button mat-button type="button" (click)="startReply(comment)">
+                <mat-icon aria-hidden="true">reply</mat-icon>
+                Rispondi
+              </button>
+              @if (comment.canEdit) {
+                <button mat-button type="button" (click)="startEdit(comment)">Modifica</button>
+              }
+              @if (comment.canDelete) {
+                <button mat-button type="button" (click)="remove(comment)">Elimina</button>
+              }
+            </div>
+          }
+
+          @if (comment.replies.length > 0 || replyingTo() === comment.id) {
+            <ol class="replies" [attr.aria-label]="'Risposte a ' + comment.authorName">
+              @for (reply of comment.replies; track reply.id) {
+                <li class="comment comment--reply">
+                  <header class="comment__header">
+                    <span class="avatar avatar--small" aria-hidden="true">{{
+                      reply.authorName.charAt(0)
+                    }}</span>
+                    <span class="comment__author">{{ reply.authorName }}</span>
+                    <span class="comment__date">
+                      {{ when(reply) }}
+                      @if (reply.edited) {
+                        · modificato
+                      }
+                    </span>
+                  </header>
+                  @if (editing() === reply.id) {
+                    <gov-comment-composer
+                      label="Modifica la risposta"
+                      submitLabel="Salva"
+                      [initialBody]="reply.body"
+                      [candidates]="candidates()"
+                      [busy]="busy()"
+                      [cancellable]="true"
+                      (submitted)="saveEdit(reply, $event)"
+                      (cancelled)="editing.set(null)"
+                    />
+                  } @else {
+                    <ng-container *ngTemplateOutlet="body; context: { $implicit: reply }" />
+                    <div class="comment__actions">
+                      @if (reply.canEdit) {
+                        <button mat-button type="button" (click)="startEdit(reply)">
+                          Modifica
+                        </button>
+                      }
+                      @if (reply.canDelete) {
+                        <button mat-button type="button" (click)="remove(reply)">Elimina</button>
+                      }
+                    </div>
+                  }
+                </li>
+              }
+              @if (replyingTo() === comment.id) {
+                <li class="comment comment--reply">
+                  <gov-comment-composer
+                    label="Scrivi una risposta"
+                    submitLabel="Rispondi"
+                    [candidates]="candidates()"
+                    [busy]="busy()"
+                    [cancellable]="true"
+                    (submitted)="reply(comment, $event)"
+                    (cancelled)="replyingTo.set(null)"
+                  />
+                </li>
+              }
+            </ol>
+          }
+        </li>
+      }
+    </ol>
+  }
+</section>

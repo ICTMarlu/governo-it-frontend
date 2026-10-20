@@ -1,0 +1,47 @@
+<div class="composer">
+  <mat-form-field appearance="outline" class="composer__field" subscriptSizing="dynamic">
+    <mat-label>{{ label() }}</mat-label>
+    <textarea
+      #textarea
+      matInput
+      rows="3"
+      maxlength="10000"
+      role="combobox"
+      aria-autocomplete="list"
+      [attr.aria-expanded]="suggestions().length > 0"
+      [attr.aria-controls]="listId"
+      [attr.aria-activedescendant]="suggestions().length > 0 ? optionId(activeIndex()) : null"
+      [value]="text()"
+      (input)="onInput($event)"
+      (keydown)="onKeydown($event)"
+      (blur)="query.set(null)"
+    ></textarea>
+    <mat-hint>Usa &#64; per citare una persona · Ctrl+Invio per pubblicare</mat-hint>
+  </mat-form-field>
+
+  @if (suggestions().length > 0) {
+    <ul class="suggestions" role="listbox" [id]="listId" aria-label="Persone da citare">
+      @for (candidate of suggestions(); track candidate.id; let index = $index) {
+        <li
+          class="suggestion"
+          role="option"
+          [id]="optionId(index)"
+          [class.suggestion--active]="index === activeIndex()"
+          [attr.aria-selected]="index === activeIndex()"
+          (mousedown)="$event.preventDefault(); choose(candidate)"
+        >
+          &#64;{{ candidate.name }}
+        </li>
+      }
+    </ul>
+  }
+
+  <div class="composer__actions">
+    @if (cancellable()) {
+      <button mat-button type="button" (click)="cancelled.emit()">Annulla</button>
+    }
+    <button mat-flat-button type="button" [disabled]="!canSubmit()" (click)="submit()">
+      {{ submitLabel() }}
+    </button>
+  </div>
+</div>

@@ -1,4 +1,5 @@
 import { EntityConfig, EntityRow, ROLES } from '../../shared/crud/crud.model';
+import { PROJECTS_HELP } from '../../shared/help/help-content';
 
 const priorityLabel = (row: EntityRow): string => {
   const attributes = row['attributes'] as { level?: number; description?: string } | undefined;
@@ -14,11 +15,13 @@ export const PROJECTS_CONFIG: EntityConfig = {
   subtitle:
     'Portafoglio IT: Project, AMS, Continuous e Admin. Il codice viene assegnato al salvataggio se il sistema ha il codice breve.',
   endpoint: '/projects',
+  help: PROJECTS_HELP,
   writeRoles: [ROLES.admin, ROLES.pm, ROLES.editor],
+  rowLink: (row) => ['/projects', row.id!],
   searchKeys: ['code', 'name', 'ownerNames', 'requesterNames', 'mainSystemLabel', 'description'],
   quickFilters: [
-    { key: 'workTypeLabel', label: 'Tipo' },
-    { key: 'statusLabel', label: 'Stato' },
+    { key: 'workTypeLabel', label: 'Tipo', orderKey: 'workTypeSortOrder' },
+    { key: 'statusLabel', label: 'Stato', orderKey: 'statusSortOrder' },
     { key: 'mainSystemLabel', label: 'Sistema' },
     { key: 'ownerNames', label: 'Owner' },
   ],
@@ -161,11 +164,24 @@ export const PROJECTS_CONFIG: EntityConfig = {
   columns: [
     { key: 'name', label: 'Progetto', primary: true },
     { key: 'code', label: 'Codice' },
-    { key: 'workTypeLabel', label: 'Tipo' },
+    { key: 'workTypeLabel', label: 'Tipo', sortKey: 'workTypeSortOrder' },
     { key: 'mainSystemLabel', label: 'Sistema' },
-    { key: 'statusLabel', label: 'Stato', type: 'badge', colorKey: 'statusColor' },
+    {
+      key: 'statusLabel',
+      label: 'Stato',
+      type: 'badge',
+      colorKey: 'statusColor',
+      sortKey: 'statusSortOrder',
+    },
     { key: 'itPriorityLevel', label: 'Priorità IT', type: 'number' },
+    { key: 'businessPriorityLevel', label: 'Priorità business', type: 'number' },
     { key: 'ownerNames', label: 'Owner', type: 'list' },
+    { key: 'requesterNames', label: 'Richiesto da', type: 'list', hideOnMobile: true },
     { key: 'dueForLabel', label: 'Due for', hideOnMobile: true },
+    { key: 'notes', label: 'Note', clamp: true, hideOnMobile: true },
+    { key: 'expenseTypeLabel', label: 'Capex / Opex', defaultHidden: true },
+    { key: 'legalEntityNames', label: 'Società', type: 'list', defaultHidden: true },
+    { key: 'estimatedEffortDays', label: 'Effort (gg)', type: 'number', defaultHidden: true },
+    { key: 'legacyActivityNumber', label: 'N. storico', type: 'number', defaultHidden: true },
   ],
 };

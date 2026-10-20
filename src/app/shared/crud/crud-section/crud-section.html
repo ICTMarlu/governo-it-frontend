@@ -14,18 +14,32 @@
   }
 
   @for (quickFilter of filterOptions(); track quickFilter.key) {
-    <mat-form-field appearance="outline" class="toolbar__filter" subscriptSizing="dynamic">
+    <mat-form-field
+      appearance="outline"
+      class="toolbar__filter"
+      subscriptSizing="dynamic"
+      floatLabel="always"
+    >
       <mat-label>{{ quickFilter.label }}</mat-label>
       <mat-select
-        [value]="filters()[quickFilter.key] ?? ''"
+        multiple
+        [value]="filters()[quickFilter.key] ?? []"
         (valueChange)="setFilter(quickFilter.key, $event)"
+        placeholder="Tutti"
       >
-        <mat-option value="">Tutti</mat-option>
+        <mat-select-trigger>{{ filterSummary(quickFilter.key) }}</mat-select-trigger>
         @for (value of quickFilter.values; track value) {
           <mat-option [value]="value">{{ value }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
+  }
+
+  @if (hasActiveFilters() || search()) {
+    <button mat-button type="button" (click)="clearFilters()">
+      <mat-icon aria-hidden="true">filter_alt_off</mat-icon>
+      Azzera filtri
+    </button>
   }
 
   @if (hasInactive()) {
@@ -35,6 +49,11 @@
   }
 
   <span class="toolbar__spacer"></span>
+
+  <button mat-stroked-button type="button" class="toolbar__columns" (click)="openColumnChooser()">
+    <mat-icon aria-hidden="true">view_column</mat-icon>
+    Colonne
+  </button>
 
   @if (canWrite() && config().canCreate !== false) {
     <button mat-flat-button type="button" class="toolbar__new" (click)="openForm()">
@@ -63,7 +82,7 @@
     </p>
     <gov-entity-table
       [rows]="visibleRows()"
-      [columns]="config().columns"
+      [columns]="visibleColumns()"
       [caption]="config().title"
       [canEdit]="canWrite()"
       [canDelete]="canWrite() && config().canDelete === true"

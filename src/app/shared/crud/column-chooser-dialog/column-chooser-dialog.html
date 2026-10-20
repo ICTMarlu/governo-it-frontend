@@ -1,0 +1,50 @@
+<h2 mat-dialog-title>Colonne</h2>
+
+<mat-dialog-content>
+  <p class="hint">Spunta le colonne da vedere e trascinale nell'ordine che preferisci.</p>
+  <ul class="list" cdkDropList (cdkDropListDropped)="drop($event)" aria-label="Colonne dell'elenco">
+    @for (item of items(); track item.id; let index = $index; let last = $last) {
+      <li class="item" cdkDrag cdkDragLockAxis="y">
+        <mat-icon class="handle" cdkDragHandle aria-hidden="true">drag_indicator</mat-icon>
+        <mat-checkbox
+          class="item__check"
+          [checked]="item.visible"
+          [disabled]="item.locked"
+          (change)="toggle(item, $event.checked)"
+        >
+          {{ item.label }}
+          @if (item.locked) {
+            <span class="item__note">(sempre visibile)</span>
+          }
+        </mat-checkbox>
+        <button
+          mat-icon-button
+          type="button"
+          [disabled]="index === 0"
+          [attr.aria-label]="'Sposta su ' + item.label"
+          matTooltip="Sposta su"
+          (click)="move(index, -1)"
+        >
+          <mat-icon aria-hidden="true">arrow_upward</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          type="button"
+          [disabled]="last"
+          [attr.aria-label]="'Sposta giù ' + item.label"
+          matTooltip="Sposta giù"
+          (click)="move(index, 1)"
+        >
+          <mat-icon aria-hidden="true">arrow_downward</mat-icon>
+        </button>
+      </li>
+    }
+  </ul>
+</mat-dialog-content>
+
+<mat-dialog-actions class="actions">
+  <button mat-button type="button" (click)="reset()">Ripristina predefinite</button>
+  <span class="spacer"></span>
+  <button mat-button type="button" mat-dialog-close>Annulla</button>
+  <button mat-flat-button type="button" (click)="apply()">Applica</button>
+</mat-dialog-actions>

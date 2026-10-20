@@ -14,6 +14,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { filter, map, switchMap } from 'rxjs';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
+import {
+  ColumnChooserData,
+  ColumnChooserDialog,
+  ColumnChooserResult,
+} from '../column-chooser-dialog/column-chooser-dialog';
+import { ColumnLayout, orderedColumns } from '../column-layout';
 import { ConfirmDialog, ConfirmDialogData } from '../confirm-dialog/confirm-dialog';
 import { CrudApiService, errorMessage } from '../crud-api.service';
 import { EntityConfig, EntityRow, readPath } from '../crud.model';
@@ -53,6 +60,7 @@ export class CrudSection {
     { initialValue: false },
   );
   private readonly currentUser = inject(AuthService).currentUser;
+  private readonly preferences = inject(UserPreferencesService);
 
   readonly config = input.required<EntityConfig>();
 
@@ -60,7 +68,18 @@ export class CrudSection {
   protected readonly rows = signal<EntityRow[]>([]);
   protected readonly search = signal('');
   protected readonly showInactive = signal(false);
-  protected readonly filters = signal<Record<string, string>>({});
+  /** Filtri rapidi a scelta multipla: valori in alternativa nello stesso filtro, filtri diversi in AND. */
+  protected readonly filters = signal<Record<string, readonly string[]>>({});
+  /** Colonne scelte dall'utente (null = predefinite), salvate sul server per utente. */
+  protected readonly layout = signal<ColumnLayout | null>(null);
+  protected readonly visibleColumns = computed(() =>
+    orderedColumns(this.config().columns, this.layout())
+      .filter((item) => item.visible)
+      .map((item) => item.column),
+  );
+  protected readonly hasActiveFilters = computed(() =>
+    Object.values(this.filters()).some((values) => values.length > 0),
+  );
 
   protected readonly canWrite = computed(() => {
     if (this.config().readOnly) {
@@ -73,12 +92,20 @@ export class CrudSection {
 
   /** Valori distinti delle colonne con filtro rapido. */
   protected readonly filterOptions = computed(() =>
-    (this.config().quickFilters ?? []).map((quickFilter) => ({
-      ...quickFilter,
-      values: [
-        ...new Set(this.rows().flatMap((row) => valuesOf(readPath(row, quickFilter.key)))),
-      ].sort((a, b) => a.localeCompare(b, 'it')),
-    })),
+    (this.config().quickFilters ?? []).map((quickFilter) => {
+      // Ordine delle voci: campo indicato (es. ordine dello stato), altrimenti alfabetico
+      const position = new Map<string, number>();
+      for (const row of this.rows()) {
+        const order = quickFilter.orderKey ? Number(readPath(row, quickFilter.orderKey)) : 0;
+        for (const value of valuesOf(readPath(row, quickFilter.key))) {
+          position.set(value, Math.min(position.get(value) ?? Infinity, order || 0));
+        }
+      }
+      const values = [...position.keys()].sort(
+        (a, b) => position.get(a)! - position.get(b)! || a.localeCompare(b, 'it'),
+      );
+      return { ...quickFilter, values };
+    }),
   );
 
   protected readonly hasInactive = computed(() =>
@@ -88,7 +115,7 @@ export class CrudSection {
   protected readonly visibleRows = computed(() => {
     const config = this.config();
     const text = this.search().trim().toLowerCase();
-    const activeFilters = Object.entries(this.filters()).filter(([, value]) => value);
+    const activeFilters = Object.entries(this.filters()).filter(([, values]) => values.length > 0);
     const rows = this.rows().filter(
       (row) =>
         (this.showInactive() || row['active'] !== false) &&
@@ -96,7 +123,9 @@ export class CrudSection {
           config.searchKeys.some((key) =>
             valuesOf(readPath(row, key)).some((value) => value.toLowerCase().includes(text)),
           )) &&
-        activeFilters.every(([key, value]) => valuesOf(readPath(row, key)).includes(value)),
+        activeFilters.every(([key, selected]) =>
+          valuesOf(readPath(row, key)).some((value) => selected.includes(value)),
+        ),
     );
     return config.sort ? [...rows].sort(config.sort) : rows;
   });
@@ -104,7 +133,10 @@ export class CrudSection {
   constructor() {
     effect(() => {
       const endpoint = this.config().endpoint;
-      untracked(() => this.load(endpoint));
+      untracked(() => {
+        this.load(endpoint);
+        this.loadLayout();
+      });
     });
   }
 
@@ -112,8 +144,46 @@ export class CrudSection {
     this.load(this.config().endpoint);
   }
 
-  protected setFilter(key: string, value: string): void {
-    this.filters.update((current) => ({ ...current, [key]: value }));
+  protected setFilter(key: string, values: readonly string[]): void {
+    this.filters.update((current) => ({ ...current, [key]: values }));
+  }
+
+  protected clearFilters(): void {
+    this.filters.set({});
+    this.search.set('');
+  }
+
+  /** Testo del filtro chiuso: "Tutti", il valore scelto, oppure il primo "+N". */
+  protected filterSummary(key: string): string {
+    const selected = this.filters()[key] ?? [];
+    if (selected.length === 0) {
+      return 'Tutti';
+    }
+    return selected.length === 1 ? selected[0] : `${selected[0]} +${selected.length - 1}`;
+  }
+
+  protected openColumnChooser(): void {
+    const data: ColumnChooserData = { columns: this.config().columns, layout: this.layout() };
+    this.dialog
+      .open<ColumnChooserDialog, ColumnChooserData, ColumnChooserResult>(ColumnChooserDialog, {
+        data,
+        width: '440px',
+        maxWidth: '100vw',
+      })
+      .afterClosed()
+      .pipe(filter((result): result is ColumnChooserResult => result !== undefined))
+      .subscribe((result) => {
+        const key = this.layoutKey();
+        if (result === 'reset') {
+          this.layout.set(null);
+          this.preferences.reset(key).subscribe();
+        } else {
+          this.layout.set(result);
+          this.preferences.save(key, result).subscribe({
+            error: () => this.snackBar.open('Colonne non salvate sul server', 'Chiudi'),
+          });
+        }
+      });
   }
 
   protected openForm(row?: EntityRow): void {
@@ -155,6 +225,23 @@ export class CrudSection {
         },
         error: (error: unknown) => this.snackBar.open(errorMessage(error), 'Chiudi'),
       });
+  }
+
+  /** Chiave della preferenza: una per elenco (gli id nel percorso non contano). */
+  private layoutKey(): string {
+    const path = this.config()
+      .endpoint.replace(/\/\d+/g, '')
+      .replace(/^\//, '')
+      .replace(/\//g, '.');
+    return `columns.${path}`;
+  }
+
+  private loadLayout(): void {
+    this.layout.set(null);
+    this.preferences.get<ColumnLayout>(this.layoutKey()).subscribe({
+      next: (layout) => this.layout.set(layout),
+      error: () => this.layout.set(null),
+    });
   }
 
   private load(endpoint: string): void {

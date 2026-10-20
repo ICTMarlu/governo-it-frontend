@@ -1,4 +1,5 @@
 import { EntityConfig, ROLES } from '../../shared/crud/crud.model';
+import { USERS_HELP } from '../../shared/help/help-content';
 
 const DATE_TIME = new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' });
 
@@ -9,6 +10,7 @@ export const USERS_CONFIG: EntityConfig = {
   subtitle:
     'Accessi all’applicazione: ruolo, permesso sui costi e collegamento alla risorsa del team. In fase 2 il login passerà a Microsoft.',
   endpoint: '/users',
+  help: USERS_HELP,
   writeRoles: [ROLES.admin],
   searchKeys: ['displayName', 'username', 'email', 'resourceName'],
   quickFilters: [{ key: 'roleLabel', label: 'Ruolo' }],

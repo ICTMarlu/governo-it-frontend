@@ -7,26 +7,29 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { API_BASE_URL } from '../../core/config/api.config';
+import { BackLink } from '../../shared/components/back-link/back-link';
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { errorMessage } from '../../shared/crud/crud-api.service';
 import { ROLES } from '../../shared/crud/crud.model';
+import { PROJECT_CODES_HELP } from '../../shared/help/help-content';
 
 interface SystemNextCode {
   readonly mainSystemId: number;
   readonly mainSystemLabel: string;
   readonly shortCode: string | null;
   readonly nextCode: string | null;
+  readonly projectsWithoutCode: number;
 }
 
 interface CodeCounter {
   readonly year: number;
   readonly lastValue: number;
   readonly nextValue: number;
+  readonly projectsWithoutCode: number;
   readonly systems: readonly SystemNextCode[];
 }
 
@@ -44,7 +47,7 @@ interface GenerateResult {
   selector: 'gov-project-codes-page',
   imports: [
     FormsModule,
-    RouterLink,
+    BackLink,
     PageHeader,
     MatButtonModule,
     MatFormFieldModule,
@@ -65,7 +68,42 @@ export class ProjectCodesPage {
   protected readonly editValue = signal<number | null>(null);
   protected readonly busy = signal(false);
   protected readonly result = signal<GenerateResult | null>(null);
+  protected readonly help = PROJECT_CODES_HELP;
   protected readonly isAdmin = computed(() => this.currentUser()?.role === ROLES.admin);
+  /** Codici brevi in modifica, per id del sistema. */
+  protected readonly shortCodes = signal<Record<number, string>>({});
+
+  protected shortCodeChanged(system: SystemNextCode): boolean {
+    const edited = (this.shortCodes()[system.mainSystemId] ?? '').trim().toUpperCase();
+    return edited !== (system.shortCode ?? '');
+  }
+
+  protected setShortCodeDraft(system: SystemNextCode, value: string): void {
+    this.shortCodes.update((current) => ({ ...current, [system.mainSystemId]: value }));
+  }
+
+  protected saveShortCode(system: SystemNextCode): void {
+    const value = (this.shortCodes()[system.mainSystemId] ?? '').trim().toUpperCase();
+    if (value && !/^[A-Z0-9]{2,5}$/.test(value)) {
+      this.snackBar.open('Codice breve: da 2 a 5 lettere o numeri (es. ERP)', 'Chiudi');
+      return;
+    }
+    this.busy.set(true);
+    this.http
+      .put<CodeCounter>(`${this.url}/systems/${system.mainSystemId}/short-code`, {
+        shortCode: value || null,
+      })
+      .pipe(finalize(() => this.busy.set(false)))
+      .subscribe({
+        next: (counter) => {
+          this.setCounter(counter);
+          this.snackBar.open(`Codice breve di ${system.mainSystemLabel} salvato`, 'OK', {
+            duration: 3000,
+          });
+        },
+        error: (error: unknown) => this.snackBar.open(errorMessage(error), 'Chiudi'),
+      });
+  }
 
   constructor() {
     this.load();
@@ -114,5 +152,10 @@ export class ProjectCodesPage {
   private setCounter(counter: CodeCounter): void {
     this.counter.set(counter);
     this.editValue.set(counter.lastValue);
+    this.shortCodes.set(
+      Object.fromEntries(
+        counter.systems.map((system) => [system.mainSystemId, system.shortCode ?? '']),
+      ),
+    );
   }
 }

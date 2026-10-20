@@ -1,3 +1,5 @@
+import { HelpContent } from '../help/help.model';
+
 /**
  * Configurazione dichiarativa di un'anagrafica: campi del form, colonne dell'elenco, permessi.
  * Un solo insieme di componenti (CrudSection, EntityTable, EntityFormDialog) gestisce tutte
@@ -72,7 +74,13 @@ export type ColumnType = 'text' | 'boolean' | 'badge' | 'list' | 'date' | 'numbe
 export interface ColumnConfig {
   /** Campo della riga; per gli attributi delle liste valori: "attributes.terminal". */
   readonly key: string;
+  /** Identificativo della colonna per le preferenze, se due colonne leggono lo stesso campo. */
+  readonly id?: string;
   readonly label: string;
+  /** Nascosta finché l'utente non la attiva da "Colonne". */
+  readonly defaultHidden?: boolean;
+  /** Testo lungo: mostrato su due righe al massimo, completo al passaggio del mouse. */
+  readonly clamp?: boolean;
   readonly type?: ColumnType;
   /** Per 'badge': chiave della riga con il colore. */
   readonly colorKey?: string;
@@ -80,8 +88,18 @@ export interface ColumnConfig {
   readonly primary?: boolean;
   /** Nascosta su mobile (resta in tabella da tablet in su). */
   readonly hideOnMobile?: boolean;
+  /** Campo su cui ordinare al posto del valore mostrato (es. ordine dello stato invece dell'etichetta). */
+  readonly sortKey?: string;
   /** Testo da mostrare al posto del valore grezzo (es. INTERNAL -> Interno). */
   readonly format?: (value: unknown, row: EntityRow) => string;
+}
+
+/** Filtro rapido a scelta multipla sui valori distinti di un campo. */
+export interface QuickFilterConfig {
+  readonly key: string;
+  readonly label: string;
+  /** Ordine delle voci: campo numerico della riga (es. ordine dello stato); se assente, alfabetico. */
+  readonly orderKey?: string;
 }
 
 export interface EntityConfig {
@@ -95,7 +113,7 @@ export interface EntityConfig {
   /** Campi su cui lavora la ricerca testuale. */
   readonly searchKeys: readonly string[];
   /** Filtri rapidi: valori distinti della colonna indicata. */
-  readonly quickFilters?: readonly { readonly key: string; readonly label: string }[];
+  readonly quickFilters?: readonly QuickFilterConfig[];
   /** Ruoli che possono creare e modificare; vuoto = tutti. */
   readonly writeRoles?: readonly string[];
   /** Sola lettura per tutti (nessuna creazione o modifica). */
@@ -106,6 +124,8 @@ export interface EntityConfig {
   readonly rowLink?: (row: EntityRow) => readonly (string | number)[];
   /** Ordinamento iniziale dell'elenco. */
   readonly sort?: (a: EntityRow, b: EntityRow) => number;
+  /** Guida della pagina (pulsante Guida). */
+  readonly help?: HelpContent;
 }
 
 /** Valore di un campo della riga, anche annidato ("attributes.shortCode"). */

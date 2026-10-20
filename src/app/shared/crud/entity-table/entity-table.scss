@@ -4,6 +4,48 @@
   color: var(--mat-sys-on-surface-variant);
 }
 
+.mobile-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-block-end: 0.75rem;
+
+  &__field {
+    flex: 1 1 auto;
+  }
+}
+
+// Intestazione cliccabile: tutto il testo è il pulsante di ordinamento
+.sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &__icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    opacity: 0.35;
+  }
+
+  &:hover &__icon,
+  &:focus-visible &__icon,
+  &--active &__icon {
+    opacity: 1;
+  }
+
+  &--active {
+    color: var(--mat-sys-primary);
+  }
+}
+
 .cards {
   display: grid;
   gap: 0.75rem;
@@ -63,6 +105,16 @@
   }
 }
 
+// Testi lunghi (es. note): due righe al massimo, testo completo nel tooltip
+.clamp {
+  display: -webkit-box;
+  max-width: 28rem;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
 .link {
   color: var(--mat-sys-primary);
   font-weight: 500;
@@ -114,7 +166,8 @@
 }
 
 @media (min-width: 768px) {
-  .cards {
+  .cards,
+  .mobile-sort {
     display: none;
   }
 

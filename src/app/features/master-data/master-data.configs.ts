@@ -5,6 +5,16 @@ import {
   FieldConfig,
   ROLES,
 } from '../../shared/crud/crud.model';
+import {
+  HOLIDAY_CALENDARS_HELP,
+  HOLIDAYS_HELP,
+  LEGAL_ENTITIES_HELP,
+  LOOKUP_RULES,
+  lookupHelp,
+  REQUESTERS_HELP,
+  SITES_HELP,
+  VENDORS_HELP,
+} from '../../shared/help/help-content';
 
 const CODE_PATTERN = {
   regex: '^[A-Z0-9_]{1,30}$',
@@ -52,6 +62,7 @@ function lookupConfig(definition: LookupDefinition): EntityConfig {
     canCreate: !definition.fixed,
     searchKeys: ['label', 'code'],
     sort: bySortOrder,
+    help: lookupHelp(definition.title, definition.subtitle, LOOKUP_RULES[definition.slug]),
     fields: [
       {
         key: 'code',
@@ -213,6 +224,7 @@ export const LEGAL_ENTITIES_CONFIG: EntityConfig = {
   singular: 'Società',
   subtitle: 'Per i progetti di tutto il gruppo usa il flag "Tutto il gruppo" sul progetto.',
   endpoint: '/legal-entities',
+  help: LEGAL_ENTITIES_HELP,
   writeRoles: [ROLES.admin],
   searchKeys: ['name', 'code'],
   fields: [
@@ -241,6 +253,7 @@ export const VENDORS_CONFIG: EntityConfig = {
   singular: 'Fornitore',
   subtitle: 'Fornitori e società di consulenza; "Marlu IT" è il fornitore interno.',
   endpoint: '/vendors',
+  help: VENDORS_HELP,
   writeRoles: [ROLES.admin],
   searchKeys: ['name', 'email', 'vatNumber'],
   fields: [
@@ -266,6 +279,7 @@ export const SITES_CONFIG: EntityConfig = {
   singular: 'Sede',
   subtitle: 'Sedi di lavoro delle risorse, con il calendario festività di riferimento.',
   endpoint: '/sites',
+  help: SITES_HELP,
   writeRoles: [ROLES.admin],
   searchKeys: ['name', 'code'],
   fields: [
@@ -309,6 +323,7 @@ export const REQUESTERS_CONFIG: EntityConfig = {
   singular: 'Richiedente',
   subtitle: 'Persone del business che chiedono i progetti, con dipartimento, azienda e ruolo.',
   endpoint: '/requesters',
+  help: REQUESTERS_HELP,
   writeRoles: [ROLES.admin, ROLES.pm, ROLES.editor],
   searchKeys: ['fullName', 'email', 'businessAreaLabel', 'legalEntityName', 'jobTitle'],
   quickFilters: [
@@ -367,6 +382,7 @@ export const HOLIDAY_CALENDARS_CONFIG: EntityConfig = {
   subtitle:
     'Le festività riempiono in automatico la riga "Festività" del piano e riducono la capacità delle risorse della sede.',
   endpoint: '/holiday-calendars',
+  help: HOLIDAY_CALENDARS_HELP,
   readOnly: true,
   searchKeys: [],
   rowLink: (row) => ['/master-data/holiday-calendars', row.id!],
@@ -385,6 +401,7 @@ export function holidaysConfig(calendarId: number): EntityConfig {
     title: 'Festività',
     singular: 'Festività',
     endpoint: `/holiday-calendars/${calendarId}/holidays`,
+    help: HOLIDAYS_HELP,
     writeRoles: [ROLES.admin],
     canDelete: true,
     searchKeys: ['description'],
@@ -397,6 +414,7 @@ export function holidaysConfig(calendarId: number): EntityConfig {
       { key: 'holidayDate', label: 'Data', type: 'date', primary: true },
       {
         key: 'holidayDate',
+        id: 'weekday',
         label: 'Giorno',
         format: (value) => WEEKDAY.format(new Date(`${String(value)}T00:00:00`)),
       },

@@ -1,6 +1,8 @@
 <ng-template #cell let-row let-column="column">
   @if (column.type === 'badge' && text(row, column) !== '—') {
     <span class="badge" [style.--badge-color]="color(row, column)">{{ text(row, column) }}</span>
+  } @else if (column.clamp) {
+    <span class="clamp" [attr.title]="text(row, column)">{{ text(row, column) }}</span>
   } @else {
     {{ text(row, column) }}
   }
@@ -42,9 +44,35 @@
 @if (rows().length === 0) {
   <p class="empty">Nessun elemento da mostrare.</p>
 } @else {
-  <!-- Mobile -->
+  <!-- Mobile: ordinamento da tendina -->
+  <div class="mobile-sort">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="mobile-sort__field">
+      <mat-label>Ordina per</mat-label>
+      <mat-select [value]="sort()?.id ?? null" (valueChange)="setSortColumn($event)">
+        <mat-option [value]="null">Ordine predefinito</mat-option>
+        @for (column of columns(); track $index) {
+          <mat-option [value]="columnId(column)">{{ column.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    @if (sort(); as current) {
+      <button
+        mat-icon-button
+        type="button"
+        [attr.aria-label]="
+          current.direction === 'asc' ? 'Ordine crescente: inverti' : 'Ordine decrescente: inverti'
+        "
+        (click)="toggleDirection()"
+      >
+        <mat-icon aria-hidden="true">{{
+          current.direction === 'asc' ? 'arrow_upward' : 'arrow_downward'
+        }}</mat-icon>
+      </button>
+    }
+  </div>
+
   <ul class="cards" [attr.aria-label]="caption()">
-    @for (row of rows(); track row.id) {
+    @for (row of sortedRows(); track row.id) {
       <li class="card" [class.card--inactive]="row['active'] === false">
         <div class="card__header">
           <span class="card__title">
@@ -80,8 +108,21 @@
       </caption>
       <thead>
         <tr>
-          @for (column of columns(); track $index) {
-            <th scope="col">{{ column.label }}</th>
+          @for (column of columns(); track columnId(column)) {
+            <th scope="col" [attr.aria-sort]="ariaSort(column)">
+              <button
+                type="button"
+                class="sort-button"
+                [class.sort-button--active]="isSorted(column)"
+                [attr.aria-label]="'Ordina per ' + column.label"
+                (click)="toggleSort(column)"
+              >
+                <span>{{ column.label }}</span>
+                <mat-icon class="sort-button__icon" aria-hidden="true">{{
+                  sortIcon(column)
+                }}</mat-icon>
+              </button>
+            </th>
           }
           @if (hasActions()) {
             <th scope="col"><span class="visually-hidden">Azioni</span></th>
@@ -89,7 +130,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (row of rows(); track row.id) {
+        @for (row of sortedRows(); track row.id) {
           <tr [class.inactive]="row['active'] === false">
             @for (column of columns(); track $index) {
               <td>

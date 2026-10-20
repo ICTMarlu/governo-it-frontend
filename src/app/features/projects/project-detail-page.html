@@ -1,0 +1,70 @@
+<gov-back-link [target]="{ link: '/projects', label: 'Progetti' }" />
+
+@switch (state()) {
+  @case ('loading') {
+    <div class="state" role="status">
+      <mat-progress-spinner diameter="32" mode="indeterminate" aria-hidden="true" />
+      <span>Caricamento…</span>
+    </div>
+  }
+  @case ('error') {
+    <p class="state state--error" role="alert">Progetto non trovato o backend non raggiungibile.</p>
+  }
+  @case ('ready') {
+    @if (project(); as p) {
+      <header class="header">
+        <div class="header__main">
+          <p class="header__code">{{ p['code'] ?? 'Codice non ancora assegnato' }}</p>
+          <h1 class="header__title">{{ p['name'] }}</h1>
+          <span class="badge" [style.--badge-color]="p['statusColor']">{{ p['statusLabel'] }}</span>
+          @if (p['active'] === false) {
+            <span class="badge">Non attivo</span>
+          }
+        </div>
+        <div class="header__actions">
+          <gov-help-button [help]="help" />
+          @if (canEdit()) {
+            <button mat-stroked-button type="button" (click)="edit()">
+              <mat-icon aria-hidden="true">edit</mat-icon>
+              Modifica
+            </button>
+          }
+        </div>
+      </header>
+
+      <div class="layout">
+        <div class="layout__main">
+          <section class="card" aria-labelledby="description-title">
+            <h2 id="description-title" class="card__title">Descrizione</h2>
+            @if (p['description']) {
+              <p class="long-text">{{ p['description'] }}</p>
+            } @else {
+              <p class="empty">Nessuna descrizione. Aggiungila con "Modifica".</p>
+            }
+          </section>
+
+          @if (p['notes']) {
+            <section class="card" aria-labelledby="notes-title">
+              <h2 id="notes-title" class="card__title">Note</h2>
+              <p class="long-text">{{ p['notes'] }}</p>
+            </section>
+          }
+
+          <gov-project-comments [projectId]="projectId()" />
+        </div>
+
+        <aside class="layout__side card" aria-labelledby="details-title">
+          <h2 id="details-title" class="card__title">Dati del progetto</h2>
+          <dl class="details">
+            @for (item of details(); track item.label) {
+              <div class="details__item">
+                <dt>{{ item.label }}</dt>
+                <dd>{{ item.value }}</dd>
+              </div>
+            }
+          </dl>
+        </aside>
+      </div>
+    }
+  }
+}
