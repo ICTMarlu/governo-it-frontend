@@ -1,7 +1,7 @@
 import { EntityConfig, EntityRow, ROLES } from '../../shared/crud/crud.model';
 import { PROJECTS_HELP } from '../../shared/help/help-content';
 
-const priorityLabel = (row: EntityRow): string => {
+export const priorityLabel = (row: EntityRow): string => {
   const attributes = row['attributes'] as { level?: number; description?: string } | undefined;
   return attributes?.description
     ? `${attributes.level} – ${attributes.description}`

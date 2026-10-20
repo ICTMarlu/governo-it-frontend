@@ -1,0 +1,151 @@
+<gov-back-link [target]="{ link: '/management', label: 'Direzione' }" />
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="state" role="status">
+      <mat-progress-spinner diameter="24" mode="indeterminate" aria-hidden="true" />
+      Caricamento della riunione…
+    </p>
+  }
+  @case ('error') {
+    <p class="state state--error" role="alert">Riunione non trovata o backend non raggiungibile.</p>
+  }
+  @case ('ready') {
+    @if (meeting(); as m) {
+      <gov-page-header [title]="heading()" [subtitle]="m.title ?? undefined" [help]="help" />
+
+      <div class="bar">
+        <span class="status" [class.status--closed]="m.status === 'CLOSED'">{{
+          m.statusLabel
+        }}</span>
+        <span class="bar__count" role="status">
+          Trattati {{ m.handledCount }} di {{ m.itemCount }} · chiusi {{ m.closedCount }} · rinviati
+          {{ m.deferredCount }}
+        </span>
+        <span class="bar__spacer"></span>
+        <button mat-stroked-button type="button" (click)="showSummary()">
+          <mat-icon aria-hidden="true">summarize</mat-icon>
+          Riepilogo
+        </button>
+        @if (canWrite()) {
+          @if (m.status === 'IN_PROGRESS') {
+            <button mat-flat-button type="button" [disabled]="busy()" (click)="closeMeeting()">
+              <mat-icon aria-hidden="true">done_all</mat-icon>
+              Chiudi riunione
+            </button>
+          } @else {
+            <button mat-stroked-button type="button" [disabled]="busy()" (click)="reopen()">
+              Riapri
+            </button>
+          }
+        }
+      </div>
+      <mat-progress-bar
+        class="progress"
+        mode="determinate"
+        [value]="progress()"
+        aria-label="Punti trattati"
+      />
+
+      @if (canWrite()) {
+        <details class="card">
+          <summary class="card__summary">Dati della riunione e note generali</summary>
+          <div class="grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Data</mat-label>
+              <input
+                matInput
+                required
+                placeholder="gg/mm/aaaa"
+                autocomplete="off"
+                [matDatepicker]="picker"
+                [ngModel]="editDate()"
+                (ngModelChange)="editDate.set($event)"
+              />
+              <mat-datepicker-toggle matIconSuffix [for]="picker" aria-label="Apri il calendario" />
+              <mat-datepicker #picker />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Titolo</mat-label>
+              <input
+                matInput
+                maxlength="200"
+                [ngModel]="editTitle()"
+                (ngModelChange)="editTitle.set($event)"
+              />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Note generali</mat-label>
+              <textarea
+                matInput
+                rows="3"
+                [ngModel]="editNotes()"
+                (ngModelChange)="editNotes.set($event)"
+              ></textarea>
+            </mat-form-field>
+          </div>
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="busy() || !dataChanged() || !editDate()"
+            (click)="saveData()"
+          >
+            Salva dati
+          </button>
+        </details>
+
+        <div class="add">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="add__field">
+            <mat-label>Aggiungi altri punti aperti</mat-label>
+            <mat-select multiple [ngModel]="toAdd()" (ngModelChange)="toAdd.set($event)">
+              @for (topic of availableTopics(); track topic.id) {
+                <mat-option [value]="topic.id"
+                  >{{ topic.topicTypeLabel }} · {{ topic.title }}</mat-option
+                >
+              } @empty {
+                <mat-option disabled>Nessun altro punto aperto</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="toAdd().length === 0 || busy()"
+            (click)="addSelected()"
+          >
+            <mat-icon aria-hidden="true">add</mat-icon>
+            Aggiungi
+          </button>
+        </div>
+      } @else if (m.notes) {
+        <p class="notes">{{ m.notes }}</p>
+      }
+
+      <ol class="agenda" aria-label="Ordine del giorno">
+        @for (item of m.items; track item.topic.id; let i = $index, first = $first, last = $last) {
+          <li>
+            <gov-agenda-item
+              [item]="item"
+              [position]="i + 1"
+              [meetingId]="m.id"
+              [canWrite]="canWrite()"
+              [busy]="busy()"
+              [first]="first"
+              [last]="last"
+              [people]="people()"
+              (marked)="mark(item, $event)"
+              (actionAdded)="addAction(item, $event)"
+              (actionToggled)="toggleAction($event.action, $event.done)"
+              (removed)="remove(item)"
+              (moved)="move(i, $event)"
+            />
+          </li>
+        } @empty {
+          <li class="empty">
+            Nessun punto all’ordine del giorno: aggiungine dalla tendina qui sopra.
+          </li>
+        }
+      </ol>
+    }
+  }
+}

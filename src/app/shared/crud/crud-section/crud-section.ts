@@ -63,6 +63,8 @@ export class CrudSection {
   private readonly preferences = inject(UserPreferencesService);
 
   readonly config = input.required<EntityConfig>();
+  /** Cambiandolo il genitore fa ricaricare l'elenco (es. dopo un inserimento fatto fuori). */
+  readonly refresh = input(0);
 
   protected readonly state = signal<LoadState>('loading');
   protected readonly rows = signal<EntityRow[]>([]);
@@ -137,6 +139,16 @@ export class CrudSection {
         this.load(endpoint);
         this.loadLayout();
       });
+    });
+    // Ricarica su richiesta del genitore (il primo valore è già coperto dal caricamento iniziale)
+    let firstRefresh = true;
+    effect(() => {
+      this.refresh();
+      if (firstRefresh) {
+        firstRefresh = false;
+        return;
+      }
+      untracked(() => this.reload());
     });
   }
 

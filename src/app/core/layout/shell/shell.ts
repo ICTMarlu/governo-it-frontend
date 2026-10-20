@@ -32,6 +32,12 @@ const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Progetti', icon: 'work', route: '/projects' },
   { label: 'Risorse', icon: 'groups', route: '/resources' },
   { label: 'Richiedenti', icon: 'contact_mail', route: '/requesters' },
+  {
+    label: 'Direzione',
+    icon: 'record_voice_over',
+    route: '/management',
+    roles: [ROLES.admin, ROLES.pm, ROLES.viewer],
+  },
   { label: 'Anagrafiche e liste', icon: 'tune', route: '/master-data' },
   { label: 'Utenti', icon: 'manage_accounts', route: '/users', roles: [ROLES.admin] },
 ];

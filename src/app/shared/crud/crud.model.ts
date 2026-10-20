@@ -146,4 +146,5 @@ export const ROLES = {
   admin: 'ADMIN',
   pm: 'PM',
   editor: 'EDITOR',
+  viewer: 'VIEWER',
 } as const;

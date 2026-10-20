@@ -10,6 +10,7 @@ import {
   SITES_CONFIG,
   VENDORS_CONFIG,
 } from './features/master-data/master-data.configs';
+import { MANAGEMENT_READ_ROLES } from './features/management/management.configs';
 import { PROJECTS_CONFIG } from './features/projects/projects.configs';
 import { RESOURCES_CONFIG } from './features/resources/resources.configs';
 import { USERS_CONFIG } from './features/users/users.configs';
@@ -85,6 +86,22 @@ export const routes: Routes = [
         title: 'Codici progetto · Governo IT',
         loadComponent: () =>
           import('./features/master-data/project-codes-page').then((m) => m.ProjectCodesPage),
+      },
+      {
+        path: 'management',
+        title: 'Direzione · Governo IT',
+        canActivate: [roleGuard],
+        data: { roles: MANAGEMENT_READ_ROLES },
+        loadComponent: () =>
+          import('./features/management/management-page').then((m) => m.ManagementPage),
+      },
+      {
+        path: 'management/meetings/:id',
+        title: 'Riunione · Governo IT',
+        canActivate: [roleGuard],
+        data: { roles: MANAGEMENT_READ_ROLES },
+        loadComponent: () =>
+          import('./features/management/meeting-detail-page').then((m) => m.MeetingDetailPage),
       },
       {
         ...crudRoute('users', USERS_CONFIG),

@@ -1,0 +1,38 @@
+// Mobile first: pulsanti e inserimento veloce vanno a capo; da tablet stanno su una riga.
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-end: 1rem;
+}
+
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-block-end: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 0.75rem;
+  background: var(--mat-sys-surface-container-low);
+
+  &__field {
+    flex: 1 1 100%;
+  }
+
+  &__types {
+    flex-wrap: wrap;
+  }
+}
+
+.tab-intro {
+  margin: 1rem 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@media (min-width: 1024px) {
+  .quick__field {
+    flex: 1 1 20rem;
+  }
+}

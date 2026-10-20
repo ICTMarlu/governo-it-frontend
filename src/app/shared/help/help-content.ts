@@ -364,3 +364,84 @@ export const USERS_HELP: HelpContent = {
     },
   ],
 };
+
+export const MANAGEMENT_HELP: HelpContent = {
+  title: 'Direzione',
+  intro:
+    'La lista viva di quello che devi portare alla direzione: la riempi quando ti viene in mente e la usi durante l’incontro.',
+  sections: [
+    {
+      title: 'Inserimento veloce',
+      items: [
+        'Scrivi il titolo nel campo "Nuovo punto", scegli il tipo (Argomento, Task, Roadblock, Decisione richiesta) e premi Invio.',
+        'Il punto nasce "Da discutere". Owner, priorità, progetto, note e decisione li aggiungi dopo con la matita, solo se servono.',
+      ],
+    },
+    {
+      title: 'Stati del punto',
+      items: [
+        'Da discutere: entra nella prossima agenda.',
+        'Posticipato: torna in agenda dalla data "Riproponi dal".',
+        'Discusso, in corso: se n’è parlato e ci sono azioni da seguire; torna in agenda come aggiornamento.',
+        'Chiuso: risolto o deciso. Annullato: non serve più.',
+        '"Rinvii" conta le volte in cui il punto è stato posticipato o non discusso: da 2 rinvii in su viene evidenziato, perché va deciso, riassegnato o annullato.',
+        'Si può eliminare solo un punto mai portato in riunione e senza azioni; altrimenti si annulla, così lo storico resta.',
+      ],
+    },
+    {
+      title: 'Azioni',
+      items: [
+        'Chi fa cosa entro quando, collegate a un punto. Le aggiungi in riunione o dalla scheda Azioni.',
+        'Quando l’ultima azione aperta di un punto "Discusso, in corso" è fatta, il punto si chiude da solo.',
+        'Le azioni scadute sono segnalate "in ritardo".',
+      ],
+    },
+    {
+      title: 'Prima e durante l’incontro',
+      items: [
+        '"Agenda" mostra cosa porterai oggi: prima gli aggiornamenti sulle azioni, poi i punti da discutere per priorità. Copiala in una mail o stampala.',
+        '"Inizia riunione" crea la riunione con l’agenda già pronta e la apre in modalità riunione.',
+      ],
+    },
+    LIST_SECTION,
+    {
+      title: 'Chi può modificare',
+      items: [
+        'Admin e Project Manager gestiscono punti, azioni e riunioni; il ruolo Viewer (direzione) li consulta in sola lettura.',
+        'Gli altri ruoli non vedono questa pagina.',
+      ],
+    },
+  ],
+};
+
+export const MEETING_HELP: HelpContent = {
+  title: 'Riunione',
+  intro: 'Modalità riunione: per ogni punto un clic sull’esito. Tutto si salva subito.',
+  sections: [
+    {
+      title: 'Esito di un punto',
+      items: [
+        'Discusso: il punto passa a "Discusso, in corso" e torna nella prossima agenda come aggiornamento finché ha azioni aperte o finché non lo chiudi.',
+        'Posticipa: scegli "Alla prossima riunione" oppure una data da cui riproporlo.',
+        'Non discusso: non c’è stato tempo, resta da discutere e il contatore dei rinvii sale.',
+        'Chiudi: il punto si chiude con la data della riunione; se non ha una decisione prende le note della discussione.',
+        '"Annulla esito" toglie la scelta fatta per errore.',
+      ],
+    },
+    {
+      title: 'Note, decisioni e azioni',
+      items: [
+        'Le note della discussione e la decisione si salvano quando esci dal campo.',
+        '"Aggiungi azione": cosa fare, chi ed entro quando; spunta l’azione quando è fatta.',
+      ],
+    },
+    {
+      title: 'Agenda e chiusura',
+      items: [
+        'L’agenda si compone da sola alla creazione; puoi aggiungere altri punti aperti, toglierli (finché non hanno un esito) e cambiarne l’ordine con le frecce.',
+        '"Chiudi riunione" segna come non discussi i punti rimasti, che restano nella prossima agenda. Puoi riaprirla per correggere.',
+        '"Riepilogo" prepara il testo con decisioni, discussi, posticipati, non discussi e azioni, da copiare in una mail o stampare in PDF.',
+      ],
+    },
+  ],
+};

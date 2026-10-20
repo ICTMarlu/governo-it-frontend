@@ -1,0 +1,300 @@
+<article
+  class="item"
+  [class.item--done]="item().result !== null"
+  [attr.aria-labelledby]="'topic-' + topic().id"
+>
+  <header class="head">
+    <span class="head__number" aria-hidden="true">{{ position() }}</span>
+    <span class="badge" [style.--badge-color]="typeColors[topic().topicType]">
+      {{ topic().topicTypeLabel }}
+    </span>
+    <h3 class="head__title" [id]="'topic-' + topic().id">{{ topic().title }}</h3>
+    @if (canWrite()) {
+      <div class="head__tools">
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Sposta su"
+          [attr.aria-label]="'Sposta su ' + topic().title"
+          [disabled]="first() || busy()"
+          (click)="moved.emit(-1)"
+        >
+          <mat-icon aria-hidden="true">arrow_upward</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Sposta giù"
+          [attr.aria-label]="'Sposta giù ' + topic().title"
+          [disabled]="last() || busy()"
+          (click)="moved.emit(1)"
+        >
+          <mat-icon aria-hidden="true">arrow_downward</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Togli dall'agenda (il punto resta nella lista)"
+          [attr.aria-label]="'Togli dall\'agenda ' + topic().title"
+          [disabled]="item().result !== null || busy()"
+          (click)="removed.emit()"
+        >
+          <mat-icon aria-hidden="true">remove_circle_outline</mat-icon>
+        </button>
+      </div>
+    }
+  </header>
+
+  <p class="meta">
+    <span>{{ topic().statusLabel }}</span>
+    @if (topic().priorityLevel) {
+      <span>Priorità {{ topic().priorityLevel }}</span>
+    }
+    <span>Owner: {{ topic().ownerName ?? '—' }}</span>
+    @if (topic().projectCode) {
+      <span>Progetto {{ topic().projectCode }}</span>
+    }
+    @if (topic().deferralCount > 0) {
+      <span [class.warn]="warnDeferrals()">
+        Rinviato {{ topic().deferralCount }} {{ topic().deferralCount === 1 ? 'volta' : 'volte' }}
+        @if (warnDeferrals()) {
+          · decidere, riassegnare o annullare
+        }
+      </span>
+    }
+  </p>
+
+  @if (topic().notes) {
+    <p class="notes">{{ topic().notes }}</p>
+  }
+
+  @if (pastMeetings().length > 0) {
+    <details class="history">
+      <summary>Riunioni precedenti ({{ pastMeetings().length }})</summary>
+      <ul>
+        @for (past of pastMeetings(); track past.meetingId) {
+          <li>
+            <strong>{{ formatDate(past.meetingDate) }}</strong>
+            · {{ past.resultLabel ?? 'non trattato' }}
+            @if (past.note) {
+              : {{ past.note }}
+            }
+          </li>
+        }
+      </ul>
+    </details>
+  }
+
+  <!-- Azioni del punto -->
+  <section class="actions" [attr.aria-label]="'Azioni di ' + topic().title">
+    @for (action of topic().actions; track action.id) {
+      <div class="action" [class.action--late]="action.overdue">
+        @if (canWrite()) {
+          <mat-checkbox
+            [checked]="action.done"
+            [disabled]="busy()"
+            (change)="actionToggled.emit({ action, done: $event.checked })"
+          >
+            <span [class.action__done]="action.done">{{ action.description }}</span>
+          </mat-checkbox>
+        } @else {
+          <span [class.action__done]="action.done"
+            >{{ action.done ? '✓ ' : '' }}{{ action.description }}</span
+          >
+        }
+        <span class="action__meta">
+          {{ action.ownerName ?? 'senza owner' }}
+          @if (action.dueDate) {
+            · entro {{ formatDate(action.dueDate) }}
+          }
+          @if (action.overdue) {
+            · in ritardo
+          }
+        </span>
+      </div>
+    }
+    @if (canWrite()) {
+      @if (addingAction()) {
+        <form class="new-action" (ngSubmit)="addAction()">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="new-action__text">
+            <mat-label>Cosa fare</mat-label>
+            <input
+              matInput
+              name="actionText"
+              maxlength="500"
+              required
+              [ngModel]="actionText()"
+              (ngModelChange)="actionText.set($event)"
+            />
+          </mat-form-field>
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Chi</mat-label>
+            <mat-select
+              name="actionOwner"
+              [ngModel]="actionOwner()"
+              (ngModelChange)="actionOwner.set($event)"
+            >
+              <mat-option [value]="null">—</mat-option>
+              @for (person of people(); track person.value) {
+                <mat-option [value]="person.value">{{ person.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Entro</mat-label>
+            <input
+              matInput
+              name="actionDue"
+              placeholder="gg/mm/aaaa"
+              autocomplete="off"
+              [matDatepicker]="duePicker"
+              [ngModel]="actionDue()"
+              (ngModelChange)="actionDue.set($event)"
+            />
+            <mat-datepicker-toggle
+              matIconSuffix
+              [for]="duePicker"
+              aria-label="Apri il calendario"
+            />
+            <mat-datepicker #duePicker />
+          </mat-form-field>
+          <div class="new-action__buttons">
+            <button mat-button type="button" (click)="addingAction.set(false)">Annulla</button>
+            <button mat-stroked-button type="submit" [disabled]="!actionText().trim() || busy()">
+              Aggiungi azione
+            </button>
+          </div>
+        </form>
+      } @else {
+        <button mat-button type="button" class="add-action" (click)="addingAction.set(true)">
+          <mat-icon aria-hidden="true">add_task</mat-icon>
+          Aggiungi azione
+        </button>
+      }
+    }
+  </section>
+
+  @if (canWrite()) {
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="note">
+      <mat-label>Note della discussione</mat-label>
+      <textarea
+        matInput
+        rows="2"
+        maxlength="2000"
+        [ngModel]="note()"
+        (ngModelChange)="note.set($event)"
+        (blur)="saveNote()"
+      ></textarea>
+    </mat-form-field>
+
+    @if (item().result === 'CLOSED' || topic().topicType === 'DECISION') {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="note">
+        <mat-label>Decisione</mat-label>
+        <textarea
+          matInput
+          rows="2"
+          [ngModel]="decision()"
+          (ngModelChange)="decision.set($event)"
+          (blur)="saveDecision()"
+        ></textarea>
+      </mat-form-field>
+    }
+
+    <div class="results" role="group" [attr.aria-label]="'Esito di ' + topic().title">
+      @for (option of results; track option.value) {
+        @if (item().result === option.value) {
+          <button
+            mat-flat-button
+            type="button"
+            class="results__button"
+            [disabled]="busy()"
+            (click)="choose(option.value)"
+          >
+            <mat-icon aria-hidden="true">{{ option.icon }}</mat-icon>
+            {{ option.label }}
+          </button>
+        } @else {
+          <button
+            mat-stroked-button
+            type="button"
+            class="results__button"
+            [disabled]="busy()"
+            (click)="choose(option.value)"
+          >
+            <mat-icon aria-hidden="true">{{ option.icon }}</mat-icon>
+            {{ option.label }}
+          </button>
+        }
+      }
+      @if (item().result) {
+        <button mat-button type="button" [disabled]="busy()" (click)="resetResult()">
+          Annulla esito
+        </button>
+      }
+    </div>
+
+    @if (item().result === 'POSTPONED' && !postponing()) {
+      <p class="postponed" role="status">
+        Posticipato
+        {{
+          item().postponedUntil
+            ? 'dal ' + formatDate(item().postponedUntil)
+            : 'alla prossima riunione'
+        }}
+      </p>
+    }
+
+    @if (postponing()) {
+      <div class="postpone" role="group" aria-label="Quando riproporre il punto">
+        <mat-radio-group
+          class="postpone__choice"
+          [ngModel]="postponeMode()"
+          (ngModelChange)="postponeMode.set($event)"
+        >
+          <mat-radio-button value="next">Alla prossima riunione</mat-radio-button>
+          <mat-radio-button value="date">Da una data</mat-radio-button>
+        </mat-radio-group>
+        @if (postponeMode() === 'date') {
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Riproponi dal</mat-label>
+            <input
+              matInput
+              placeholder="gg/mm/aaaa"
+              autocomplete="off"
+              [matDatepicker]="postponePicker"
+              [ngModel]="postponeDate()"
+              (ngModelChange)="postponeDate.set($event)"
+            />
+            <mat-datepicker-toggle
+              matIconSuffix
+              [for]="postponePicker"
+              aria-label="Apri il calendario"
+            />
+            <mat-datepicker #postponePicker />
+          </mat-form-field>
+        }
+        <div class="postpone__buttons">
+          <button mat-button type="button" (click)="postponing.set(false)">Annulla</button>
+          <button
+            mat-flat-button
+            type="button"
+            [disabled]="busy() || (postponeMode() === 'date' && !postponeDate())"
+            (click)="confirmPostpone()"
+          >
+            Posticipa
+          </button>
+        </div>
+      </div>
+    }
+  } @else {
+    <p class="readonly">
+      <strong>Esito:</strong> {{ item().resultLabel ?? 'non ancora trattato' }}
+      @if (item().note) {
+        — {{ item().note }}
+      }
+    </p>
+    @if (topic().decision) {
+      <p class="readonly"><strong>Decisione:</strong> {{ topic().decision }}</p>
+    }
+  }
+</article>

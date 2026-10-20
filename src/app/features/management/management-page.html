@@ -1,0 +1,72 @@
+<gov-page-header
+  title="Direzione"
+  subtitle="La lista viva di quello che devi portare alla direzione: segna, discuti, posticipa, chiudi."
+  [help]="help"
+/>
+
+<div class="toolbar">
+  @if (canWrite()) {
+    <button mat-flat-button type="button" (click)="startMeeting()">
+      <mat-icon aria-hidden="true">play_arrow</mat-icon>
+      Inizia riunione
+    </button>
+  }
+  <button mat-stroked-button type="button" (click)="showAgenda()">
+    <mat-icon aria-hidden="true">list_alt</mat-icon>
+    Agenda
+  </button>
+</div>
+
+@if (canWrite()) {
+  <form class="quick" (ngSubmit)="quickAdd()" aria-label="Aggiungi un punto">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="quick__field">
+      <mat-label>Nuovo punto</mat-label>
+      <input
+        matInput
+        name="quickTitle"
+        maxlength="200"
+        autocomplete="off"
+        placeholder="Scrivi e premi Invio"
+        [ngModel]="quickTitle()"
+        (ngModelChange)="quickTitle.set($event)"
+      />
+      <mat-icon matIconPrefix aria-hidden="true">add</mat-icon>
+    </mat-form-field>
+    <mat-button-toggle-group
+      class="quick__types"
+      name="quickType"
+      aria-label="Tipo del nuovo punto"
+      hideSingleSelectionIndicator
+      [ngModel]="quickType()"
+      (ngModelChange)="quickType.set($event)"
+    >
+      @for (option of typeOptions; track option.value) {
+        <mat-button-toggle [value]="option.value">{{ option.label }}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+    <button mat-stroked-button type="submit" [disabled]="adding() || !quickTitle().trim()">
+      Aggiungi
+    </button>
+  </form>
+}
+
+<mat-tab-group mat-stretch-tabs="false" dynamicHeight>
+  <mat-tab label="Punti">
+    <p class="tab-intro">
+      Restano qui finché non li chiudi o annulli. Apri la matita per aggiungere owner, priorità,
+      progetto, note o per posticiparli a una data.
+    </p>
+    <gov-crud-section [config]="topics" [refresh]="topicsRefresh()" />
+  </mat-tab>
+  <mat-tab label="Azioni">
+    <p class="tab-intro">
+      Chi fa cosa entro quando. Quando l’ultima azione di un punto discusso è fatta, il punto si
+      chiude.
+    </p>
+    <gov-crud-section [config]="actions" />
+  </mat-tab>
+  <mat-tab label="Riunioni">
+    <p class="tab-intro">Apri una riunione per marcare i punti o per il riepilogo.</p>
+    <gov-crud-section [config]="meetings" />
+  </mat-tab>
+</mat-tab-group>

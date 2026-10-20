@@ -1,0 +1,100 @@
+// Mobile first: barra e controlli vanno a capo; i dati della riunione su due colonne da tablet.
+.state {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  &--error {
+    color: var(--mat-sys-error);
+  }
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+
+  &__count {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__spacer {
+    flex: 1 1 auto;
+  }
+}
+
+.status {
+  padding: 0.125rem 0.75rem;
+  border-radius: 1rem;
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+  font: var(--mat-sys-label-large);
+
+  &--closed {
+    background: var(--mat-sys-surface-container-high);
+    color: var(--mat-sys-on-surface);
+  }
+}
+
+.progress {
+  margin: 0.75rem 0 1rem;
+}
+
+.card {
+  margin-block-end: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 0.75rem;
+
+  &__summary {
+    cursor: pointer;
+    font: var(--mat-sys-title-small);
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 1rem;
+  margin-block-start: 1rem;
+
+  .full {
+    grid-column: 1 / -1;
+  }
+}
+
+.add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-block-end: 1rem;
+
+  &__field {
+    flex: 1 1 18rem;
+  }
+}
+
+.notes {
+  white-space: pre-line;
+}
+
+.agenda {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.empty {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@media (min-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
