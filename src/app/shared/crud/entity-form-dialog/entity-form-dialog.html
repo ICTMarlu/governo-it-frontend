@@ -48,6 +48,33 @@
               }
             </mat-form-field>
           }
+          @case ('date') {
+            <mat-form-field appearance="outline" [class.full]="field.fullWidth">
+              <mat-label>{{ field.label }}</mat-label>
+              <input
+                matInput
+                [matDatepicker]="picker"
+                [formControlName]="field.key"
+                [required]="isRequired(field)"
+                placeholder="gg/mm/aaaa"
+                autocomplete="off"
+              />
+              <mat-datepicker-toggle
+                matIconSuffix
+                [for]="picker"
+                [aria-label]="'Apri il calendario di ' + field.label"
+              />
+              <mat-datepicker #picker />
+              @if (field.hint) {
+                <mat-hint>{{ field.hint }}</mat-hint>
+              }
+              @if (control(field.key).hasError('matDatepickerParse')) {
+                <mat-error>Data non valida: usa gg/mm/aaaa</mat-error>
+              } @else if (control(field.key).hasError('required')) {
+                <mat-error>Campo obbligatorio</mat-error>
+              }
+            </mat-form-field>
+          }
           @case ('textarea') {
             <mat-form-field appearance="outline" class="full">
               <mat-label>{{ field.label }}</mat-label>

@@ -13,6 +13,7 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { provideItalianDates } from './shared/dates/italian-date-adapter';
 
 registerLocaleData(localeIt);
 
@@ -22,6 +23,8 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     { provide: LOCALE_ID, useValue: 'it-IT' },
+    // Calendario dei campi data: gg/mm/aaaa, settimana da lunedì
+    provideItalianDates(),
     // Icone Material Symbols (font caricato in index.html)
     provideAppInitializer(() => {
       inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-outlined');

@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -17,6 +18,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Observable, finalize, of } from 'rxjs';
 
+import { fromIsoDate, toIsoDate } from '../../dates/italian-date-adapter';
 import { CrudApiService, errorMessage } from '../crud-api.service';
 import { EntityConfig, EntityRow, FieldConfig, SelectOption } from '../crud.model';
 
@@ -40,6 +42,7 @@ export interface EntityFormDialogData {
     MatInputModule,
     MatSelectModule,
     MatCheckboxModule,
+    MatDatepickerModule,
     MatButtonModule,
     MatProgressSpinnerModule,
   ],
@@ -94,7 +97,7 @@ export class EntityFormDialog {
   }
 
   protected inputType(field: FieldConfig): string {
-    if (field.type === 'number' || field.type === 'date' || field.type === 'password') {
+    if (field.type === 'number' || field.type === 'password') {
       return field.type;
     }
     return 'text';
@@ -161,6 +164,9 @@ export class EntityFormDialog {
     if (field.type === 'checkbox') {
       return value === true;
     }
+    if (field.type === 'date') {
+      return fromIsoDate(value);
+    }
     return value ?? null;
   }
 
@@ -206,7 +212,9 @@ export class EntityFormDialog {
     for (const field of this.config.fields) {
       const visible = !field.visibleWhen || field.visibleWhen(value);
       let fieldValue = visible ? value[field.key] : null;
-      if (typeof fieldValue === 'string') {
+      if (fieldValue instanceof Date) {
+        fieldValue = toIsoDate(fieldValue);
+      } else if (typeof fieldValue === 'string') {
         fieldValue = fieldValue.trim() === '' ? null : fieldValue.trim();
       }
       if (field.attribute) {
