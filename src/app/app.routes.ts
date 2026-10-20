@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { authGuard } from './core/auth/auth.guard';
+import { roleGuard } from './core/auth/role.guard';
 import {
   HOLIDAY_CALENDARS_CONFIG,
   LEGAL_ENTITIES_CONFIG,
@@ -11,7 +12,8 @@ import {
 } from './features/master-data/master-data.configs';
 import { PROJECTS_CONFIG } from './features/projects/projects.configs';
 import { RESOURCES_CONFIG } from './features/resources/resources.configs';
-import { EntityConfig } from './shared/crud/crud.model';
+import { USERS_CONFIG } from './features/users/users.configs';
+import { EntityConfig, ROLES } from './shared/crud/crud.model';
 
 const crudPage = () => import('./shared/crud/crud-page/crud-page').then((m) => m.CrudPage);
 
@@ -68,6 +70,11 @@ export const routes: Routes = [
         title: 'Codici progetto · Governo IT',
         loadComponent: () =>
           import('./features/master-data/project-codes-page').then((m) => m.ProjectCodesPage),
+      },
+      {
+        ...crudRoute('users', USERS_CONFIG),
+        canActivate: [roleGuard],
+        data: { config: USERS_CONFIG, roles: [ROLES.admin] },
       },
       ...LOOKUP_CONFIGS.map((config) => crudRoute(`master-data/lookups/${config.slug}`, config)),
     ],

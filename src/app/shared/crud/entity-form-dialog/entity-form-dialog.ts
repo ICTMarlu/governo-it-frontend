@@ -85,12 +85,19 @@ export class EntityFormDialog {
     this.syncHiddenFields();
   }
 
+  protected isRequired(field: FieldConfig): boolean {
+    return field.required === true || (field.requiredOnCreate === true && !this.isEdit);
+  }
+
   protected control(key: string): FormControl {
     return this.form.controls[key] as FormControl;
   }
 
   protected inputType(field: FieldConfig): string {
-    return field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text';
+    if (field.type === 'number' || field.type === 'date' || field.type === 'password') {
+      return field.type;
+    }
+    return 'text';
   }
 
   protected save(): void {
@@ -116,7 +123,8 @@ export class EntityFormDialog {
     const row = this.data.row;
     const initial = row ? this.initialValue(field, row) : this.defaultValue(field);
     const validators: ValidatorFn[] = [];
-    if (field.required && field.type !== 'checkbox') {
+    const required = field.required === true || (field.requiredOnCreate === true && !this.isEdit);
+    if (required && field.type !== 'checkbox') {
       // Per le scelte multiple "required" rifiuta anche l'elenco vuoto
       validators.push(Validators.required);
     }
@@ -137,6 +145,9 @@ export class EntityFormDialog {
   }
 
   private initialValue(field: FieldConfig, row: EntityRow): unknown {
+    if (field.type === 'password') {
+      return null;
+    }
     if (field.initialValue) {
       return field.initialValue(row);
     }

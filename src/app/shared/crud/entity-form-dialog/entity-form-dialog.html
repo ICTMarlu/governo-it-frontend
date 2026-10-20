@@ -16,8 +16,8 @@
           @case ('select') {
             <mat-form-field appearance="outline" [class.full]="field.fullWidth">
               <mat-label>{{ field.label }}</mat-label>
-              <mat-select [formControlName]="field.key" [required]="field.required === true">
-                @if (!field.required) {
+              <mat-select [formControlName]="field.key" [required]="isRequired(field)">
+                @if (!isRequired(field)) {
                   <mat-option [value]="null">—</mat-option>
                 }
                 @for (option of optionsByKey[field.key](); track option.value) {
@@ -35,11 +35,7 @@
           @case ('multiselect') {
             <mat-form-field appearance="outline" [class.full]="field.fullWidth">
               <mat-label>{{ field.label }}</mat-label>
-              <mat-select
-                [formControlName]="field.key"
-                multiple
-                [required]="field.required === true"
-              >
+              <mat-select [formControlName]="field.key" multiple [required]="isRequired(field)">
                 @for (option of optionsByKey[field.key](); track option.value) {
                   <mat-option [value]="option.value">{{ option.label }}</mat-option>
                 }
@@ -59,7 +55,7 @@
                 matInput
                 [formControlName]="field.key"
                 rows="3"
-                [required]="field.required === true"
+                [required]="isRequired(field)"
               ></textarea>
               @if (field.hint) {
                 <mat-hint>{{ field.hint }}</mat-hint>
@@ -76,11 +72,12 @@
                 matInput
                 [type]="inputType(field)"
                 [formControlName]="field.key"
-                [required]="field.required === true"
+                [required]="isRequired(field)"
                 [attr.step]="field.step ?? null"
                 [attr.min]="field.min ?? null"
                 [attr.max]="field.max ?? null"
                 [attr.placeholder]="field.type === 'color' ? '#RRGGBB' : null"
+                [attr.autocomplete]="field.type === 'password' ? 'new-password' : null"
               />
               @if (field.type === 'color' && control(field.key).value) {
                 <span

@@ -29,13 +29,23 @@ export interface OptionsSource {
 }
 
 export type FieldType =
-  'text' | 'textarea' | 'number' | 'date' | 'checkbox' | 'color' | 'select' | 'multiselect';
+  | 'text'
+  | 'textarea'
+  | 'number'
+  | 'date'
+  | 'checkbox'
+  | 'color'
+  | 'select'
+  | 'multiselect'
+  | 'password';
 
 export interface FieldConfig {
   readonly key: string;
   readonly label: string;
   readonly type: FieldType;
   readonly required?: boolean;
+  /** Obbligatorio solo in creazione (es. password iniziale; in modifica vuoto = invariato). */
+  readonly requiredOnCreate?: boolean;
   readonly maxLength?: number;
   readonly min?: number;
   readonly max?: number;

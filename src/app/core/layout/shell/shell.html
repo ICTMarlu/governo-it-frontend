@@ -25,6 +25,16 @@
     </span>
   }
 
+  <button
+    mat-icon-button
+    type="button"
+    aria-label="Cambia password"
+    matTooltip="Cambia password"
+    (click)="changePassword()"
+  >
+    <mat-icon aria-hidden="true">key</mat-icon>
+  </button>
+
   <button mat-icon-button type="button" aria-label="Esci" matTooltip="Esci" (click)="logout()">
     <mat-icon aria-hidden="true">logout</mat-icon>
   </button>
@@ -42,7 +52,7 @@
   >
     <nav aria-label="Navigazione principale">
       <mat-nav-list>
-        @for (item of navItems; track item.route) {
+        @for (item of navItems(); track item.route) {
           <a
             mat-list-item
             [routerLink]="item.route"
