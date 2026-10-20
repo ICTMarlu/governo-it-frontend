@@ -124,6 +124,18 @@ export class MasterDataPage {
           icon: 'location_on',
           link: '/master-data/sites',
         },
+        {
+          label: 'Calendari festività',
+          hint: 'Festività di San Marino e degli altri paesi',
+          icon: 'event',
+          link: '/master-data/holiday-calendars',
+        },
+        {
+          label: 'Codici progetto',
+          hint: 'Contatore unico e prossimo codice per sistema',
+          icon: 'tag',
+          link: '/master-data/project-codes',
+        },
       ],
     },
     {

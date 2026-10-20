@@ -88,6 +88,8 @@ export interface EntityConfig {
   readonly quickFilters?: readonly { readonly key: string; readonly label: string }[];
   /** Ruoli che possono creare e modificare; vuoto = tutti. */
   readonly writeRoles?: readonly string[];
+  /** Sola lettura per tutti (nessuna creazione o modifica). */
+  readonly readOnly?: boolean;
   readonly canCreate?: boolean;
   readonly canDelete?: boolean;
   /** Link di dettaglio della riga (es. ['/resources', id]). */

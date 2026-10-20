@@ -55,7 +55,7 @@
           </span>
         </div>
         <dl class="card__details">
-          @for (column of detailColumns(); track column.key) {
+          @for (column of detailColumns(); track $index) {
             <div>
               <dt>{{ column.label }}</dt>
               <dd>
@@ -80,7 +80,7 @@
       </caption>
       <thead>
         <tr>
-          @for (column of columns(); track column.key) {
+          @for (column of columns(); track $index) {
             <th scope="col">{{ column.label }}</th>
           }
           @if (hasActions()) {
@@ -91,7 +91,7 @@
       <tbody>
         @for (row of rows(); track row.id) {
           <tr [class.inactive]="row['active'] === false">
-            @for (column of columns(); track column.key) {
+            @for (column of columns(); track $index) {
               <td>
                 @if (column === primaryColumn()) {
                   <ng-container *ngTemplateOutlet="title; context: { $implicit: row }" />

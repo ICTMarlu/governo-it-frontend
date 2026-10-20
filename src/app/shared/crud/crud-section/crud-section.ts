@@ -63,6 +63,9 @@ export class CrudSection {
   protected readonly filters = signal<Record<string, string>>({});
 
   protected readonly canWrite = computed(() => {
+    if (this.config().readOnly) {
+      return false;
+    }
     const roles = this.config().writeRoles ?? [];
     const role = this.currentUser()?.role;
     return roles.length === 0 || (role !== undefined && roles.includes(role));

@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { authGuard } from './core/auth/auth.guard';
 import {
+  HOLIDAY_CALENDARS_CONFIG,
   LEGAL_ENTITIES_CONFIG,
   LOOKUP_CONFIGS,
   REQUESTERS_CONFIG,
@@ -55,6 +56,19 @@ export const routes: Routes = [
       crudRoute('master-data/legal-entities', LEGAL_ENTITIES_CONFIG),
       crudRoute('master-data/vendors', VENDORS_CONFIG),
       crudRoute('master-data/sites', SITES_CONFIG),
+      crudRoute('master-data/holiday-calendars', HOLIDAY_CALENDARS_CONFIG),
+      {
+        path: 'master-data/holiday-calendars/:id',
+        title: 'Festività · Governo IT',
+        loadComponent: () =>
+          import('./features/master-data/holiday-calendar-page').then((m) => m.HolidayCalendarPage),
+      },
+      {
+        path: 'master-data/project-codes',
+        title: 'Codici progetto · Governo IT',
+        loadComponent: () =>
+          import('./features/master-data/project-codes-page').then((m) => m.ProjectCodesPage),
+      },
       ...LOOKUP_CONFIGS.map((config) => crudRoute(`master-data/lookups/${config.slug}`, config)),
     ],
   },

@@ -1,0 +1,93 @@
+// Mobile first: tutto su una colonna; i sistemi diventano griglia da tablet in su.
+section {
+  margin-block-end: 2rem;
+}
+
+.section-title {
+  margin: 0 0 0.75rem;
+  font: var(--mat-sys-title-large);
+}
+
+.hint {
+  margin: 0 0 1rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  margin: 0 0 1rem;
+
+  dt {
+    font: var(--mat-sys-label-medium);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 0;
+    font: var(--mat-sys-headline-medium);
+  }
+}
+
+.edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.systems {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.system {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 0.75rem;
+
+  &__code {
+    font-family: monospace;
+    font-weight: 600;
+  }
+
+  &--missing &__code {
+    font-family: inherit;
+    font-weight: 400;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.result {
+  margin-block-start: 1rem;
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@media (min-width: 600px) {
+  .systems {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .systems {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

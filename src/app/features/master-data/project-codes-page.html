@@ -1,0 +1,83 @@
+<gov-page-header
+  title="Codici progetto"
+  subtitle="ICT + anno + codice breve del sistema + numero. Il numero è unico per tutti i sistemi e riparte ogni anno."
+/>
+
+@if (counter(); as data) {
+  <section class="counter" aria-labelledby="counter-title">
+    <h2 id="counter-title" class="section-title">Contatore {{ data.year }}</h2>
+    <dl class="figures">
+      <div>
+        <dt>Ultimo numero usato</dt>
+        <dd>{{ data.lastValue }}</dd>
+      </div>
+      <div>
+        <dt>Prossimo numero</dt>
+        <dd>{{ data.nextValue }}</dd>
+      </div>
+    </dl>
+
+    @if (isAdmin()) {
+      <form class="edit" (ngSubmit)="saveCounter()">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Ultimo numero usato</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0"
+            max="999"
+            name="lastValue"
+            [ngModel]="editValue()"
+            (ngModelChange)="editValue.set($event)"
+          />
+          <mat-hint>Per allinearsi a codici già in uso</mat-hint>
+        </mat-form-field>
+        <button mat-stroked-button type="submit" [disabled]="busy()">Aggiorna contatore</button>
+      </form>
+    }
+  </section>
+
+  <section aria-labelledby="systems-title">
+    <h2 id="systems-title" class="section-title">Prossimo codice per sistema</h2>
+    <p class="hint">
+      I sistemi senza codice breve non possono ricevere codici: impostalo in
+      <a routerLink="/master-data/lookups/main-systems">Sistemi</a>.
+    </p>
+    <ul class="systems">
+      @for (system of data.systems; track system.mainSystemId) {
+        <li class="system" [class.system--missing]="!system.shortCode">
+          <span class="system__name">{{ system.mainSystemLabel }}</span>
+          <span class="system__code">{{ system.nextCode ?? 'codice breve mancante' }}</span>
+        </li>
+      }
+    </ul>
+  </section>
+
+  @if (isAdmin()) {
+    <section class="generate" aria-labelledby="generate-title">
+      <h2 id="generate-title" class="section-title">Progetti senza codice</h2>
+      <p class="hint">
+        Assegna il codice a tutti i progetti che ne sono privi, nell'ordine del numero storico
+        dell'Excel. I progetti dei sistemi senza codice breve restano senza codice.
+      </p>
+      <button mat-flat-button type="button" [disabled]="busy()" (click)="generateMissing()">
+        <mat-icon aria-hidden="true">auto_fix_high</mat-icon>
+        Assegna codici mancanti
+      </button>
+      @if (result(); as outcome) {
+        <p class="result" role="status">
+          Codici assegnati: {{ outcome.assigned }}. Rimasti senza codice:
+          {{ outcome.withoutShortCode }}
+          @if (outcome.systemsWithoutShortCode.length > 0) {
+            (sistemi senza codice breve: {{ outcome.systemsWithoutShortCode.join(', ') }})
+          }
+        </p>
+      }
+    </section>
+  }
+} @else {
+  <div class="loading" role="status">
+    <mat-progress-spinner diameter="32" mode="indeterminate" aria-hidden="true" />
+    <span>Caricamento…</span>
+  </div>
+}

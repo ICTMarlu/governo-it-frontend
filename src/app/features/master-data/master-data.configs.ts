@@ -158,10 +158,13 @@ const LOOKUP_DEFINITIONS: readonly LookupDefinition[] = [
         attribute: true,
         maxLength: 5,
         pattern: { regex: '^[A-Za-z0-9]{2,5}$', message: 'Da 2 a 5 lettere o numeri (es. ERP)' },
-        hint: 'Obbligatorio per creare progetti su questo sistema',
+        hint: 'Serve per assegnare i codici ai progetti di questo sistema',
       },
     ],
-    extraColumns: [{ key: 'attributes.shortCode', label: 'Codice breve' }],
+    extraColumns: [
+      { key: 'attributes.shortCode', label: 'Codice breve' },
+      { key: 'attributes.nextCode', label: 'Prossimo codice' },
+    ],
   },
   {
     slug: 'priority-levels',
@@ -304,21 +307,39 @@ export const SITES_CONFIG: EntityConfig = {
 export const REQUESTERS_CONFIG: EntityConfig = {
   title: 'Richiedenti',
   singular: 'Richiedente',
-  subtitle: 'Persone del business che chiedono i progetti (mai testo libero sui progetti).',
+  subtitle: 'Persone del business che chiedono i progetti, con dipartimento, azienda e ruolo.',
   endpoint: '/requesters',
   writeRoles: [ROLES.admin, ROLES.pm, ROLES.editor],
-  searchKeys: ['fullName', 'email', 'businessAreaLabel'],
-  quickFilters: [{ key: 'businessAreaLabel', label: 'Area' }],
+  searchKeys: ['fullName', 'email', 'businessAreaLabel', 'legalEntityName', 'jobTitle'],
+  quickFilters: [
+    { key: 'businessAreaLabel', label: 'Dipartimento' },
+    { key: 'legalEntityName', label: 'Azienda' },
+  ],
   fields: [
     { key: 'firstName', label: 'Nome', type: 'text', required: true, maxLength: 80 },
     { key: 'lastName', label: 'Cognome', type: 'text', required: true, maxLength: 80 },
-    { key: 'email', label: 'E-mail', type: 'text', maxLength: 200 },
     {
       key: 'businessAreaId',
-      label: 'Area aziendale',
+      label: 'Dipartimento',
       type: 'select',
       options: { endpoint: '/lookups/business-areas' },
+      hint: 'Elenco in Liste valori → Aree aziendali',
     },
+    {
+      key: 'legalEntityId',
+      label: 'Azienda',
+      type: 'select',
+      options: { endpoint: '/legal-entities', labelKey: 'name' },
+    },
+    {
+      key: 'jobTitle',
+      label: 'Ruolo',
+      type: 'text',
+      maxLength: 100,
+      hint: 'Es. Responsabile Logistica',
+    },
+    { key: 'email', label: 'E-mail', type: 'text', maxLength: 200 },
+    { key: 'phone', label: 'Telefono', type: 'text', maxLength: 30 },
     {
       key: 'resourceId',
       label: 'È anche una risorsa IT',
@@ -327,12 +348,59 @@ export const REQUESTERS_CONFIG: EntityConfig = {
       hint: 'Solo se il richiedente fa parte del team IT',
     },
     ACTIVE_FIELD,
+    { key: 'notes', label: 'Note', type: 'textarea', maxLength: 500 },
   ],
   columns: [
     { key: 'fullName', label: 'Nome', primary: true },
-    { key: 'businessAreaLabel', label: 'Area' },
+    { key: 'businessAreaLabel', label: 'Dipartimento' },
+    { key: 'legalEntityName', label: 'Azienda' },
+    { key: 'jobTitle', label: 'Ruolo' },
     { key: 'email', label: 'E-mail', hideOnMobile: true },
-    { key: 'resourceName', label: 'Risorsa IT', hideOnMobile: true },
     ACTIVE_COLUMN,
   ],
 };
+
+/** Calendari festività (D-14): ognuno si apre per modificarne le festività. */
+export const HOLIDAY_CALENDARS_CONFIG: EntityConfig = {
+  title: 'Calendari festività',
+  singular: 'Calendario',
+  subtitle:
+    'Le festività riempiono in automatico la riga "Festività" del piano e riducono la capacità delle risorse della sede.',
+  endpoint: '/holiday-calendars',
+  readOnly: true,
+  searchKeys: [],
+  rowLink: (row) => ['/master-data/holiday-calendars', row.id!],
+  fields: [],
+  columns: [
+    { key: 'name', label: 'Calendario', primary: true },
+    { key: 'code', label: 'Codice' },
+  ],
+};
+
+const WEEKDAY = new Intl.DateTimeFormat('it-IT', { weekday: 'long' });
+
+/** Festività di un calendario, modificabili dall'Admin. */
+export function holidaysConfig(calendarId: number): EntityConfig {
+  return {
+    title: 'Festività',
+    singular: 'Festività',
+    endpoint: `/holiday-calendars/${calendarId}/holidays`,
+    writeRoles: [ROLES.admin],
+    canDelete: true,
+    searchKeys: ['description'],
+    quickFilters: [{ key: 'year', label: 'Anno' }],
+    fields: [
+      { key: 'holidayDate', label: 'Data', type: 'date', required: true },
+      { key: 'description', label: 'Festività', type: 'text', required: true, maxLength: 100 },
+    ],
+    columns: [
+      { key: 'holidayDate', label: 'Data', type: 'date', primary: true },
+      {
+        key: 'holidayDate',
+        label: 'Giorno',
+        format: (value) => WEEKDAY.format(new Date(`${String(value)}T00:00:00`)),
+      },
+      { key: 'description', label: 'Festività' },
+    ],
+  };
+}

@@ -12,7 +12,7 @@ export const PROJECTS_CONFIG: EntityConfig = {
   title: 'Progetti',
   singular: 'Progetto',
   subtitle:
-    'Portafoglio IT: Project, AMS, Continuous e Admin. Il codice viene assegnato al salvataggio.',
+    'Portafoglio IT: Project, AMS, Continuous e Admin. Il codice viene assegnato al salvataggio se il sistema ha il codice breve.',
   endpoint: '/projects',
   writeRoles: [ROLES.admin, ROLES.pm, ROLES.editor],
   searchKeys: ['code', 'name', 'ownerNames', 'requesterNames', 'mainSystemLabel', 'description'],
@@ -60,7 +60,7 @@ export const PROJECTS_CONFIG: EntityConfig = {
       key: 'itPriorityId',
       label: 'Priorità IT',
       type: 'select',
-      required: true,
+      hint: 'Obbligatoria per i Project',
       options: { endpoint: '/lookups/priority-levels', labelKey: priorityLabel },
     },
     {
@@ -73,7 +73,7 @@ export const PROJECTS_CONFIG: EntityConfig = {
       key: 'ownerIds',
       label: 'Owner',
       type: 'multiselect',
-      required: true,
+      hint: 'Obbligatorio per i Project; Admin, Continuous e AMS possono non averlo',
       options: { endpoint: '/resources', labelKey: 'fullName' },
     },
     {
