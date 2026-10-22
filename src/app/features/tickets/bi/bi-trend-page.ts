@@ -3,8 +3,16 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { PeriodChart } from '../../../shared/charts/period-chart';
+import { KpiDirective } from '../components/kpi.directive';
 import { BiFilters } from './bi-filters';
-import { backlogDays, isOpen, resolvedPerDay, weekly } from './bi.model';
+import {
+  BACKLOG_WEEKS,
+  backlogDays,
+  backlogPeriod,
+  isOpen,
+  resolvedPerDay,
+  weekly,
+} from './bi.model';
 import { BiStore } from './bi-store.service';
 
 /**
@@ -13,7 +21,7 @@ import { BiStore } from './bi-store.service';
  */
 @Component({
   selector: 'gov-bi-trend-page',
-  imports: [BiFilters, MatProgressSpinnerModule, MatSlideToggleModule, PeriodChart],
+  imports: [BiFilters, KpiDirective, MatProgressSpinnerModule, MatSlideToggleModule, PeriodChart],
   template: `
     <div class="bi-page">
       <gov-bi-filters />
@@ -27,17 +35,18 @@ import { BiStore } from './bi-store.service';
       } @else {
         <div class="head">
           <ul class="bi-kpis" aria-label="Numeri di oggi">
-            <li class="bi-kpi bi-kpi--info">
+            <li *govKpi="'trend.backlogDays'" class="bi-kpi bi-kpi--info">
               <span class="bi-kpi__value">{{ backlog() ?? '—' }}</span>
               <span class="bi-kpi__label">giorni lavorativi di backlog</span>
             </li>
-            <li class="bi-kpi bi-kpi--alert">
+            <li *govKpi="'trend.workable'" class="bi-kpi bi-kpi--alert">
               <span class="bi-kpi__value">{{ workable() }}</span>
               <span class="bi-kpi__label">lavorabili oggi</span>
             </li>
             <li class="bi-kpi">
               <span class="bi-kpi__value">{{ closeRate() }}</span>
               <span class="bi-kpi__label">chiusi al giorno (media)</span>
+              <span class="period">ultime {{ weeksCount }} settimane: {{ closePeriod() }}</span>
             </li>
           </ul>
           <mat-slide-toggle
@@ -77,6 +86,16 @@ import { BiStore } from './bi-store.service';
       .bi-kpis {
         flex: 0 1 33rem;
       }
+
+      .bi-kpi {
+        justify-content: center;
+      }
+    }
+
+    .period {
+      color: var(--mat-sys-on-surface-variant);
+      font-size: 0.6875rem;
+      line-height: 1.2;
     }
 
     .note {
@@ -124,6 +143,12 @@ export class BiTrendPage {
       maximumFractionDigits: 1,
     }),
   );
+  protected readonly weeksCount = BACKLOG_WEEKS;
+  protected readonly closePeriod = computed(() => {
+    const { from, to } = backlogPeriod(new Date());
+    const fmt = (d: Date) => d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' });
+    return `${fmt(from)}–${fmt(to)}`;
+  });
   protected readonly workable = computed(
     () =>
       this.store.scoped().filter((t) => isOpen(t) && (this.store.includePending() || !t.pending))

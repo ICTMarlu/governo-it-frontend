@@ -601,6 +601,13 @@ export const TICKETS_HELP: HelpContent = {
     'I ticket del service desk Jira (progetto IT): tutto ciò che passa da ticket conta come AMS. La pagina mostra quanto pesa su ogni persona, come scorrono i ticket e cosa conviene fare adesso.',
   sections: [
     {
+      title: 'Personalizza KPI',
+      items: [
+        'Il pulsante "Personalizza KPI" accanto alle linguette nasconde i numeri, le allerte o i riquadri che non ti servono, in tutte le pagine dei ticket.',
+        'La scelta vale solo per te e segue il tuo utente su ogni PC; "Mostra tutti" li riattiva.',
+      ],
+    },
+    {
       title: 'Da dove arrivano i dati',
       items: [
         'Il backend legge Jira con il token API scritto in config/local.yml e si aggiorna da solo ogni 15 minuti (i ticket cambiati); una volta al giorno rilegge tutto. "Aggiorna ora" (Admin e PM) lo fa subito.',

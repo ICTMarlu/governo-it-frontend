@@ -74,7 +74,7 @@ export const MONTHS = [
 const PRIORITY_ORDER = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
 const DAY = 24 * 60 * 60 * 1000;
 /** Giorni di backlog (come Power BI): 3 settimane complete da 5 giorni lavorativi. */
-const BACKLOG_WEEKS = 3;
+export const BACKLOG_WEEKS = 3;
 const WORKING_DAYS = 5;
 
 export const AGING_BUCKETS: readonly { readonly label: string; readonly max: number }[] = [
@@ -281,6 +281,19 @@ export function backlogDays(
   const resolvedPerWorkingDay = resolvedPerDay(tickets, now);
   const workable = tickets.filter((t) => isOpen(t) && (includePending || !t.pending)).length;
   return resolvedPerWorkingDay > 0 ? Math.round(workable / resolvedPerWorkingDay) : null;
+}
+
+/** Periodo (da lunedì a domenica) delle ultime BACKLOG_WEEKS settimane complete prima di {@code now}. */
+export function backlogPeriod(now: Date): { from: Date; to: Date } {
+  const monday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() - ((now.getDay() + 6) % 7),
+  );
+  return {
+    from: new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() - 7 * BACKLOG_WEEKS),
+    to: new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() - 1),
+  };
 }
 
 /**

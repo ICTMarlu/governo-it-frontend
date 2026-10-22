@@ -14,6 +14,7 @@ import { errorMessage } from '../../shared/crud/crud-api.service';
 import { HelpButton } from '../../shared/help/help-button';
 import { ALERTS_HELP, PERSON_LOAD_HELP, TICKETS_HELP } from '../../shared/help/help-content';
 import { FlowChart } from './components/flow-chart/flow-chart';
+import { KpiDirective } from './components/kpi.directive';
 import {
   ALERT_KINDS,
   Advice,
@@ -26,6 +27,7 @@ import {
   TicketFilter,
   jiraSearchUrl,
 } from './models/ticket.model';
+import { KpiSettingsService } from './services/kpi-settings.service';
 import { TicketSyncService } from './services/ticket-sync.service';
 import { TicketsService } from './services/tickets.service';
 import {
@@ -96,6 +98,7 @@ type AdviceView = 'all' | 'EM' | 'PERSON';
 @Component({
   selector: 'gov-tickets-page',
   imports: [
+    KpiDirective,
     DatePipe,
     DecimalPipe,
     FlowChart,
@@ -125,6 +128,13 @@ export class TicketsPage {
   protected readonly severityIcons = SEVERITY_ICONS;
 
   protected readonly dashboard = signal<TicketDashboard | null>(null);
+  private readonly kpiSettings = inject(KpiSettingsService);
+  /** Allerte dei tipi che l'utente non ha nascosto (Personalizza KPI). */
+  protected readonly alerts = computed(() =>
+    (this.dashboard()?.alerts ?? []).filter((alert) =>
+      this.kpiSettings.visible('alert.' + alert.kind),
+    ),
+  );
   protected readonly loadError = signal<string | null>(null);
   protected readonly adviceView = signal<AdviceView>('all');
   protected readonly filter = signal<TicketFilter | null>(null);

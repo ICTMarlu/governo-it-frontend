@@ -69,14 +69,14 @@
 
   <!-- Numeri principali -->
   <ul class="kpis" aria-label="Numeri principali">
-    <li class="kpi">
+    <li *govKpi="'ops.open'" class="kpi">
       <span class="kpi__value">{{ data.kpis.open }}</span>
       <span class="kpi__label">ticket aperti</span>
       <span class="kpi__meta"
         >{{ data.kpis.toDo }} da fare · {{ data.kpis.inProgress }} in corso</span
       >
     </li>
-    <li class="kpi">
+    <li *govKpi="'ops.flow7'" class="kpi">
       <span class="kpi__value"
         >{{ data.kpis.createdLast7Days }} / {{ data.kpis.resolvedLast7Days }}</span
       >
@@ -89,7 +89,7 @@
         }
       </span>
     </li>
-    <li class="kpi" [class.kpi--alert]="data.kpis.unassigned > 0">
+    <li *govKpi="'ops.unassigned'" class="kpi" [class.kpi--alert]="data.kpis.unassigned > 0">
       <span class="kpi__value">{{ data.kpis.unassigned }}</span>
       <span class="kpi__label">senza assegnatario</span>
       @if (data.kpis.unassigned > 0) {
@@ -98,25 +98,25 @@
         </span>
       }
     </li>
-    <li class="kpi" [class.kpi--alert]="data.kpis.overdue > 0">
+    <li *govKpi="'ops.overdue'" class="kpi" [class.kpi--alert]="data.kpis.overdue > 0">
       <span class="kpi__value">{{ data.kpis.overdue }}</span>
       <span class="kpi__label">con la scadenza passata</span>
     </li>
-    <li class="kpi">
+    <li *govKpi="'ops.waiting'" class="kpi">
       <span class="kpi__value">{{ data.kpis.waitingCustomer }}</span>
       <span class="kpi__label">in attesa del cliente</span>
     </li>
-    <li class="kpi">
+    <li *govKpi="'ops.stale'" class="kpi">
       <span class="kpi__value">{{ data.kpis.stale }}</span>
       <span class="kpi__label"
         >fermi: nessun aggiornamento da oltre {{ data.kpis.staleDays }} giorni</span
       >
     </li>
-    <li class="kpi">
+    <li *govKpi="'ops.age'" class="kpi">
       <span class="kpi__value">{{ data.kpis.averageAgeDays | number: '1.0-1' }} gg</span>
       <span class="kpi__label">età media degli aperti</span>
     </li>
-    <li class="kpi">
+    <li *govKpi="'ops.withProject'" class="kpi">
       <span class="kpi__value">{{ ratio(data.kpis.withProject, data.kpis.open) }}%</span>
       <span class="kpi__label">aperti con codice progetto</span>
     </li>
@@ -126,16 +126,16 @@
   <section class="alerts" aria-labelledby="alerts-title">
     <h2 id="alerts-title" class="card__title">
       Allerte
-      @if (data.alerts.length > 0) {
-        <span class="muted">· {{ data.alerts.length }}</span>
+      @if (alerts().length > 0) {
+        <span class="muted">· {{ alerts().length }}</span>
       }
       <gov-help-button [help]="alertHelp" [compact]="true" label="Come si calcolano le allerte" />
     </h2>
-    @if (data.alerts.length === 0) {
+    @if (alerts().length === 0) {
       <p class="state">Nessuna allerta: per ora non c'è niente da anticipare.</p>
     } @else {
       <ul class="alerts__list">
-        @for (alert of data.alerts; track $index) {
+        @for (alert of alerts(); track $index) {
           <li class="alert" [class]="'alert alert--' + alert.severity">
             <mat-icon class="alert__icon" aria-hidden="true">{{
               alertKinds[alert.kind].icon
@@ -167,7 +167,7 @@
 
   <div class="columns">
     <!-- Azioni consigliate -->
-    <section class="card" aria-labelledby="advice-title">
+    <section *govKpi="'ops.advice'" class="card" aria-labelledby="advice-title">
       <div class="card__head">
         <h2 id="advice-title" class="card__title">Azioni consigliate</h2>
         <mat-button-toggle-group
@@ -214,13 +214,13 @@
     </section>
 
     <!-- Flussi settimanali -->
-    <section class="card" aria-label="Flussi settimanali">
+    <section *govKpi="'ops.flows'" class="card" aria-label="Flussi settimanali">
       <gov-flow-chart [weeks]="data.weeks" />
     </section>
   </div>
 
   <!-- Carico per persona -->
-  <section class="card" aria-labelledby="people-title">
+  <section *govKpi="'ops.people'" class="card" aria-labelledby="people-title">
     <h2 id="people-title" class="card__title">
       Carico per persona
       <gov-help-button
@@ -313,7 +313,7 @@
   </section>
 
   <div class="columns">
-    <section class="card" aria-labelledby="areas-title">
+    <section *govKpi="'ops.areas'" class="card" aria-labelledby="areas-title">
       <h2 id="areas-title" class="card__title">Per area (campo "Progetto Marlù")</h2>
       <table class="table">
         <thead>
@@ -343,7 +343,7 @@
       </table>
     </section>
 
-    <section class="card" aria-labelledby="projects-title">
+    <section *govKpi="'ops.projects'" class="card" aria-labelledby="projects-title">
       <h2 id="projects-title" class="card__title">Per progetto (etichetta col codice)</h2>
       @if (data.projects.length === 0) {
         <p class="muted">

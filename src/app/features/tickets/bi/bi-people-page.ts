@@ -6,6 +6,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { PeriodChart } from '../../../shared/charts/period-chart';
 import { HelpButton } from '../../../shared/help/help-button';
 import { PEOPLE_TREND_HELP } from '../../../shared/help/help-content';
+import { KpiDirective } from '../components/kpi.directive';
 import { BiFilters } from './bi-filters';
 import { PERSON_TREND_WEEKS, PersonTrend, assigneeOf, personTrends, weekly } from './bi.model';
 import { BiStore } from './bi-store.service';
@@ -30,6 +31,7 @@ const DIRECTIONS: Readonly<
   imports: [
     BiFilters,
     HelpButton,
+    KpiDirective,
     MatIconModule,
     MatProgressSpinnerModule,
     MatSlideToggleModule,
@@ -65,7 +67,7 @@ const DIRECTIONS: Readonly<
           />
         </div>
 
-        <section class="bi-card" aria-labelledby="people-title">
+        <section *govKpi="'people.table'" class="bi-card" aria-labelledby="people-title">
           <h2 id="people-title" class="title">Backlog per persona</h2>
           @if (trends().length === 0) {
             <p class="bi-state">Nessun ticket per i filtri scelti.</p>
@@ -116,7 +118,7 @@ const DIRECTIONS: Readonly<
         </section>
 
         @if (selected(); as name) {
-          <section class="bi-card">
+          <section *govKpi="'people.chart'" class="bi-card">
             <gov-period-chart
               [barsTitle]="name + ': entrati e chiusi per settimana'"
               [lineTitle]="

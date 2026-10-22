@@ -3,6 +3,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { HBarChart } from '../../../shared/charts/hbar-chart';
 import { PeriodChart } from '../../../shared/charts/period-chart';
+import { KpiDirective } from '../components/kpi.directive';
 import { BiFilters } from './bi-filters';
 import { areaOf, assigneeOf, countBy, monthly, overview } from './bi.model';
 import { BiStore } from './bi-store.service';
@@ -14,7 +15,7 @@ import { BiStore } from './bi-store.service';
  */
 @Component({
   selector: 'gov-bi-overview-page',
-  imports: [BiFilters, HBarChart, MatProgressSpinnerModule, PeriodChart],
+  imports: [BiFilters, HBarChart, KpiDirective, MatProgressSpinnerModule, PeriodChart],
   template: `
     <div class="bi-page">
       <gov-bi-filters />
@@ -28,26 +29,26 @@ import { BiStore } from './bi-store.service';
       } @else {
         @let n = numbers();
         <ul class="bi-kpis" aria-label="Numeri del periodo">
-          <li class="bi-kpi bi-kpi--info">
+          <li *govKpi="'bi.created'" class="bi-kpi bi-kpi--info">
             <span class="bi-kpi__value">{{ n.created }}</span
             ><span class="bi-kpi__label">ticket creati</span>
           </li>
-          <li class="bi-kpi bi-kpi--alert">
+          <li *govKpi="'bi.open'" class="bi-kpi bi-kpi--alert">
             <span class="bi-kpi__value">{{ n.open }}</span
             ><span class="bi-kpi__label">aperti</span>
             <span class="bi-kpi__meta">{{ n.openPct }}%</span>
           </li>
-          <li class="bi-kpi bi-kpi--alert">
+          <li *govKpi="'bi.workable'" class="bi-kpi bi-kpi--alert">
             <span class="bi-kpi__value">{{ n.openWorkable }}</span
             ><span class="bi-kpi__label">open (lavorabili)</span>
             <span class="bi-kpi__meta">{{ n.openWorkablePct }}%</span>
           </li>
-          <li class="bi-kpi bi-kpi--warn">
+          <li *govKpi="'bi.pending'" class="bi-kpi bi-kpi--warn">
             <span class="bi-kpi__value">{{ n.pending }}</span
             ><span class="bi-kpi__label">pending</span>
             <span class="bi-kpi__meta">{{ n.pendingPct }}%</span>
           </li>
-          <li class="bi-kpi bi-kpi--good">
+          <li *govKpi="'bi.resolved'" class="bi-kpi bi-kpi--good">
             <span class="bi-kpi__value">{{ n.resolved }}</span
             ><span class="bi-kpi__label">risolti</span>
             <span class="bi-kpi__meta">{{ n.resolvedPct }}%</span>
