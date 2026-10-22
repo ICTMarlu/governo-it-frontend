@@ -44,21 +44,21 @@
             Ore al giorno e giorni a settimana per periodo: 7,5 h × 5 giorni = 5 giornate a
             settimana. I periodi non si sovrappongono.
           </p>
-          <gov-crud-section [config]="capacityConfig()" />
+          <gov-crud-section [config]="capacityConfig()" [savedViews]="false" />
         </mat-tab>
         <mat-tab label="Ore extra">
           <p class="tab-intro">
             Ore in più a settimana dalla data indicata fino alla riga successiva. Per chiudere
             l'extra inserisci una riga con 0.
           </p>
-          <gov-crud-section [config]="extraConfig()" />
+          <gov-crud-section [config]="extraConfig()" [savedViews]="false" />
         </mat-tab>
         @if (canViewCosts()) {
           <mat-tab label="Tariffe">
             <p class="tab-intro">
               Tariffa giornaliera per periodo, visibile solo a chi gestisce i costi.
             </p>
-            <gov-crud-section [config]="ratesConfig()" />
+            <gov-crud-section [config]="ratesConfig()" [savedViews]="false" />
           </mat-tab>
         }
       </mat-tab-group>

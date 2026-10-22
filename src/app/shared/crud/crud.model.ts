@@ -92,6 +92,11 @@ export interface ColumnConfig {
   readonly sortKey?: string;
   /** Testo da mostrare al posto del valore grezzo (es. INTERNAL -> Interno). */
   readonly format?: (value: unknown, row: EntityRow) => string;
+  /**
+   * Larghezza in tabella: 'narrow' per valori corti (l'intestazione va al massimo su due righe),
+   * 'wide' per i testi lunghi. Di partenza: larga la colonna principale, strette le numeriche.
+   */
+  readonly width?: 'narrow' | 'wide';
 }
 
 /** Filtro rapido a scelta multipla sui valori distinti di un campo. */
@@ -122,6 +127,8 @@ export interface EntityConfig {
   readonly canDelete?: boolean;
   /** Link di dettaglio della riga (es. ['/resources', id]). */
   readonly rowLink?: (row: EntityRow) => readonly (string | number)[];
+  /** Clic sul titolo della riga = apre la scheda di modifica (per chi può modificare). */
+  readonly titleOpensForm?: boolean;
   /** Ordinamento iniziale dell'elenco. */
   readonly sort?: (a: EntityRow, b: EntityRow) => number;
   /** Guida della pagina (pulsante Guida). */

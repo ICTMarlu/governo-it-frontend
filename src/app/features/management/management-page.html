@@ -4,18 +4,28 @@
   [help]="help"
 />
 
-<div class="toolbar">
-  @if (canWrite()) {
+@if (seesAll()) {
+  <div class="toolbar">
     <button mat-flat-button type="button" (click)="startMeeting()">
       <mat-icon aria-hidden="true">play_arrow</mat-icon>
       Inizia riunione
     </button>
-  }
-  <button mat-stroked-button type="button" (click)="showAgenda()">
-    <mat-icon aria-hidden="true">list_alt</mat-icon>
-    Agenda
-  </button>
-</div>
+    <button mat-stroked-button type="button" (click)="showAgenda()">
+      <mat-icon aria-hidden="true">list_alt</mat-icon>
+      Agenda
+    </button>
+  </div>
+} @else {
+  <p class="scope-note" role="note">
+    <mat-icon aria-hidden="true">visibility</mat-icon>
+    @if (linked()) {
+      Vedi solo i punti di cui sei owner e le azioni assegnate a te o nate dai tuoi punti.
+    } @else {
+      Il tuo utente non è collegato a una persona del team, quindi non vedi nessun punto: chiedi
+      all’Admin di collegarlo in Utenti.
+    }
+  </p>
+}
 
 @if (canWrite()) {
   <form class="quick" (ngSubmit)="quickAdd()" aria-label="Aggiungi un punto">
@@ -65,8 +75,10 @@
     </p>
     <gov-crud-section [config]="actions" />
   </mat-tab>
-  <mat-tab label="Riunioni">
-    <p class="tab-intro">Apri una riunione per marcare i punti o per il riepilogo.</p>
-    <gov-crud-section [config]="meetings" />
-  </mat-tab>
+  @if (seesAll()) {
+    <mat-tab label="Riunioni">
+      <p class="tab-intro">Apri una riunione per marcare i punti o per il riepilogo.</p>
+      <gov-crud-section [config]="meetings" />
+    </mat-tab>
+  }
 </mat-tab-group>

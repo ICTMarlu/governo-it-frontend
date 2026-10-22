@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, input, model, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,7 +20,7 @@ const COLLATOR = new Intl.Collator('it', { numeric: true, sensitivity: 'base' })
 
 export type SortDirection = 'asc' | 'desc';
 
-interface SortState {
+export interface SortState {
   /** Identificativo della colonna (resta valido se le colonne vengono spostate). */
   readonly id: string;
   readonly direction: SortDirection;
@@ -53,11 +53,14 @@ export class EntityTable {
   readonly canEdit = input(false);
   readonly canDelete = input(false);
   readonly rowLink = input<(row: EntityRow) => readonly (string | number)[]>();
+  /** Il titolo della riga apre la modifica (oltre alla matita). */
+  readonly titleOpensEdit = input(false);
 
   readonly edit = output<EntityRow>();
   readonly remove = output<EntityRow>();
 
-  protected readonly sort = signal<SortState | null>(null);
+  /** Ordinamento (colonna e direzione); il genitore lo legge e lo imposta (viste salvate). */
+  readonly sort = model<SortState | null>(null);
 
   protected readonly primaryColumn = computed(
     () => this.columns().find((column) => column.primary) ?? this.columns()[0],
@@ -90,6 +93,17 @@ export class EntityTable {
       return result * factor;
     });
   });
+
+  /** Larghezza della colonna: quella indicata, altrimenti larga la principale e strette le numeriche. */
+  protected widthOf(column: ColumnConfig): 'narrow' | 'wide' | null {
+    if (column.width) {
+      return column.width;
+    }
+    if (column === this.primaryColumn()) {
+      return 'wide';
+    }
+    return column.type === 'number' ? 'narrow' : null;
+  }
 
   /** Clic sull'intestazione: crescente, poi decrescente, poi ordine iniziale. */
   protected toggleSort(column: ColumnConfig): void {

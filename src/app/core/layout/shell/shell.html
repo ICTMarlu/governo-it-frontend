@@ -14,7 +14,35 @@
     </button>
   }
 
-  <a class="brand" routerLink="/home">Governo IT</a>
+  <a class="brand" routerLink="/home">
+    <!-- Logo Marlù: prende il colore del testo della barra (bianco sul blu, chiaro nel tema scuro) -->
+    <svg class="brand__logo" viewBox="0 0 400 400" aria-hidden="true" focusable="false">
+      <g fill="none" stroke="currentColor" stroke-linejoin="miter" stroke-miterlimit="10">
+        <circle cx="200" cy="200" r="184" stroke-width="18" />
+        <polyline points="108,292 147,140 200,262 253,140 292,292" stroke-width="22" />
+        <line x1="176" y1="86" x2="198" y2="110" stroke-width="18" />
+      </g>
+    </svg>
+    Governo IT
+  </a>
+
+  @if (isDesktop()) {
+    <nav class="topnav" aria-label="Navigazione principale">
+      @for (item of navItems(); track item.route) {
+        <a
+          class="topnav__item"
+          [routerLink]="item.route"
+          routerLinkActive="topnav__item--active"
+          #topLink="routerLinkActive"
+          [attr.aria-current]="topLink.isActive ? 'page' : null"
+          [matTooltip]="item.label"
+        >
+          <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+          <span class="topnav__label">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+  }
 
   <span class="spacer"></span>
 
@@ -24,6 +52,71 @@
       <span class="user__role">{{ user.roleLabel }}</span>
     </span>
   }
+
+  <!-- Promemoria dei task: in ritardo, in scadenza o col promemoria arrivato -->
+  <button
+    mat-icon-button
+    type="button"
+    [attr.aria-label]="reminderLabel()"
+    [matTooltip]="reminderLabel()"
+    [matMenuTriggerFor]="reminderMenu"
+  >
+    <mat-icon
+      aria-hidden="true"
+      [matBadge]="reminderCount()"
+      [matBadgeHidden]="reminderCount() === 0"
+      matBadgeSize="small"
+      >{{ reminderCount() > 0 ? 'notifications_active' : 'notifications_none' }}</mat-icon
+    >
+  </button>
+  <mat-menu #reminderMenu="matMenu" class="reminder-menu">
+    @for (task of reminderTasks(); track task.id) {
+      <button mat-menu-item type="button" (click)="openReminder(task)">
+        <mat-icon aria-hidden="true" [class.reminder--late]="task.overdue">{{
+          task.overdue ? 'error' : 'event'
+        }}</mat-icon>
+        <span class="reminder">
+          <span class="reminder__title">{{ task.title }}</span>
+          <span class="reminder__meta" [class.reminder--late]="task.overdue">
+            {{ reminderDue(task) }}{{ task.projectCode ? ' · ' + task.projectCode : '' }}
+          </span>
+        </span>
+      </button>
+    } @empty {
+      <p class="reminder-empty">Nessun task in ritardo o in scadenza.</p>
+    }
+    <a mat-menu-item routerLink="/tasks">
+      <mat-icon aria-hidden="true">task_alt</mat-icon>
+      Tutti i miei task
+    </a>
+  </mat-menu>
+
+  <!-- Tema: chiaro, scuro o come il sistema -->
+  <button
+    mat-icon-button
+    type="button"
+    [attr.aria-label]="'Tema: ' + themeLabel() + '. Cambia tema'"
+    [matTooltip]="'Tema ' + themeLabel().toLowerCase() + ' · clic per cambiare'"
+    [matMenuTriggerFor]="themeMenu"
+  >
+    <mat-icon aria-hidden="true">{{ theme.isDark() ? 'dark_mode' : 'light_mode' }}</mat-icon>
+  </button>
+  <mat-menu #themeMenu="matMenu">
+    @for (option of themeOptions; track option.mode) {
+      <button
+        mat-menu-item
+        type="button"
+        role="menuitemradio"
+        [attr.aria-checked]="theme.mode() === option.mode"
+        (click)="theme.set(option.mode)"
+      >
+        <mat-icon aria-hidden="true">{{
+          theme.mode() === option.mode ? 'check' : option.icon
+        }}</mat-icon>
+        {{ option.label }}
+      </button>
+    }
+  </mat-menu>
 
   <button
     mat-icon-button
@@ -45,9 +138,8 @@
     #sidenav
     id="main-navigation"
     class="sidenav"
-    [mode]="isDesktop() ? 'side' : 'over'"
-    [opened]="isDesktop()"
-    [fixedInViewport]="!isDesktop()"
+    mode="over"
+    [fixedInViewport]="true"
     fixedTopGap="56"
   >
     <nav aria-label="Navigazione principale">
@@ -70,7 +162,7 @@
   </mat-sidenav>
 
   <mat-sidenav-content>
-    <main id="main-content" class="content" tabindex="-1">
+    <main id="main-content" class="content" [class.content--full]="fullWidthPage()" tabindex="-1">
       <router-outlet />
     </main>
   </mat-sidenav-content>

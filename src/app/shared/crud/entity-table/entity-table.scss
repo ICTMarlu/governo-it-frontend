@@ -118,6 +118,26 @@
 .link {
   color: var(--mat-sys-primary);
   font-weight: 500;
+
+  // Titolo che apre la modifica: aspetto di un collegamento, comportamento di un pulsante
+  &--button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--mat-sys-primary);
+      outline-offset: 2px;
+    }
+  }
 }
 
 .badge {
@@ -156,6 +176,22 @@
 
   .inactive td {
     opacity: 0.6;
+  }
+
+  // Valori corti (es. priorità): colonna stretta, l'intestazione va al massimo su due righe
+  .col--narrow {
+    width: 1%;
+    max-width: 6.5rem;
+    white-space: normal;
+  }
+
+  td.col--narrow {
+    white-space: nowrap;
+  }
+
+  // Testi lunghi (es. nome del progetto): più spazio, così vanno meno a capo
+  .col--wide {
+    min-width: 18rem;
   }
 
   .actions {

@@ -14,7 +14,11 @@
             </div>
           }
           @case ('select') {
-            <mat-form-field appearance="outline" [class.full]="field.fullWidth">
+            <mat-form-field
+              appearance="outline"
+              subscriptSizing="dynamic"
+              [class.full]="field.fullWidth"
+            >
               <mat-label>{{ field.label }}</mat-label>
               <mat-select [formControlName]="field.key" [required]="isRequired(field)">
                 @if (!isRequired(field)) {
@@ -33,7 +37,11 @@
             </mat-form-field>
           }
           @case ('multiselect') {
-            <mat-form-field appearance="outline" [class.full]="field.fullWidth">
+            <mat-form-field
+              appearance="outline"
+              subscriptSizing="dynamic"
+              [class.full]="field.fullWidth"
+            >
               <mat-label>{{ field.label }}</mat-label>
               <mat-select [formControlName]="field.key" multiple [required]="isRequired(field)">
                 @for (option of optionsByKey[field.key](); track option.value) {
@@ -49,7 +57,11 @@
             </mat-form-field>
           }
           @case ('date') {
-            <mat-form-field appearance="outline" [class.full]="field.fullWidth">
+            <mat-form-field
+              appearance="outline"
+              subscriptSizing="dynamic"
+              [class.full]="field.fullWidth"
+            >
               <mat-label>{{ field.label }}</mat-label>
               <input
                 matInput
@@ -76,7 +88,7 @@
             </mat-form-field>
           }
           @case ('textarea') {
-            <mat-form-field appearance="outline" class="full">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="full">
               <mat-label>{{ field.label }}</mat-label>
               <textarea
                 matInput
@@ -93,7 +105,11 @@
             </mat-form-field>
           }
           @default {
-            <mat-form-field appearance="outline" [class.full]="field.fullWidth">
+            <mat-form-field
+              appearance="outline"
+              subscriptSizing="dynamic"
+              [class.full]="field.fullWidth"
+            >
               <mat-label>{{ field.label }}</mat-label>
               <input
                 matInput

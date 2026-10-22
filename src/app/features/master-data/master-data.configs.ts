@@ -213,6 +213,22 @@ const LOOKUP_DEFINITIONS: readonly LookupDefinition[] = [
     singular: 'Ruolo',
     subtitle: 'Ruolo delle risorse nel team IT (diverso dal ruolo applicativo).',
   },
+  {
+    slug: 'task-statuses',
+    title: 'Stati dei task',
+    singular: 'Stato',
+    subtitle: 'Stati di task e note (colonne del kanban). Gli stati finali li chiudono.',
+    extraFields: [
+      {
+        key: 'done',
+        label: 'Stato finale',
+        type: 'checkbox',
+        attribute: true,
+        hint: 'Es. Fatto, Annullato: il task esce dai promemoria',
+      },
+    ],
+    extraColumns: [{ key: 'attributes.done', label: 'Stato finale', type: 'boolean' }],
+  },
 ];
 
 /** Liste valori pronte per pagine e rotte. */
@@ -362,6 +378,12 @@ export const REQUESTERS_CONFIG: EntityConfig = {
       options: { endpoint: '/resources', labelKey: 'fullName' },
       hint: 'Solo se il richiedente fa parte del team IT',
     },
+    {
+      key: 'management',
+      label: 'Fa parte della direzione',
+      type: 'checkbox',
+      hint: 'Si può scegliere in "Rivolto a" nei punti della pagina Direzione',
+    },
     ACTIVE_FIELD,
     { key: 'notes', label: 'Note', type: 'textarea', maxLength: 500 },
   ],
@@ -370,6 +392,7 @@ export const REQUESTERS_CONFIG: EntityConfig = {
     { key: 'businessAreaLabel', label: 'Dipartimento' },
     { key: 'legalEntityName', label: 'Azienda' },
     { key: 'jobTitle', label: 'Ruolo' },
+    { key: 'management', label: 'Direzione', type: 'boolean', hideOnMobile: true },
     { key: 'email', label: 'E-mail', hideOnMobile: true },
     ACTIVE_COLUMN,
   ],

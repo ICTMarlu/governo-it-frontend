@@ -1,0 +1,271 @@
+<div class="head">
+  <h2 mat-dialog-title class="head__title">
+    {{ kind() === 'NOTE' ? 'Nota' : 'Task' }}
+    @if (task(); as current) {
+      <small class="head__meta">
+        creato da {{ current.createdByName ?? '—' }} il {{ current.createdAt | date: 'dd/MM/yyyy' }}
+        @if (current.weekStart) {
+          · casella della settimana del {{ current.weekStart | date: 'dd/MM' }}
+        }
+      </small>
+    }
+  </h2>
+  <button mat-icon-button type="button" class="head__close" aria-label="Chiudi" (click)="close()">
+    <mat-icon aria-hidden="true">close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content class="body">
+  @if (loadError()) {
+    <p class="state state--error" role="alert">
+      Impossibile caricare il task: forse è stato eliminato.
+    </p>
+  } @else if (!detail()) {
+    <div class="state" role="status">
+      <mat-progress-spinner diameter="24" mode="indeterminate" aria-hidden="true" />
+      Caricamento…
+    </div>
+  } @else {
+    <form class="layout" (ngSubmit)="save()">
+      <div class="main">
+        <mat-form-field appearance="outline" class="title">
+          <mat-label>Titolo</mat-label>
+          <input
+            matInput
+            name="title"
+            required
+            maxlength="200"
+            [readonly]="readOnly()"
+            [ngModel]="title()"
+            (ngModelChange)="title.set($event)"
+          />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Descrizione</mat-label>
+          <textarea
+            matInput
+            name="description"
+            rows="4"
+            maxlength="20000"
+            placeholder="Contesto, passi, link utili…"
+            [readonly]="readOnly()"
+            [ngModel]="description()"
+            (ngModelChange)="description.set($event)"
+          ></textarea>
+        </mat-form-field>
+
+        <section class="section" aria-labelledby="task-comments">
+          <h3 id="task-comments" class="section__title">
+            Aggiornamenti e commenti ({{ detail()!.comments.length }})
+          </h3>
+          @for (comment of detail()!.comments; track comment.id) {
+            <article class="comment">
+              <header class="comment__head">
+                <span class="avatar" aria-hidden="true">{{ comment.authorName.charAt(0) }}</span>
+                <strong>{{ comment.authorName }}</strong>
+                <span class="muted">
+                  {{ comment.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                  @if (comment.edited) {
+                    · modificato
+                  }
+                </span>
+                @if (editingComment() !== comment.id) {
+                  <span class="spacer"></span>
+                  @if (comment.canEdit) {
+                    <button mat-button type="button" (click)="editingComment.set(comment.id)">
+                      Modifica
+                    </button>
+                  }
+                  @if (comment.canDelete) {
+                    <button mat-button type="button" (click)="deleteComment(comment)">
+                      Elimina
+                    </button>
+                  }
+                }
+              </header>
+              @if (editingComment() === comment.id) {
+                <gov-comment-composer
+                  label="Modifica il commento"
+                  submitLabel="Salva"
+                  [initialBody]="comment.body"
+                  [candidates]="people()"
+                  [busy]="busy()"
+                  [cancellable]="true"
+                  (submitted)="saveComment(comment, $event)"
+                  (cancelled)="editingComment.set(null)"
+                />
+              } @else {
+                <p class="comment__body">
+                  @for (segment of segments(comment); track $index) {
+                    @if (segment.kind === 'mention') {
+                      <span class="mention">&#64;{{ segment.name }}</span>
+                    } @else {
+                      <span>{{ segment.text }}</span>
+                    }
+                  }
+                </p>
+              }
+            </article>
+          }
+          <gov-comment-composer
+            #newComposer
+            label="Scrivi un aggiornamento (@ per citare)"
+            [candidates]="people()"
+            [busy]="busy()"
+            (submitted)="publish($event)"
+          />
+        </section>
+      </div>
+
+      <aside class="side" aria-label="Proprietà">
+        <mat-button-toggle-group
+          name="kind"
+          aria-label="Tipo"
+          hideSingleSelectionIndicator
+          [disabled]="readOnly()"
+          [ngModel]="kind()"
+          (ngModelChange)="kind.set($event)"
+        >
+          <mat-button-toggle value="TASK">Task</mat-button-toggle>
+          <mat-button-toggle value="NOTE">Nota</mat-button-toggle>
+        </mat-button-toggle-group>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Stato</mat-label>
+          <mat-select
+            name="status"
+            [disabled]="readOnly()"
+            [ngModel]="statusId()"
+            (ngModelChange)="statusId.set($event)"
+          >
+            @for (status of statuses(); track status.id) {
+              @if (status.active || status.id === statusId()) {
+                <mat-option [value]="status.id">{{ status.label }}</mat-option>
+              }
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Assegnato a</mat-label>
+          <mat-select
+            name="assignee"
+            [disabled]="readOnly()"
+            [ngModel]="assigneeId()"
+            (ngModelChange)="assigneeId.set($event)"
+          >
+            <mat-option [value]="null">Nessuno</mat-option>
+            @for (person of people(); track person.id) {
+              <mat-option [value]="person.id">{{ person.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Progetto</mat-label>
+          <input
+            matInput
+            name="project"
+            placeholder="Cerca per codice o nome"
+            [readonly]="readOnly() || inCell()"
+            [matAutocomplete]="projectAuto"
+            [matAutocompleteDisabled]="readOnly() || inCell()"
+            [ngModel]="projectText()"
+            (ngModelChange)="onProjectInput($event)"
+          />
+          <mat-autocomplete #projectAuto="matAutocomplete" [displayWith]="displayProject">
+            @for (project of projectMatches(); track project.id) {
+              <mat-option [value]="project.id">{{ displayProject(project.id!) }}</mat-option>
+            }
+          </mat-autocomplete>
+          @if (inCell()) {
+            <mat-hint>Dalla riga del piano</mat-hint>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Scadenza</mat-label>
+          <input
+            matInput
+            name="due"
+            [readonly]="readOnly()"
+            [matDatepicker]="duePicker"
+            [ngModel]="dueDate()"
+            (ngModelChange)="dueDate.set($event)"
+          />
+          <mat-datepicker-toggle matIconSuffix [for]="duePicker" [disabled]="readOnly()" />
+          <mat-datepicker #duePicker />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Promemoria il</mat-label>
+          <input
+            matInput
+            name="remind"
+            [readonly]="readOnly()"
+            [matDatepicker]="remindPicker"
+            [ngModel]="remindOn()"
+            (ngModelChange)="remindOn.set($event)"
+          />
+          <mat-datepicker-toggle matIconSuffix [for]="remindPicker" [disabled]="readOnly()" />
+          <mat-datepicker #remindPicker />
+          <mat-hint>Compare nella campanella e nell'e-mail</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Priorità</mat-label>
+          <mat-select
+            name="priority"
+            [disabled]="readOnly()"
+            [ngModel]="priorityLevelId()"
+            (ngModelChange)="priorityLevelId.set($event)"
+          >
+            <mat-option [value]="null">—</mat-option>
+            @for (priority of priorities(); track priority.id) {
+              <mat-option [value]="priority.id">{{ priority['label'] }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (detail()!.events.length > 0) {
+          <details class="history">
+            <summary>Storico ({{ detail()!.events.length }})</summary>
+            <ol class="history__list">
+              @for (event of detail()!.events; track $index) {
+                <li>
+                  <span class="muted">{{ event.occurredAt | date: 'dd/MM HH:mm' }}</span>
+                  {{ event.userName ?? '' }}:
+                  @if (event.field === 'CREATED') {
+                    creato
+                  } @else {
+                    {{ eventLabels[event.field] ?? event.field }}
+                    {{ eventValue(event.oldValue, event.field) }} →
+                    <strong>{{ eventValue(event.newValue, event.field) }}</strong>
+                  }
+                </li>
+              }
+            </ol>
+          </details>
+        }
+      </aside>
+    </form>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions class="actions">
+  @if (task()?.canEdit) {
+    <button mat-button type="button" class="actions__delete" (click)="remove()">Elimina</button>
+  }
+  <span class="spacer"></span>
+  <button mat-button type="button" (click)="close()">Chiudi</button>
+  @if (task()?.canEdit) {
+    <button
+      mat-flat-button
+      type="button"
+      [disabled]="!dirty() || busy() || !title().trim()"
+      (click)="save()"
+    >
+      Salva
+    </button>
+  }
+</mat-dialog-actions>

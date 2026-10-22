@@ -3,7 +3,8 @@ import { priorityLabel } from '../projects/projects.configs';
 
 /** Chi gestisce la pagina Direzione (D-17); il Viewer legge soltanto. */
 export const MANAGEMENT_WRITE_ROLES: readonly string[] = [ROLES.admin, ROLES.pm];
-export const MANAGEMENT_READ_ROLES: readonly string[] = [ROLES.admin, ROLES.pm, ROLES.viewer];
+/** Riunioni e visione completa della Direzione: solo Admin (D-31); gli altri vedono i propri punti. */
+export const MEETING_ROLES: readonly string[] = [ROLES.admin];
 
 export const TOPIC_TYPE_OPTIONS = [
   { value: 'TOPIC', label: 'Argomento' },
@@ -50,13 +51,24 @@ export const TOPICS_CONFIG: EntityConfig = {
   endpoint: '/management/topics',
   writeRoles: MANAGEMENT_WRITE_ROLES,
   canDelete: true,
-  searchKeys: ['title', 'notes', 'decision', 'projectCode', 'projectName', 'ownerName'],
+  searchKeys: [
+    'title',
+    'notes',
+    'decision',
+    'projectCode',
+    'projectName',
+    'ownerName',
+    'audienceNames',
+  ],
   quickFilters: [
     { key: 'statusLabel', label: 'Stato' },
     { key: 'topicTypeLabel', label: 'Tipo' },
+    { key: 'audienceNames', label: 'Rivolto a' },
     { key: 'ownerName', label: 'Owner' },
   ],
   sort: byStatusThenPriority,
+  // Clic sul titolo: si apre la scheda del punto per modificarlo
+  titleOpensForm: true,
   fields: [
     {
       key: 'title',
@@ -73,6 +85,17 @@ export const TOPICS_CONFIG: EntityConfig = {
       required: true,
       defaultValue: 'TOPIC',
       options: { static: TOPIC_TYPE_OPTIONS },
+    },
+    {
+      key: 'audienceIds',
+      label: 'Rivolto a',
+      type: 'multiselect',
+      options: {
+        endpoint: '/requesters',
+        labelKey: 'fullName',
+        filter: (row) => row['management'] === true,
+      },
+      hint: 'Uno o più membri della direzione (si indicano in Richiedenti › "Fa parte della direzione")',
     },
     {
       key: 'status',
@@ -95,6 +118,12 @@ export const TOPICS_CONFIG: EntityConfig = {
       label: 'Priorità',
       type: 'select',
       options: { endpoint: '/lookups/priority-levels', labelKey: priorityLabel },
+    },
+    {
+      key: 'dueDate',
+      label: 'Scadenza',
+      type: 'date',
+      hint: 'Entro quando va risolto o deciso',
     },
     {
       key: 'ownerResourceId',
@@ -125,9 +154,19 @@ export const TOPICS_CONFIG: EntityConfig = {
   ],
   columns: [
     { key: 'title', label: 'Titolo', primary: true, clamp: true },
+    { key: 'audienceNames', label: 'Rivolto a', type: 'list' },
     { key: 'topicTypeLabel', label: 'Tipo' },
     { key: 'statusLabel', label: 'Stato' },
     { key: 'priorityLevel', label: 'Priorità', type: 'number' },
+    {
+      key: 'dueDate',
+      label: 'Scadenza',
+      format: (value, row) =>
+        value
+          ? `${new Intl.DateTimeFormat('it-IT').format(new Date(`${String(value)}T00:00:00`))}${row['overdue'] ? ' · scaduto' : ''}`
+          : '',
+    },
+    { key: 'createdOn', label: 'Creato il', type: 'date', hideOnMobile: true },
     { key: 'ownerName', label: 'Owner' },
     { key: 'postponedUntil', label: 'Riproponi dal', type: 'date', hideOnMobile: true },
     { key: 'deferralCount', label: 'Rinvii', type: 'number', hideOnMobile: true },

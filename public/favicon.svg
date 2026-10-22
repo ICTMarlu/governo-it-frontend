@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <!-- Logo Marlù: cerchio, M con l'accento. Fondo bianco per vederlo anche sulle schede scure -->
+  <circle cx="200" cy="200" r="196" fill="#ffffff"/>
+  <g fill="none" stroke="#111111" stroke-linejoin="miter" stroke-miterlimit="10">
+    <circle cx="200" cy="200" r="186" stroke-width="14"/>
+    <polyline points="108,292 147,140 200,262 253,140 292,292" stroke-width="20"/>
+    <line x1="176" y1="86" x2="198" y2="110" stroke-width="16"/>
+  </g>
+</svg>

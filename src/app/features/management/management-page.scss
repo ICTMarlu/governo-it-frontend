@@ -36,3 +36,12 @@
     flex: 1 1 20rem;
   }
 }
+
+// Chi non è Admin vede solo i propri punti (D-31): lo dice in chiaro
+.scope-note {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0 0 1rem;
+  color: var(--mat-sys-on-surface-variant);
+}

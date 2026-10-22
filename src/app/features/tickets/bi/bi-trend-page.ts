@@ -1,0 +1,139 @@
+import { Component, computed, inject } from '@angular/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+
+import { PeriodChart } from '../../../shared/charts/period-chart';
+import { BiFilters } from './bi-filters';
+import { backlogDays, isOpen, resolvedPerDay, weekly } from './bi.model';
+import { BiStore } from './bi-store.service';
+
+/**
+ * Trend dei ticket lavorabili (come la pagina Trend di Power BI): per settimana creati, risolti
+ * e lavorabili a fine settimana, con o senza i Pending; in alto i giorni di backlog.
+ */
+@Component({
+  selector: 'gov-bi-trend-page',
+  imports: [BiFilters, MatProgressSpinnerModule, MatSlideToggleModule, PeriodChart],
+  template: `
+    <div class="bi-page">
+      <gov-bi-filters />
+      @if (store.error(); as error) {
+        <p class="bi-state" role="alert">{{ error }}</p>
+      } @else if (!store.data()) {
+        <p class="bi-state" role="status">
+          <mat-progress-spinner diameter="24" mode="indeterminate" aria-hidden="true" /> Caricamento
+          dei ticket…
+        </p>
+      } @else {
+        <div class="head">
+          <ul class="bi-kpis" aria-label="Numeri di oggi">
+            <li class="bi-kpi bi-kpi--info">
+              <span class="bi-kpi__value">{{ backlog() ?? '—' }}</span>
+              <span class="bi-kpi__label">giorni lavorativi di backlog</span>
+            </li>
+            <li class="bi-kpi bi-kpi--alert">
+              <span class="bi-kpi__value">{{ workable() }}</span>
+              <span class="bi-kpi__label">lavorabili oggi</span>
+            </li>
+            <li class="bi-kpi">
+              <span class="bi-kpi__value">{{ closeRate() }}</span>
+              <span class="bi-kpi__label">chiusi al giorno (media)</span>
+            </li>
+          </ul>
+          <mat-slide-toggle
+            [checked]="store.includePending()"
+            (change)="store.includePending.set($event.checked)"
+          >
+            Includi i Pending tra i lavorabili
+          </mat-slide-toggle>
+          <p class="note">
+            Giorni di backlog (come in Power BI) = lavorabili di oggi ÷ chiusi al giorno (media dei
+            ticket risolti per giorno lavorativo nelle ultime 3 settimane complete: risolti ÷ 3 ÷ 5;
+            la settimana in corso non conta). "Pending" è lo stato di oggi (stati:
+            {{ pendingStatuses() }}).
+          </p>
+        </div>
+        <section class="bi-card">
+          <gov-period-chart
+            barsTitle="Ticket creati e risolti per settimana"
+            [lineTitle]="
+              store.includePending()
+                ? 'Lavorabili a fine settimana (con i Pending)'
+                : 'Lavorabili a fine settimana (senza Pending)'
+            "
+            [points]="weeks()"
+          />
+        </section>
+      }
+    </div>
+  `,
+  styles: `
+    .head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem;
+
+      .bi-kpis {
+        flex: 0 1 33rem;
+      }
+    }
+
+    .note {
+      flex: 1 1 20rem;
+      margin: 0;
+      color: var(--mat-sys-on-surface-variant);
+      font: var(--mat-sys-body-small);
+    }
+  `,
+})
+export class BiTrendPage {
+  protected readonly store = inject(BiStore);
+
+  /** Dal 1° gennaio dell'anno scelto (o del primo mese scelto); senza anno le ultime 52 settimane. */
+  private readonly from = computed(() => {
+    const year = this.store.year();
+    const now = new Date();
+    if (year === null) {
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7 * 51);
+    }
+    const months = this.store.months();
+    return new Date(year, months && months.length > 0 ? Math.min(...months) - 1 : 0, 1);
+  });
+
+  /** Fino a oggi, oppure alla fine dell'anno (o dell'ultimo mese) scelto se è passato. */
+  private readonly to = computed(() => {
+    const year = this.store.year();
+    const now = new Date();
+    if (year === null) {
+      return now;
+    }
+    const months = this.store.months();
+    const end = new Date(year, months && months.length > 0 ? Math.max(...months) : 12, 0);
+    return end < now ? end : now;
+  });
+
+  protected readonly weeks = computed(() =>
+    weekly(this.store.scoped(), this.from(), this.to(), this.store.includePending()),
+  );
+  protected readonly backlog = computed(() =>
+    backlogDays(this.store.scoped(), new Date(), this.store.includePending()),
+  );
+  protected readonly closeRate = computed(() =>
+    resolvedPerDay(this.store.scoped(), new Date()).toLocaleString('it-IT', {
+      maximumFractionDigits: 1,
+    }),
+  );
+  protected readonly workable = computed(
+    () =>
+      this.store.scoped().filter((t) => isOpen(t) && (this.store.includePending() || !t.pending))
+        .length,
+  );
+  protected readonly pendingStatuses = computed(() =>
+    (this.store.data()?.pendingStatuses ?? []).join(', '),
+  );
+
+  constructor() {
+    this.store.load();
+  }
+}

@@ -139,6 +139,12 @@ export class MasterDataPage {
           icon: 'tag',
           link: '/master-data/project-codes',
         },
+        {
+          label: 'Parametri generali',
+          hint: 'Ore per giornata, soglie, promemoria e-mail dei task',
+          icon: 'settings',
+          link: '/master-data/parameters',
+        },
       ],
     },
     {

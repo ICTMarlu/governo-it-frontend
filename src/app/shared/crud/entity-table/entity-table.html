@@ -36,6 +36,15 @@
 <ng-template #title let-row>
   @if (rowLink(); as link) {
     <a class="link" [routerLink]="link(row)">{{ rowTitle(row) }}</a>
+  } @else if (titleOpensEdit() && canEdit()) {
+    <button
+      type="button"
+      class="link link--button"
+      [attr.aria-label]="'Apri e modifica ' + rowTitle(row)"
+      (click)="edit.emit(row)"
+    >
+      {{ rowTitle(row) }}
+    </button>
   } @else {
     {{ rowTitle(row) }}
   }
@@ -109,7 +118,12 @@
       <thead>
         <tr>
           @for (column of columns(); track columnId(column)) {
-            <th scope="col" [attr.aria-sort]="ariaSort(column)">
+            <th
+              scope="col"
+              [class.col--narrow]="widthOf(column) === 'narrow'"
+              [class.col--wide]="widthOf(column) === 'wide'"
+              [attr.aria-sort]="ariaSort(column)"
+            >
               <button
                 type="button"
                 class="sort-button"
@@ -133,7 +147,10 @@
         @for (row of sortedRows(); track row.id) {
           <tr [class.inactive]="row['active'] === false">
             @for (column of columns(); track $index) {
-              <td>
+              <td
+                [class.col--narrow]="widthOf(column) === 'narrow'"
+                [class.col--wide]="widthOf(column) === 'wide'"
+              >
                 @if (column === primaryColumn()) {
                   <ng-container *ngTemplateOutlet="title; context: { $implicit: row }" />
                 } @else {

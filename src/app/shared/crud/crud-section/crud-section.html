@@ -50,6 +50,10 @@
 
   <span class="toolbar__spacer"></span>
 
+  @if (savedViews()) {
+    <gov-saved-views [page]="viewPage()" [state]="viewState()" (apply)="applyView($event)" />
+  }
+
   <button mat-stroked-button type="button" class="toolbar__columns" (click)="openColumnChooser()">
     <mat-icon aria-hidden="true">view_column</mat-icon>
     Colonne
@@ -87,6 +91,8 @@
       [canEdit]="canWrite()"
       [canDelete]="canWrite() && config().canDelete === true"
       [rowLink]="config().rowLink"
+      [titleOpensEdit]="config().titleOpensForm === true"
+      [(sort)]="sort"
       (edit)="openForm($event)"
       (remove)="confirmDelete($event)"
     />

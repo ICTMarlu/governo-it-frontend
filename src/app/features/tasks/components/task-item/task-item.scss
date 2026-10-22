@@ -1,0 +1,115 @@
+:host {
+  display: block;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 0.25rem 0;
+
+  &--done .item__title {
+    color: var(--mat-sys-on-surface-variant);
+    text-decoration: line-through;
+  }
+
+  &__check {
+    margin-top: -0.375rem;
+  }
+
+  &__note {
+    flex-shrink: 0;
+    margin: 0.5rem 0.75rem 0 0.625rem;
+    color: var(--mat-sys-tertiary);
+    font-size: 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  &__main {
+    flex: 1;
+    min-width: 0;
+    padding-top: 0.375rem;
+  }
+
+  // Titolo cliccabile: apre il dettaglio
+  &__title {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--mat-sys-on-surface);
+    font: var(--mat-sys-body-medium);
+    text-align: start;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+
+    &:hover {
+      color: var(--mat-sys-primary);
+      text-decoration: underline;
+    }
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    margin-top: 0.125rem;
+  }
+}
+
+.meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-medium);
+
+  mat-icon {
+    width: 1rem;
+    height: 1rem;
+    font-size: 1rem;
+  }
+
+  &--late {
+    color: var(--mat-sys-error);
+    font-weight: 600;
+  }
+}
+
+// Pillola di stato: colore della lista valori, attenuato sullo sfondo
+.status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.125rem 0 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--status-color, #757575) 55%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--status-color, #757575) 14%, transparent);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-label-medium);
+  line-height: 1.25rem;
+
+  mat-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+    font-size: 1.125rem;
+  }
+}
+
+span.status {
+  padding-inline-end: 0.5rem;
+}
+
+button.status {
+  cursor: pointer;
+}
+
+.dot {
+  display: inline-block;
+  width: 0.625rem;
+  height: 0.625rem;
+  margin-inline-end: 0.5rem;
+  border-radius: 50%;
+}

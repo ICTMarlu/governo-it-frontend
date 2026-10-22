@@ -25,7 +25,8 @@ import { ConfirmDialog, ConfirmDialogData } from '../confirm-dialog/confirm-dial
 import { CrudApiService, errorMessage } from '../crud-api.service';
 import { EntityConfig, EntityRow, readPath } from '../crud.model';
 import { EntityFormDialog, EntityFormDialogData } from '../entity-form-dialog/entity-form-dialog';
-import { EntityTable } from '../entity-table/entity-table';
+import { EntityTable, SortState } from '../entity-table/entity-table';
+import { SavedViews } from '../../views/saved-views';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -38,6 +39,7 @@ type LoadState = 'loading' | 'ready' | 'error';
   imports: [
     FormsModule,
     EntityTable,
+    SavedViews,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
@@ -65,6 +67,8 @@ export class CrudSection {
   readonly config = input.required<EntityConfig>();
   /** Cambiandolo il genitore fa ricaricare l'elenco (es. dopo un inserimento fatto fuori). */
   readonly refresh = input(0);
+  /** Viste salvate (filtri, colonne, ordinamento); spente nelle sottoschede (es. capacità). */
+  readonly savedViews = input(true);
 
   protected readonly state = signal<LoadState>('loading');
   protected readonly rows = signal<EntityRow[]>([]);
@@ -79,6 +83,24 @@ export class CrudSection {
       .filter((item) => item.visible)
       .map((item) => item.column),
   );
+  protected readonly sort = signal<SortState | null>(null);
+  /** Una vista è stata applicata: le colonne salvate in precedenza non la sovrascrivono. */
+  private viewApplied = false;
+
+  /** Stato salvato nelle viste: ricerca, filtri, disattivati, colonne e ordinamento. */
+  protected readonly viewState = computed(() => ({
+    search: this.search(),
+    filters: Object.fromEntries(
+      Object.entries(this.filters()).filter(([, values]) => values.length > 0),
+    ),
+    showInactive: this.showInactive(),
+    columns: this.layout(),
+    sort: this.sort(),
+  }));
+
+  /** Pagina delle viste salvate: una per elenco, come la chiave delle colonne. */
+  protected readonly viewPage = computed(() => `list.${this.layoutKey().slice('columns.'.length)}`);
+
   protected readonly hasActiveFilters = computed(() =>
     Object.values(this.filters()).some((values) => values.length > 0),
   );
@@ -136,6 +158,7 @@ export class CrudSection {
     effect(() => {
       const endpoint = this.config().endpoint;
       untracked(() => {
+        this.viewApplied = false;
         this.load(endpoint);
         this.loadLayout();
       });
@@ -172,6 +195,28 @@ export class CrudSection {
       return 'Tutti';
     }
     return selected.length === 1 ? selected[0] : `${selected[0]} +${selected.length - 1}`;
+  }
+
+  /** Applica una vista salvata (null = vista standard: niente filtri, colonne predefinite). */
+  protected applyView(state: unknown): void {
+    this.viewApplied = true;
+    const view = (state ?? {}) as Partial<{
+      search: string;
+      filters: Record<string, readonly string[]>;
+      showInactive: boolean;
+      columns: ColumnLayout | null;
+      sort: SortState | null;
+    }>;
+    this.search.set(view.search ?? '');
+    this.filters.set(view.filters ?? {});
+    this.showInactive.set(view.showInactive ?? false);
+    this.sort.set(view.sort ?? null);
+    const columns = view.columns ?? null;
+    this.layout.set(columns);
+    const key = this.layoutKey();
+    (columns ? this.preferences.save(key, columns) : this.preferences.reset(key)).subscribe({
+      error: () => undefined,
+    });
   }
 
   protected openColumnChooser(): void {
@@ -251,7 +296,11 @@ export class CrudSection {
   private loadLayout(): void {
     this.layout.set(null);
     this.preferences.get<ColumnLayout>(this.layoutKey()).subscribe({
-      next: (layout) => this.layout.set(layout),
+      next: (layout) => {
+        if (!this.viewApplied) {
+          this.layout.set(layout);
+        }
+      },
       error: () => this.layout.set(null),
     });
   }

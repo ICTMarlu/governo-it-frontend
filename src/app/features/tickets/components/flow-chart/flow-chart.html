@@ -1,0 +1,136 @@
+<div class="viz">
+  <div class="viz__head">
+    <h3 class="viz__title">Entrati e chiusi per settimana</h3>
+    <ul class="legend" aria-label="Legenda">
+      <li><span class="swatch swatch--created" aria-hidden="true"></span>Entrati</li>
+      <li><span class="swatch swatch--resolved" aria-hidden="true"></span>Chiusi</li>
+    </ul>
+  </div>
+
+  <div class="viz__plot" (mouseleave)="hover.set(null)">
+    <svg
+      [attr.viewBox]="'0 0 ' + width + ' ' + height"
+      role="img"
+      aria-label="Ticket entrati e chiusi nelle ultime settimane; i numeri sono nella tabella Dati"
+    >
+      @for (tick of flowTicks(); track tick) {
+        <line
+          class="grid"
+          [attr.x1]="pad.left"
+          [attr.x2]="width - pad.right"
+          [attr.y1]="flowY()(tick)"
+          [attr.y2]="flowY()(tick)"
+        />
+        <text class="axis" [attr.x]="pad.left - 6" [attr.y]="flowY()(tick) + 4" text-anchor="end">
+          {{ tick }}
+        </text>
+      }
+      @for (item of bars(); track item.week.weekStart) {
+        <path class="bar bar--created" [attr.d]="item.created" />
+        <path class="bar bar--resolved" [attr.d]="item.resolved" />
+        <text class="axis" [attr.x]="item.labelX" [attr.y]="height - 6" text-anchor="middle">
+          {{ label(item.week.weekStart) }}
+        </text>
+        <rect
+          class="hit"
+          [class.hit--on]="hover() === item.index"
+          [attr.x]="item.slotX"
+          [attr.y]="pad.top"
+          [attr.width]="slotWidth()"
+          [attr.height]="height - pad.top - pad.bottom"
+          (mouseenter)="hover.set(item.index)"
+        />
+      }
+    </svg>
+    @if (hover() !== null) {
+      @let week = weeks()[hover()!];
+      <div class="tip" role="status" [style.left.%]="tooltipLeft(hover()!)">
+        <strong>Settimana del {{ label(week.weekStart) }}</strong>
+        <span
+          ><span class="swatch swatch--created" aria-hidden="true"></span>Entrati
+          {{ week.created }}</span
+        >
+        <span
+          ><span class="swatch swatch--resolved" aria-hidden="true"></span>Chiusi
+          {{ week.resolved }}</span
+        >
+        <span
+          >Saldo {{ balance(week) > 0 ? '+' : '' }}{{ balance(week) }} · aperti
+          {{ week.openAtEnd }}</span
+        >
+      </div>
+    }
+  </div>
+
+  <h3 class="viz__title viz__title--second">Aperti a fine settimana</h3>
+  <div class="viz__plot" (mouseleave)="hover.set(null)">
+    <svg
+      [attr.viewBox]="'0 0 ' + width + ' ' + lineHeight"
+      role="img"
+      aria-label="Ticket aperti a fine di ogni settimana; i numeri sono nella tabella Dati"
+    >
+      @for (tick of openTicks(); track tick) {
+        <line
+          class="grid"
+          [attr.x1]="pad.left"
+          [attr.x2]="width - pad.right"
+          [attr.y1]="openY()(tick)"
+          [attr.y2]="openY()(tick)"
+        />
+        <text class="axis" [attr.x]="pad.left - 6" [attr.y]="openY()(tick) + 4" text-anchor="end">
+          {{ tick }}
+        </text>
+      }
+      <path class="line" [attr.d]="openPath()" />
+      @for (point of openPoints(); track point.week.weekStart) {
+        <circle
+          class="dot"
+          [class.dot--on]="hover() === point.index"
+          [attr.cx]="point.x"
+          [attr.cy]="point.y"
+          r="4"
+        />
+        <rect
+          class="hit"
+          [attr.x]="point.x - slotWidth() / 2"
+          [attr.y]="0"
+          [attr.width]="slotWidth()"
+          [attr.height]="lineHeight"
+          (mouseenter)="hover.set(point.index)"
+        />
+      }
+      @if (openPoints().length > 0) {
+        @let last = openPoints()[openPoints().length - 1];
+        <text class="value" [attr.x]="last.x - 6" [attr.y]="last.y - 8" text-anchor="end">
+          {{ last.week.openAtEnd }}
+        </text>
+      }
+    </svg>
+  </div>
+
+  <details class="data">
+    <summary>Dati</summary>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Settimana</th>
+          <th scope="col">Entrati</th>
+          <th scope="col">Chiusi</th>
+          <th scope="col">Saldo</th>
+          <th scope="col">Aperti a fine settimana</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (week of weeks(); track week.weekStart) {
+          <tr>
+            <th scope="row">{{ label(week.weekStart) }}</th>
+            <td>{{ week.created }}</td>
+            <td>{{ week.resolved }}</td>
+            <td>{{ balance(week) | number: '1.0-0' }}</td>
+            <td>{{ week.openAtEnd }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </details>
+</div>

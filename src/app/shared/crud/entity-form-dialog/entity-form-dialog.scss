@@ -1,8 +1,12 @@
 // Mobile first: una colonna; da 600px due colonne (i campi "full" occupano la riga intera).
+// Lo spazio sotto ogni campo cresce con il testo d'aiuto (anche su più righe), quindi non si
+// sovrappone mai all'etichetta del campo sotto; row-gap tiene distanziate le righe.
 .grid {
   display: grid;
   grid-template-columns: 1fr;
   column-gap: 1rem;
+  row-gap: 0.75rem;
+  align-items: start;
   padding-block-start: 0.5rem;
 }
 

@@ -42,9 +42,8 @@ export const PROJECTS_CONFIG: EntityConfig = {
       key: 'mainSystemId',
       label: 'Sistema',
       type: 'select',
-      required: true,
       options: { endpoint: '/lookups/main-systems' },
-      hint: 'Il codice progetto usa il codice breve del sistema',
+      hint: 'Vuoto se riguarda più sistemi (es. AMS). Il codice progetto usa il codice breve del sistema',
     },
     {
       key: 'statusId',
@@ -163,8 +162,8 @@ export const PROJECTS_CONFIG: EntityConfig = {
   ],
   columns: [
     { key: 'name', label: 'Progetto', primary: true },
-    { key: 'code', label: 'Codice' },
-    { key: 'workTypeLabel', label: 'Tipo', sortKey: 'workTypeSortOrder' },
+    { key: 'code', label: 'Codice', width: 'narrow' },
+    { key: 'workTypeLabel', label: 'Tipo', sortKey: 'workTypeSortOrder', width: 'narrow' },
     { key: 'mainSystemLabel', label: 'Sistema' },
     {
       key: 'statusLabel',
@@ -177,7 +176,7 @@ export const PROJECTS_CONFIG: EntityConfig = {
     { key: 'businessPriorityLevel', label: 'Priorità business', type: 'number' },
     { key: 'ownerNames', label: 'Owner', type: 'list' },
     { key: 'requesterNames', label: 'Richiesto da', type: 'list', hideOnMobile: true },
-    { key: 'dueForLabel', label: 'Due for', hideOnMobile: true },
+    { key: 'dueForLabel', label: 'Due for', hideOnMobile: true, width: 'narrow' },
     { key: 'notes', label: 'Note', clamp: true, hideOnMobile: true },
     { key: 'expenseTypeLabel', label: 'Capex / Opex', defaultHidden: true },
     { key: 'legalEntityNames', label: 'Società', type: 'list', defaultHidden: true },

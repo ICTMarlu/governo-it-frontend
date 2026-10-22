@@ -15,8 +15,13 @@ html {
   );
 }
 
-body {
+// Tema chiaro di base; lo scuro si attiva impostando color-scheme (ThemeService): i colori
+// Material usano light-dark(). Nello scuro sfondo grigio (non nero) e testo attenuato.
+html {
   color-scheme: light;
+}
+
+body {
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
@@ -61,4 +66,283 @@ body {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+// Saturazione del piano (griglia e vista telefono): colori con testo scuro della stessa
+// famiglia, contrasto AA (anche nel tema scuro, con tinte tenui). Verde sotto il 90%, giallo 90–100%, rosso oltre il 100%.
+.sat-pill {
+  display: inline-block;
+  min-width: 2.75rem;
+  padding: 0 0.375rem;
+  border-radius: 1rem;
+  font: var(--mat-sys-label-small);
+  line-height: 1.25rem;
+  text-align: center;
+
+  &--free {
+    background: light-dark(#e6f4ea, #1e3a26);
+    color: light-dark(#1b5e20, #a6d4b0);
+  }
+
+  &--full {
+    background: light-dark(#fff4d6, #3d3418);
+    color: light-dark(#6d4c00, #e9cf8a);
+  }
+
+  &--over {
+    background: light-dark(#fde7e7, #45201e);
+    color: light-dark(#9a1c1c, #f2b8b5);
+  }
+
+  &--none {
+    background: var(--mat-sys-surface-container);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+// Pallino dei task nella casella del piano (D-23): numero dei task aperti nell'angolo in alto a
+// sinistra (a destra c'è il triangolino della nota); "+" solo al passaggio del mouse o col
+// focus nella casella; ✓ se sono tutti chiusi.
+.task-dot {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  z-index: 1;
+  min-width: 0.875rem;
+  height: 0.875rem;
+  padding: 0 0.1875rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: light-dark(#0b57d0, #a8c7fa);
+  color: light-dark(#ffffff, #062e6f);
+  font: 600 0.625rem/0.875rem var(--mat-sys-body-small-font, Roboto, sans-serif);
+  cursor: pointer;
+
+  &--closed {
+    background: var(--mat-sys-surface-container-highest);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &--empty {
+    opacity: 0;
+    background: var(--mat-sys-surface-container-highest);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &:focus-visible {
+    opacity: 1;
+  }
+}
+
+td:hover > .task-dot--empty,
+td:focus-within > .task-dot--empty {
+  opacity: 1;
+}
+
+// Pannello laterale (es. task della casella del piano): attaccato al bordo destro, senza angoli
+.side-panel .mat-mdc-dialog-surface {
+  border-radius: 0;
+}
+
+.side-panel .mat-mdc-dialog-container {
+  --mat-dialog-container-max-height: 100vh;
+}
+
+// Casella di ricerca compatta e dal vivo, alta come i filtri stile Excel (es. piano settimanale)
+.inline-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: 0.5rem;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface-variant);
+
+  &:focus-within {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: -1px;
+  }
+
+  mat-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+    font-size: 1.125rem;
+  }
+
+  &__input {
+    width: 15rem;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--mat-sys-on-surface);
+    font: var(--mat-sys-body-medium);
+  }
+}
+
+// Griglie come in Excel (es. piano settimanale): intestazioni con filtro e ordinamento
+// Intestazione di colonna con il filtro come in Excel
+.head-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+// Intestazione cliccabile per ordinare; freccia e numero del livello (1, 2)
+.sort-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--mat-sys-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+  }
+}
+
+.sort-ind {
+  color: var(--mat-sys-primary);
+  font-weight: 700;
+
+  &--off {
+    color: var(--mat-sys-on-surface-variant);
+    font-weight: 400;
+    opacity: 0.55;
+  }
+}
+
+// Nome cliccabile dentro una griglia (es. persona e progetto nel piano): apre la scheda
+.link {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--mat-sys-primary);
+    text-decoration: underline;
+  }
+}
+
+// Piano: riga del gruppo per sistema (più tenue della riga della persona); chiusa mostra i totali
+.grid tr.section > th,
+.grid tr.section > td {
+  background: var(--mat-sys-surface-container-lowest);
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  color: var(--mat-sys-on-surface-variant);
+  font-weight: 500;
+}
+
+.grid tr.section .section__name {
+  padding-inline-start: 0.75rem;
+  color: var(--mat-sys-on-surface);
+  font-weight: 600;
+}
+
+.grid tr.section--closed > td.c-week {
+  color: var(--mat-sys-on-surface);
+}
+
+// Pagine BI dei ticket (D-27): numeri in evidenza e riquadri dei grafici, comuni a tutte le pagine
+.bi-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bi-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bi-kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem;
+  border: 2px solid var(--bi-kpi-color, var(--mat-sys-outline-variant));
+  border-radius: 0.75rem;
+  text-align: center;
+
+  &__value {
+    font: var(--mat-sys-headline-medium);
+  }
+
+  &__label {
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-label-large);
+  }
+
+  &__meta {
+    font: var(--mat-sys-title-medium);
+  }
+
+  // Colori di stato, sempre con l'etichetta accanto (mai solo colore)
+  &--info {
+    --bi-kpi-color: light-dark(#2a78d6, #3987e5);
+  }
+
+  &--alert {
+    --bi-kpi-color: var(--mat-sys-error);
+  }
+
+  &--warn {
+    --bi-kpi-color: light-dark(#b26a00, #e9b44c);
+  }
+
+  &--good {
+    --bi-kpi-color: light-dark(#2e7d32, #7cc683);
+  }
+}
+
+.bi-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.bi-card {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 0.75rem;
+}
+
+.bi-state {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@media (min-width: 1024px) {
+  .bi-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bi-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+// Piano settimanale: riempie l'area a tutta larghezza; la griglia prende lo spazio che resta
+gov-plan-page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+// "Saturazione" sulla riga della persona nel piano, nello spazio delle colonne a scelta
+.sat-label {
+  color: var(--mat-sys-on-surface-variant);
+  font-weight: 400;
 }

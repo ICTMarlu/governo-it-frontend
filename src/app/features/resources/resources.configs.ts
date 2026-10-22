@@ -37,6 +37,13 @@ export const RESOURCES_CONFIG: EntityConfig = {
     },
     { key: 'email', label: 'E-mail', type: 'text', maxLength: 200 },
     {
+      key: 'jiraAccountId',
+      label: 'Account Jira',
+      type: 'text',
+      maxLength: 128,
+      hint: 'Si compila da solo se il nome è uguale in Jira; altrimenti incolla l’accountId (dal profilo Jira)',
+    },
+    {
       key: 'resourceType',
       label: 'Tipo',
       type: 'select',

@@ -25,6 +25,7 @@ import {
 import {
   ACTIONS_CONFIG,
   MANAGEMENT_WRITE_ROLES,
+  MEETING_ROLES,
   MEETINGS_CONFIG,
   TOPICS_CONFIG,
   TOPIC_TYPE_OPTIONS,
@@ -68,6 +69,13 @@ export class ManagementPage {
     const role = this.currentUser()?.role;
     return role !== undefined && MANAGEMENT_WRITE_ROLES.includes(role);
   });
+
+  /** Solo l'Admin vede tutto e gestisce le riunioni; gli altri i punti di cui sono owner (D-31). */
+  protected readonly seesAll = computed(() => {
+    const role = this.currentUser()?.role;
+    return role !== undefined && MEETING_ROLES.includes(role);
+  });
+  protected readonly linked = computed(() => this.currentUser()?.resourceId != null);
 
   /** Inserimento veloce: titolo e tipo, il resto si completa dopo. */
   protected readonly quickTitle = signal('');

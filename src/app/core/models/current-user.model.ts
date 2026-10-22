@@ -6,4 +6,6 @@ export interface CurrentUser {
   readonly role: string;
   readonly roleLabel: string;
   readonly canViewCosts: boolean;
+  /** Risorsa del team collegata all'utente (es. per "i miei task"), se c'è. */
+  readonly resourceId: number | null;
 }

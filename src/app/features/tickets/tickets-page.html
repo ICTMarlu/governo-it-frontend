@@ -1,0 +1,496 @@
+<gov-page-header
+  title="Ticket AMS"
+  subtitle="Il carico del service desk Jira su ogni persona, come scorrono i ticket e cosa conviene fare adesso."
+  [help]="help"
+/>
+
+@if (loadError()) {
+  <p class="state state--error" role="alert">
+    {{ loadError() }}
+    <button mat-button type="button" (click)="load()">Riprova</button>
+  </p>
+} @else if (!dashboard()) {
+  <div class="state" role="status">
+    <mat-progress-spinner diameter="24" mode="indeterminate" aria-hidden="true" />
+    Caricamento…
+  </div>
+} @else {
+  @let data = dashboard()!;
+
+  <!-- Collegamento con Jira -->
+  <div class="sync" role="status">
+    @if (!data.sync.configured) {
+      <mat-icon aria-hidden="true" class="sync__icon sync__icon--off">link_off</mat-icon>
+      <span>
+        <strong>Jira non collegato.</strong> Scrivi indirizzo, utente e token API di Jira in
+        <code>config/local.yml</code> (vedi <code>config/local.example.yml</code>) e riavvia il
+        backend: i ticket arrivano da soli ogni 15 minuti.
+      </span>
+    } @else {
+      <mat-icon
+        aria-hidden="true"
+        class="sync__icon"
+        [class.sync__icon--off]="data.sync.lastRunAt && !data.sync.lastSucceeded"
+        >{{
+          data.sync.lastRunAt && !data.sync.lastSucceeded ? 'sync_problem' : 'cloud_done'
+        }}</mat-icon
+      >
+      <span>
+        @if (sync.syncing()) {
+          Aggiornamento da Jira in corso…
+        } @else {
+          Aggiornato da Jira {{ sync.sinceText() }}
+        }
+        @if (data.sync.lastRunAt && !data.sync.lastSucceeded) {
+          · <strong class="late">ultimo tentativo non riuscito: {{ data.sync.lastMessage }}</strong>
+        }
+      </span>
+      <span class="spacer"></span>
+      <gov-saved-views page="tickets" [state]="viewState()" (apply)="applyView($event)" />
+      @if (data.sync.jiraBaseUrl) {
+        <a mat-button [href]="data.sync.jiraBaseUrl" target="_blank" rel="noopener">
+          <mat-icon aria-hidden="true">open_in_new</mat-icon> Apri Jira
+        </a>
+      }
+      @if (sync.canSync()) {
+        <button
+          mat-stroked-button
+          type="button"
+          matTooltip="Chiede a Jira i ticket cambiati; tutte le pagine dei ticket si aggiornano"
+          [disabled]="sync.syncing()"
+          (click)="sync.refresh()"
+        >
+          <mat-icon aria-hidden="true">sync</mat-icon>
+          {{ sync.syncing() ? 'Aggiornamento…' : 'Aggiorna ora' }}
+        </button>
+      }
+    }
+  </div>
+
+  <!-- Numeri principali -->
+  <ul class="kpis" aria-label="Numeri principali">
+    <li class="kpi">
+      <span class="kpi__value">{{ data.kpis.open }}</span>
+      <span class="kpi__label">ticket aperti</span>
+      <span class="kpi__meta"
+        >{{ data.kpis.toDo }} da fare · {{ data.kpis.inProgress }} in corso</span
+      >
+    </li>
+    <li class="kpi">
+      <span class="kpi__value"
+        >{{ data.kpis.createdLast7Days }} / {{ data.kpis.resolvedLast7Days }}</span
+      >
+      <span class="kpi__label">entrati / chiusi in 7 giorni</span>
+      <span class="kpi__meta">
+        @if (data.kpis.resolvedLast7Days >= data.kpis.createdLast7Days) {
+          il backlog scende
+        } @else {
+          il backlog sale di {{ data.kpis.createdLast7Days - data.kpis.resolvedLast7Days }}
+        }
+      </span>
+    </li>
+    <li class="kpi" [class.kpi--alert]="data.kpis.unassigned > 0">
+      <span class="kpi__value">{{ data.kpis.unassigned }}</span>
+      <span class="kpi__label">senza assegnatario</span>
+      @if (data.kpis.unassigned > 0) {
+        <span class="kpi__meta">
+          di cui {{ data.kpis.unassignedLate }} da oltre {{ data.kpis.unassignedHours }} ore
+        </span>
+      }
+    </li>
+    <li class="kpi" [class.kpi--alert]="data.kpis.overdue > 0">
+      <span class="kpi__value">{{ data.kpis.overdue }}</span>
+      <span class="kpi__label">con la scadenza passata</span>
+    </li>
+    <li class="kpi">
+      <span class="kpi__value">{{ data.kpis.waitingCustomer }}</span>
+      <span class="kpi__label">in attesa del cliente</span>
+    </li>
+    <li class="kpi">
+      <span class="kpi__value">{{ data.kpis.stale }}</span>
+      <span class="kpi__label"
+        >fermi: nessun aggiornamento da oltre {{ data.kpis.staleDays }} giorni</span
+      >
+    </li>
+    <li class="kpi">
+      <span class="kpi__value">{{ data.kpis.averageAgeDays | number: '1.0-1' }} gg</span>
+      <span class="kpi__label">età media degli aperti</span>
+    </li>
+    <li class="kpi">
+      <span class="kpi__value">{{ ratio(data.kpis.withProject, data.kpis.open) }}%</span>
+      <span class="kpi__label">aperti con codice progetto</span>
+    </li>
+  </ul>
+
+  <!-- Allerte: segnali da anticipare (D-30) -->
+  <section class="alerts" aria-labelledby="alerts-title">
+    <h2 id="alerts-title" class="card__title">
+      Allerte
+      @if (data.alerts.length > 0) {
+        <span class="muted">· {{ data.alerts.length }}</span>
+      }
+      <gov-help-button [help]="alertHelp" [compact]="true" label="Come si calcolano le allerte" />
+    </h2>
+    @if (data.alerts.length === 0) {
+      <p class="state">Nessuna allerta: per ora non c'è niente da anticipare.</p>
+    } @else {
+      <ul class="alerts__list">
+        @for (alert of data.alerts; track $index) {
+          <li class="alert" [class]="'alert alert--' + alert.severity">
+            <mat-icon class="alert__icon" aria-hidden="true">{{
+              alertKinds[alert.kind].icon
+            }}</mat-icon>
+            <div class="alert__body">
+              <span class="alert__tag">
+                {{ severityLabels[alert.severity] }} · {{ alertKinds[alert.kind].label }}
+              </span>
+              <strong>{{ alert.title }}</strong>
+              <span class="muted">{{ alert.detail }}</span>
+              <span class="alert__links">
+                @if (alertUrl(alert); as url) {
+                  <a [href]="url" target="_blank" rel="noopener"
+                    >Apri in Jira ({{ alert.issueKeys.length }})</a
+                  >
+                }
+                @if (alert.resourceId !== null || alert.area !== null) {
+                  <button type="button" class="link-btn" (click)="alertFilter(alert)">
+                    Vedi i ticket
+                  </button>
+                }
+              </span>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <div class="columns">
+    <!-- Azioni consigliate -->
+    <section class="card" aria-labelledby="advice-title">
+      <div class="card__head">
+        <h2 id="advice-title" class="card__title">Azioni consigliate</h2>
+        <mat-button-toggle-group
+          aria-label="Per chi"
+          hideSingleSelectionIndicator
+          [value]="adviceView()"
+          (change)="adviceView.set($event.value)"
+        >
+          <mat-button-toggle value="all">Tutte</mat-button-toggle>
+          <mat-button-toggle value="EM">Per chi coordina</mat-button-toggle>
+          <mat-button-toggle value="PERSON">Per le persone</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+      @if (advice().length === 0) {
+        <p class="state">Nessuna azione: i ticket scorrono bene.</p>
+      }
+      <ul class="advice">
+        @for (item of advice(); track item.title) {
+          <li class="advice__item" [class]="'advice__item advice__item--' + item.severity">
+            <mat-icon class="advice__icon" aria-hidden="true">{{
+              severityIcons[item.severity]
+            }}</mat-icon>
+            <div class="advice__body">
+              <span class="advice__tag">{{ severityLabels[item.severity] }}</span>
+              <strong>{{ item.title }}</strong>
+              <span class="muted">{{ item.detail }}</span>
+              <span class="advice__links">
+                @if (adviceUrl(item); as url) {
+                  <a [href]="url" target="_blank" rel="noopener"
+                    >Apri in Jira ({{ item.issueKeys.length }})</a
+                  >
+                }
+                @if (item.resourceId !== null) {
+                  <button type="button" class="link-btn" (click)="adviceFilter(item)">
+                    Vedi i ticket
+                  </button>
+                  <a [routerLink]="['/plan']">Piano</a>
+                }
+              </span>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <!-- Flussi settimanali -->
+    <section class="card" aria-label="Flussi settimanali">
+      <gov-flow-chart [weeks]="data.weeks" />
+    </section>
+  </div>
+
+  <!-- Carico per persona -->
+  <section class="card" aria-labelledby="people-title">
+    <h2 id="people-title" class="card__title">
+      Carico per persona
+      <gov-help-button
+        [help]="personLoadHelp"
+        [compact]="true"
+        label="Come si calcolano le colonne"
+      />
+    </h2>
+    <p class="muted">
+      Clic sul nome per vedere i suoi ticket; passa sulle intestazioni per il significato di ogni
+      colonna, "?" per i calcoli.
+    </p>
+    <div class="table-wrap">
+      <table class="table table--centered">
+        <thead>
+          <tr>
+            <th scope="col">Persona</th>
+            <th scope="col">Aperti</th>
+            <th scope="col">Da<br />fare</th>
+            <th scope="col">In<br />corso</th>
+            <th scope="col">In<br />attesa</th>
+            <th scope="col">Sca-<br />duti</th>
+            <th
+              scope="col"
+              [title]="'Senza aggiornamenti da oltre ' + data.kpis.staleDays + ' giorni'"
+            >
+              Fermi<br />&gt; {{ data.kpis.staleDays }} gg
+            </th>
+            <th scope="col">Più<br />vecchio</th>
+            <th scope="col" title="Entrati / chiusi negli ultimi 7 giorni di calendario">
+              Ultimi 7 gg<br />entrati / chiusi
+            </th>
+            <th
+              scope="col"
+              title="Entrati / chiusi nelle ultime 4 settimane complete (da lunedì a domenica)"
+            >
+              Ultime 4 sett.<br />entrati / chiusi
+            </th>
+            <th scope="col" title="Media dei chiusi nelle ultime 4 settimane complete">
+              Chiusi<br />a settimana
+            </th>
+            <th scope="col" title="Giornate della settimana corrente sulle righe AMS del piano">
+              AMS<br />pianificate
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (person of people(); track person.resourceId ?? person.name ?? '-') {
+            <tr>
+              <th scope="row">
+                <button type="button" class="link-btn" (click)="selectPerson(person)">
+                  {{ person.name ?? 'Senza assegnatario' }}
+                </button>
+                @if (person.resourceId === null && person.name !== null) {
+                  <span class="muted" matTooltip="Utente Jira non collegato a una risorsa">
+                    · non collegato</span
+                  >
+                }
+                @if (person.backlogGrowing) {
+                  <span
+                    class="badge"
+                    matTooltip="Da 3 settimane entrano più ticket di quanti ne escono"
+                  >
+                    <mat-icon aria-hidden="true">trending_up</mat-icon> in crescita
+                  </span>
+                }
+              </th>
+              <td class="num strong">{{ person.open }}</td>
+              <td class="num">{{ person.toDo }}</td>
+              <td class="num">{{ person.inProgress }}</td>
+              <td class="num">{{ person.waitingCustomer }}</td>
+              <td class="num" [class.late]="person.overdue > 0">{{ person.overdue }}</td>
+              <td class="num" [class.late]="person.stale > 0">{{ person.stale }}</td>
+              <td class="num">{{ person.open > 0 ? person.oldestDays + ' gg' : '' }}</td>
+              <td class="num">{{ person.createdLast7Days }} / {{ person.resolvedLast7Days }}</td>
+              <td class="num">{{ person.createdLast4Weeks }} / {{ person.resolvedLast4Weeks }}</td>
+              <td class="num">{{ person.resolvedPerWeek | number: '1.0-1' }}</td>
+              <td class="num">
+                {{
+                  person.amsPlannedDays === null
+                    ? ''
+                    : (person.amsPlannedDays | number: '1.0-2') + ' gg'
+                }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="columns">
+    <section class="card" aria-labelledby="areas-title">
+      <h2 id="areas-title" class="card__title">Per area (campo "Progetto Marlù")</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Area</th>
+            <th scope="col">Aperti</th>
+            <th scope="col">Chiusi in 4 settimane</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (area of data.areas; track area.area) {
+            <tr>
+              <th scope="row">
+                <button
+                  type="button"
+                  class="link-btn"
+                  (click)="setFilter({ label: area.area, area: area.area })"
+                >
+                  {{ area.area }}
+                </button>
+              </th>
+              <td class="num strong">{{ area.open }}</td>
+              <td class="num">{{ area.resolvedLast4Weeks }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card" aria-labelledby="projects-title">
+      <h2 id="projects-title" class="card__title">Per progetto (etichetta col codice)</h2>
+      @if (data.projects.length === 0) {
+        <p class="muted">
+          Nessun ticket agganciato. Aggiungi in Jira l'etichetta con il codice del progetto (es.
+          ICT26ERP127).
+        </p>
+      } @else {
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Progetto</th>
+              <th scope="col">Aperti</th>
+              <th scope="col">Chiusi in 4 settimane</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (project of data.projects; track project.projectId) {
+              <tr>
+                <th scope="row">
+                  <button
+                    type="button"
+                    class="link-btn"
+                    (click)="setFilter({ label: project.code, projectId: project.projectId })"
+                  >
+                    {{ project.code }}
+                  </button>
+                  <a class="muted" [routerLink]="['/projects', project.projectId]">
+                    {{ project.name }}</a
+                  >
+                </th>
+                <td class="num strong">{{ project.open }}</td>
+                <td class="num">{{ project.resolvedLast4Weeks }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  </div>
+
+  <!-- Elenco dei ticket -->
+  <section id="ticket-list" class="card" aria-labelledby="list-title">
+    <div class="card__head">
+      <h2 id="list-title" class="card__title">
+        Ticket {{ includeDone() ? '' : 'aperti' }}
+        @if (filter(); as current) {
+          · {{ current.label }}
+          <button
+            mat-icon-button
+            type="button"
+            aria-label="Togli il filtro"
+            (click)="setFilter(null)"
+          >
+            <mat-icon aria-hidden="true">close</mat-icon>
+          </button>
+        }
+      </h2>
+      <span class="toggles">
+        <mat-slide-toggle
+          [checked]="includePending()"
+          (change)="includePending.set($event.checked)"
+        >
+          Anche i Pending
+          @if (!includePending() && hiddenPending() > 0) {
+            <span class="muted">({{ hiddenPending() }})</span>
+          }
+        </mat-slide-toggle>
+        <mat-slide-toggle [checked]="includeDone()" (change)="toggleDone($event.checked)">
+          Anche i chiusi recenti
+        </mat-slide-toggle>
+      </span>
+    </div>
+    @if (tickets() === null) {
+      <div class="state" role="status">
+        <mat-progress-spinner diameter="20" mode="indeterminate" aria-hidden="true" /> Caricamento…
+      </div>
+    } @else if (visibleTickets().length === 0) {
+      <p class="state">
+        Nessun ticket{{ hiddenPending() > 0 ? ' (i Pending sono nascosti)' : '' }}.
+      </p>
+    } @else {
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              @for (column of listColumns; track column.id) {
+                <th scope="col" [class.num]="column.num" [attr.aria-sort]="ariaSort(column.id)">
+                  <button
+                    type="button"
+                    class="sort-btn"
+                    [matTooltip]="sortHint"
+                    (click)="toggleListSort(column.id)"
+                  >
+                    {{ column.label }}
+                    @if (sortOf(column.id); as sort) {
+                      <span class="sort-ind">
+                        {{ sort.direction === 'asc' ? '↑' : '↓' }}
+                        @if (listSort().length > 1) {
+                          <sup>{{ sort.position }}</sup>
+                        }
+                      </span>
+                    } @else {
+                      <span class="sort-ind sort-ind--off" aria-hidden="true">↕</span>
+                    }
+                  </button>
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (ticket of visibleTickets(); track ticket.key) {
+              <tr>
+                <th scope="row">
+                  @if (ticket.url) {
+                    <a [href]="ticket.url" target="_blank" rel="noopener">{{ ticket.key }}</a>
+                  } @else {
+                    {{ ticket.key }}
+                  }
+                </th>
+                <td class="summary" [title]="ticket.summary">{{ ticket.summary }}</td>
+                <td>
+                  {{ ticket.statusName }}
+                  @if (ticket.stale) {
+                    <span
+                      class="badge"
+                      [matTooltip]="
+                        'Nessun aggiornamento da oltre ' + data.kpis.staleDays + ' giorni'
+                      "
+                      >fermo</span
+                    >
+                  }
+                </td>
+                <td>{{ ticket.assigneeName ?? '—' }}</td>
+                <td>{{ ticket.area ?? '' }}</td>
+                <td>{{ ticket.projectCode ?? '' }}</td>
+                <td class="num">{{ ticket.ageDays }} gg</td>
+                <td class="num" [class.late]="ticket.stale">
+                  {{ ticket.idleDays === 0 ? 'oggi' : ticket.idleDays + ' gg' }}
+                </td>
+                <td [class.late]="ticket.overdue">
+                  {{ ticket.dueDate ? (ticket.dueDate | date: 'dd/MM') : '' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}

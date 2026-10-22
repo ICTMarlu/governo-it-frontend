@@ -10,7 +10,7 @@ import {
   SITES_CONFIG,
   VENDORS_CONFIG,
 } from './features/master-data/master-data.configs';
-import { MANAGEMENT_READ_ROLES } from './features/management/management.configs';
+import { MEETING_ROLES } from './features/management/management.configs';
 import { PROJECTS_CONFIG } from './features/projects/projects.configs';
 import { RESOURCES_CONFIG } from './features/resources/resources.configs';
 import { USERS_CONFIG } from './features/users/users.configs';
@@ -57,6 +57,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/projects/project-detail-page').then((m) => m.ProjectDetailPage),
       },
+      {
+        path: 'plan',
+        title: 'Piano settimanale · Governo IT',
+        // Griglia come in Excel: menu nella barra blu e tutta la larghezza dello schermo
+        data: { fullWidth: true },
+        loadComponent: () => import('./features/plan/plan-page').then((m) => m.PlanPage),
+      },
       crudRoute('resources', RESOURCES_CONFIG),
       {
         path: 'resources/:id',
@@ -88,10 +95,72 @@ export const routes: Routes = [
           import('./features/master-data/project-codes-page').then((m) => m.ProjectCodesPage),
       },
       {
+        // Ticket AMS: pagina operativa e pagine BI navigabili (D-24, D-27)
+        path: 'tickets',
+        loadComponent: () =>
+          import('./features/tickets/tickets-section').then((m) => m.TicketsSection),
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            title: 'Ticket AMS · Governo IT',
+            loadComponent: () =>
+              import('./features/tickets/tickets-page').then((m) => m.TicketsPage),
+          },
+          {
+            path: 'panoramica',
+            title: 'Ticket · Panoramica · Governo IT',
+            loadComponent: () =>
+              import('./features/tickets/bi/bi-overview-page').then((m) => m.BiOverviewPage),
+          },
+          {
+            path: 'trend',
+            title: 'Ticket · Trend · Governo IT',
+            loadComponent: () =>
+              import('./features/tickets/bi/bi-trend-page').then((m) => m.BiTrendPage),
+          },
+          {
+            path: 'persone',
+            title: 'Ticket · Persone · Governo IT',
+            loadComponent: () =>
+              import('./features/tickets/bi/bi-people-page').then((m) => m.BiPeoplePage),
+          },
+          {
+            path: 'aperti',
+            title: 'Ticket aperti · Governo IT',
+            data: { mode: 'open' },
+            loadComponent: () =>
+              import('./features/tickets/bi/bi-open-page').then((m) => m.BiOpenPage),
+          },
+          {
+            path: 'pending',
+            title: 'Ticket in Pending · Governo IT',
+            data: { mode: 'pending' },
+            loadComponent: () =>
+              import('./features/tickets/bi/bi-open-page').then((m) => m.BiOpenPage),
+          },
+          {
+            path: 'elenco',
+            title: 'Elenco ticket · Governo IT',
+            loadComponent: () =>
+              import('./features/tickets/bi/bi-list-page').then((m) => m.BiListPage),
+          },
+        ],
+      },
+      {
+        path: 'tasks',
+        title: 'Task · Governo IT',
+        loadComponent: () => import('./features/tasks/tasks-page').then((m) => m.TasksPage),
+      },
+      {
+        path: 'master-data/parameters',
+        title: 'Parametri generali · Governo IT',
+        loadComponent: () =>
+          import('./features/master-data/parameters-page').then((m) => m.ParametersPage),
+      },
+      {
         path: 'management',
         title: 'Direzione · Governo IT',
-        canActivate: [roleGuard],
-        data: { roles: MANAGEMENT_READ_ROLES },
         loadComponent: () =>
           import('./features/management/management-page').then((m) => m.ManagementPage),
       },
@@ -99,7 +168,7 @@ export const routes: Routes = [
         path: 'management/meetings/:id',
         title: 'Riunione · Governo IT',
         canActivate: [roleGuard],
-        data: { roles: MANAGEMENT_READ_ROLES },
+        data: { roles: MEETING_ROLES },
         loadComponent: () =>
           import('./features/management/meeting-detail-page').then((m) => m.MeetingDetailPage),
       },

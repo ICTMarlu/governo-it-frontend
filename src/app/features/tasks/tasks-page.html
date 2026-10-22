@@ -1,0 +1,155 @@
+<gov-page-header
+  title="Task"
+  subtitle="Task e note di ogni persona, per progetto o per stato: nulla si perde tra un allineamento e l’altro."
+  [help]="help"
+/>
+
+@if (!seesAll()) {
+  <p class="scope-note" role="note">
+    <mat-icon aria-hidden="true">visibility</mat-icon>
+    Vedi i task assegnati a te e quelli che hai creato tu.
+  </p>
+}
+
+<div class="toolbar">
+  <mat-select
+    class="toolbar__person"
+    aria-label="Persona"
+    [value]="personId()"
+    (valueChange)="personId.set($event)"
+  >
+    <mat-option [value]="ALL">Tutte le persone</mat-option>
+    @for (person of people(); track person.id) {
+      <mat-option [value]="person.id">{{ person.name }}</mat-option>
+    }
+  </mat-select>
+
+  <label class="inline-search">
+    <mat-icon aria-hidden="true">search</mat-icon>
+    <input
+      class="inline-search__input"
+      type="search"
+      placeholder="Cerca titolo, progetto, persona…"
+      aria-label="Cerca nei task"
+      [value]="search()"
+      (input)="search.set($any($event.target).value)"
+    />
+  </label>
+
+  @if (view() === 'list') {
+    <mat-slide-toggle [checked]="includeDone()" (change)="includeDone.set($event.checked)">
+      Mostra chiusi
+    </mat-slide-toggle>
+  }
+
+  <span class="spacer"></span>
+
+  <gov-saved-views page="tasks" [state]="viewState()" (apply)="applyView($event)" />
+
+  <mat-button-toggle-group
+    aria-label="Vista"
+    hideSingleSelectionIndicator
+    [value]="view()"
+    (change)="setView($event.value)"
+  >
+    <mat-button-toggle value="list">
+      <mat-icon aria-hidden="true">view_list</mat-icon> Elenco
+    </mat-button-toggle>
+    <mat-button-toggle value="board">
+      <mat-icon aria-hidden="true">view_kanban</mat-icon> Kanban
+    </mat-button-toggle>
+  </mat-button-toggle-group>
+</div>
+
+<gov-task-quick-add
+  class="quick"
+  [defaults]="quickDefaults()"
+  [placeholder]="
+    personName() ? 'Nuovo task per ' + personName() + '… (Invio)' : 'Nuovo task… (Invio)'
+  "
+  (created)="onCreated($event)"
+/>
+
+<p class="summary" role="status">
+  {{ openCount() }} aperti
+  @if (overdueCount() > 0) {
+    · <strong class="late">{{ overdueCount() }} in ritardo</strong>
+  }
+</p>
+
+@if (tasks() === null) {
+  <div class="state" role="status">
+    <mat-progress-spinner diameter="24" mode="indeterminate" aria-hidden="true" />
+    Caricamento…
+  </div>
+} @else if (loadError()) {
+  <p class="state state--error" role="alert">
+    Impossibile caricare i task.
+    <button mat-button type="button" (click)="reload()">Riprova</button>
+  </p>
+} @else if (view() === 'list') {
+  @if (groups().length === 0) {
+    <p class="state">
+      Nessun task. Scrivine uno qui sopra o aggiungilo da una casella del piano settimanale (Alt+T).
+    </p>
+  }
+  @for (group of groups(); track group.key) {
+    <section class="group" [attr.aria-labelledby]="'group-' + group.key">
+      <h2 class="group__title" [id]="'group-' + group.key">
+        @if (group.key !== 'none') {
+          <a [routerLink]="['/projects', group.key]">{{ group.label }}</a>
+        } @else {
+          {{ group.label }}
+        }
+        <span class="group__count">{{ group.open }} aperti</span>
+      </h2>
+      <ul class="list">
+        @for (task of group.tasks; track task.id) {
+          <li>
+            <gov-task-item
+              [task]="task"
+              [statuses]="statuses()"
+              [showProject]="false"
+              [showAssignee]="personId() === ALL || task.assigneeId !== personId()"
+              (opened)="open(task)"
+              (toggleDone)="toggleDone(task)"
+              (statusChange)="changeStatus(task, $event)"
+            />
+          </li>
+        }
+      </ul>
+    </section>
+  }
+} @else {
+  <p class="hint">
+    Trascina le schede da una colonna all’altra per cambiare stato. Le note sono nella vista Elenco.
+  </p>
+  <div class="board" cdkDropListGroup>
+    @for (column of columns(); track column.status.id) {
+      <section
+        class="column"
+        cdkDropList
+        [cdkDropListData]="column.status"
+        [style.--status-color]="column.status.color"
+        [attr.aria-labelledby]="'column-' + column.status.id"
+        (cdkDropListDropped)="drop($event)"
+      >
+        <h2 class="column__title" [id]="'column-' + column.status.id">
+          {{ column.status.label }} <span class="group__count">{{ column.tasks.length }}</span>
+        </h2>
+        @for (task of column.tasks; track task.id) {
+          <div class="card" cdkDrag [cdkDragData]="task" [cdkDragDisabled]="!task.canEdit">
+            <gov-task-item
+              [task]="task"
+              [statuses]="statuses()"
+              [showAssignee]="personId() === ALL"
+              (opened)="open(task)"
+              (toggleDone)="toggleDone(task)"
+              (statusChange)="changeStatus(task, $event)"
+            />
+          </div>
+        }
+      </section>
+    }
+  </div>
+}

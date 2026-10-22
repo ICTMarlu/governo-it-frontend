@@ -1,0 +1,78 @@
+@let item = task();
+<div class="item" [class.item--done]="item.done">
+  @if (item.kind === 'TASK') {
+    <mat-checkbox
+      class="item__check"
+      [checked]="item.done"
+      [disabled]="!item.canEdit || busy()"
+      [attr.aria-label]="(item.done ? 'Riapri: ' : 'Segna come fatto: ') + item.title"
+      (change)="toggleDone.emit()"
+    />
+  } @else {
+    <mat-icon class="item__note" aria-label="Nota" title="Nota">sticky_note_2</mat-icon>
+  }
+
+  <div class="item__main">
+    <button type="button" class="item__title" (click)="opened.emit()">{{ item.title }}</button>
+    <div class="item__meta">
+      @if (item.kind === 'TASK') {
+        @if (item.canEdit && activeStatuses().length > 0) {
+          <button
+            type="button"
+            class="status"
+            [style.--status-color]="item.statusColor"
+            [matMenuTriggerFor]="statusMenu"
+            [attr.aria-label]="'Stato: ' + item.statusLabel + '. Cambia stato'"
+          >
+            {{ item.statusLabel }}
+            <mat-icon aria-hidden="true">arrow_drop_down</mat-icon>
+          </button>
+        } @else {
+          <span class="status" [style.--status-color]="item.statusColor">{{
+            item.statusLabel
+          }}</span>
+        }
+      }
+      @if (showProject() && item.projectCode) {
+        <span class="meta" [title]="item.projectName ?? ''">{{ item.projectCode }}</span>
+      }
+      @if (showAssignee() && item.assigneeName) {
+        <span class="meta">
+          <mat-icon aria-hidden="true">person</mat-icon>{{ item.assigneeName }}
+        </span>
+      }
+      @if (due()) {
+        <span class="meta" [class.meta--late]="item.overdue">
+          <mat-icon aria-hidden="true">event</mat-icon>{{ due() }}
+        </span>
+      }
+      @if (item.remindOn && !item.done) {
+        <span class="meta" [title]="'Promemoria il ' + item.remindOn">
+          <mat-icon aria-hidden="true">notifications</mat-icon>
+          <span class="visually-hidden">promemoria</span>
+        </span>
+      }
+      @if (item.commentCount > 0) {
+        <span class="meta">
+          <mat-icon aria-hidden="true">chat_bubble_outline</mat-icon>{{ item.commentCount }}
+          <span class="visually-hidden">commenti</span>
+        </span>
+      }
+    </div>
+  </div>
+</div>
+
+<mat-menu #statusMenu="matMenu">
+  @for (status of activeStatuses(); track status.id) {
+    <button
+      mat-menu-item
+      type="button"
+      role="menuitemradio"
+      [attr.aria-checked]="status.id === item.statusId"
+      (click)="statusChange.emit(status.id)"
+    >
+      <span class="dot" [style.background]="status.color" aria-hidden="true"></span>
+      {{ status.label }}
+    </button>
+  }
+</mat-menu>

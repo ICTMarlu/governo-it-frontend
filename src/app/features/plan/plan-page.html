@@ -1,0 +1,899 @@
+<!-- Riga delle festività della persona (calendario della sua sede) -->
+<ng-template #holidayTpl let-group>
+  <tr class="holiday">
+    <td class="c-menu sticky"></td>
+    <td class="c-code sticky"></td>
+    <th scope="row" class="c-project sticky">Festività</th>
+    @if (infoColumns().length > 0) {
+      <td class="sticky info-span" [attr.colspan]="infoColumns().length">
+        dal calendario della sede
+      </td>
+    }
+    <td class="c-total sticky"></td>
+    @for (total of group.totals; track total.weekStart) {
+      <td
+        class="c-week"
+        [class.current]="weekIsCurrent(total.weekStart)"
+        [matTooltip]="total.holidayNames.join(', ')"
+        [matTooltipDisabled]="total.holidayNames.length === 0"
+      >
+        {{ format(total.holidays) }}
+      </td>
+    }
+  </tr>
+</ng-template>
+
+<!-- Riga del piano (persona + progetto), usata in tutti i raggruppamenti -->
+<ng-template #rowTpl let-group="group" let-gridRow="gridRow">
+  <tr [class.archived]="gridRow.row.archived" [class.vacation]="gridRow.row.vacation">
+    <td class="c-menu sticky">
+      @if (canWrite()) {
+        <button
+          type="button"
+          class="icon-btn"
+          [matMenuTriggerFor]="rowMenu"
+          [attr.aria-label]="'Azioni sulla riga ' + rowLabel(gridRow.row)"
+        >
+          <mat-icon aria-hidden="true">more_vert</mat-icon>
+        </button>
+        <mat-menu #rowMenu="matMenu">
+          <button mat-menu-item type="button" (click)="fill(group, gridRow)">
+            <mat-icon aria-hidden="true">format_color_fill</mat-icon>
+            Riempi intervallo
+          </button>
+          @if (gridRow.row.id !== null) {
+            <button mat-menu-item type="button" (click)="editRow(gridRow.row)">
+              <mat-icon aria-hidden="true">edit</mat-icon>
+              {{ gridRow.row.vacation ? 'Nota della riga' : 'Modifica riga' }}
+            </button>
+            @if (!gridRow.row.vacation) {
+              <button mat-menu-item type="button" (click)="toggleArchived(gridRow.row)">
+                <mat-icon aria-hidden="true">{{
+                  gridRow.row.archived ? 'unarchive' : 'archive'
+                }}</mat-icon>
+                {{ gridRow.row.archived ? 'Ripristina' : 'Archivia' }}
+              </button>
+              <button mat-menu-item type="button" (click)="deleteRow(gridRow.row)">
+                <mat-icon aria-hidden="true">delete</mat-icon>
+                Elimina
+              </button>
+            }
+          }
+        </mat-menu>
+      }
+    </td>
+    <td class="c-code sticky code">{{ gridRow.row.projectCode }}</td>
+    <th
+      scope="row"
+      class="c-project sticky"
+      [title]="gridRow.row.vacation ? 'Ferie' : gridRow.row.projectName"
+    >
+      @if (gridRow.row.vacation) {
+        @if (grouping() === 'system') {
+          <span class="muted">{{ group.resource.name }} ·</span>
+        }
+        Ferie
+      } @else {
+        @if (grouping() === 'system') {
+          <span class="muted">{{ group.resource.name }} ·</span>
+        }
+        <a class="link" [routerLink]="['/projects', gridRow.row.projectId]">{{
+          gridRow.row.projectName
+        }}</a>
+      }
+    </th>
+    @for (id of infoColumns(); track id) {
+      @switch (id) {
+        @case ('status') {
+          <td class="c-status sticky">
+            @if (gridRow.row.statusLabel && !gridRow.row.vacation) {
+              <span
+                class="status"
+                [style.--status-color]="gridRow.row.statusColor"
+                [title]="gridRow.row.workTypeLabel"
+              >
+                {{ gridRow.row.statusLabel }}
+              </span>
+            }
+          </td>
+        }
+        @case ('prio') {
+          <td class="c-prio sticky">{{ gridRow.row.itPriorityLevel ?? '' }}</td>
+        }
+        @case ('businessPrio') {
+          <td class="c-businessPrio sticky">
+            {{ gridRow.row.businessPriorityLevel ?? '' }}
+          </td>
+        }
+        @case ('system') {
+          <td class="c-system sticky" [title]="gridRow.row.mainSystemLabel ?? ''">
+            {{ gridRow.row.vacation ? '' : gridRow.row.mainSystemLabel }}
+          </td>
+        }
+        @case ('type') {
+          <td class="c-type sticky">
+            {{ gridRow.row.vacation ? '' : gridRow.row.workTypeLabel }}
+          </td>
+        }
+        @case ('owner') {
+          <td class="c-owner sticky" [title]="gridRow.row.ownerNames.join(', ')">
+            {{ gridRow.row.ownerNames.join(', ') }}
+          </td>
+        }
+        @case ('requester') {
+          <td class="c-requester sticky" [title]="gridRow.row.requesterNames.join(', ')">
+            {{ gridRow.row.requesterNames.join(', ') }}
+          </td>
+        }
+        @case ('note') {
+          <td
+            class="c-note sticky"
+            [class.cell]="canWrite() && gridRow.row.id !== null"
+            [title]="gridRow.row.rowNote ?? ''"
+          >
+            @if (canWrite() && gridRow.row.id !== null) {
+              <!-- Nota scritta nella cella, come in Excel: si salva uscendo o con Invio -->
+              <input
+                class="cell__input cell__input--text"
+                maxlength="500"
+                autocomplete="off"
+                placeholder="Aggiungi nota…"
+                [attr.aria-label]="'Nota della riga ' + rowLabel(gridRow.row)"
+                [value]="gridRow.row.rowNote ?? ''"
+                (change)="saveRowNote(group.resource, gridRow.row, $any($event.target))"
+                (keydown.enter)="$any($event.target).blur()"
+                (keydown.escape)="
+                  $any($event.target).value = gridRow.row.rowNote ?? ''; $any($event.target).blur()
+                "
+              />
+            } @else {
+              {{ gridRow.row.rowNote }}
+            }
+          </td>
+        }
+      }
+    }
+    <td
+      class="c-total sticky"
+      [title]="
+        gridRow.row.workTypeCode === 'PROJECT'
+          ? 'Totale del progetto, tutte le settimane (anno ' +
+            currentYear +
+            ': ' +
+            format(gridRow.row.yearTotal) +
+            ' gg)'
+          : 'Totale dell’anno ' + currentYear
+      "
+    >
+      {{ format(gridRow.total) }}
+    </td>
+    @for (week of weeks(); track week.weekStart) {
+      <td
+        class="c-week cell"
+        [class.current]="week.current"
+        [class.cell--note]="gridRow.cells[week.weekStart]?.note"
+      >
+        @if (canWrite()) {
+          <input
+            class="cell__input"
+            inputmode="decimal"
+            autocomplete="off"
+            [attr.data-nav]="gridRow.nav"
+            [attr.data-row]="gridRow.row.id"
+            [attr.data-week]="week.weekStart"
+            [attr.aria-label]="
+              group.resource.name + ', ' + rowLabel(gridRow.row) + ', settimana ' + week.isoWeek
+            "
+            [title]="gridRow.cells[week.weekStart]?.note ?? ''"
+            [value]="format(gridRow.cells[week.weekStart]?.days)"
+            (focus)="$any($event.target).select()"
+            (change)="commit(group, gridRow, week.weekStart, $any($event.target))"
+            (keydown)="onKey($event, group, gridRow, week.weekStart)"
+            (paste)="onPaste($event, gridRow, week.weekStart)"
+            (contextmenu)="$event.preventDefault(); editNote(group, gridRow, week.weekStart)"
+          />
+        } @else {
+          <span [title]="gridRow.cells[week.weekStart]?.note ?? ''">{{
+            format(gridRow.cells[week.weekStart]?.days)
+          }}</span>
+        }
+        @if (gridRow.row.id !== null) {
+          <!-- Task e note della casella: pallino col numero degli aperti, + al passaggio -->
+          @let tasks = cellTasks().get(cellKey(gridRow.row.id, week.weekStart));
+          <button
+            type="button"
+            class="task-dot"
+            [class.task-dot--empty]="!tasks"
+            [class.task-dot--closed]="tasks && tasks.open === 0"
+            [attr.tabindex]="tasks ? 0 : -1"
+            [attr.aria-label]="
+              taskCountLabel(tasks) + ' · ' + rowLabel(gridRow.row) + ', settimana ' + week.isoWeek
+            "
+            [matTooltip]="taskCountLabel(tasks)"
+            (click)="openTasks(group, gridRow, week.weekStart)"
+          >
+            @if (!tasks) {
+              +
+            } @else if (tasks.open > 0) {
+              {{ tasks.open }}
+            } @else {
+              ✓
+            }
+          </button>
+        }
+      </td>
+    }
+  </tr>
+</ng-template>
+
+<!-- Gruppo per sistema: freccia per aprire e chiudere, da chiuso i totali per settimana -->
+<ng-template #sectionTpl let-section>
+  <tr class="section" [class.section--closed]="collapsedSections().has(section.key)">
+    <th scope="rowgroup" class="c-menu sticky">
+      <button
+        type="button"
+        class="icon-btn"
+        [attr.aria-expanded]="!collapsedSections().has(section.key)"
+        [attr.aria-label]="
+          (collapsedSections().has(section.key) ? 'Mostra le righe di ' : 'Nascondi le righe di ') +
+          section.label
+        "
+        (click)="toggleSection(section.key)"
+      >
+        <mat-icon aria-hidden="true">{{
+          collapsedSections().has(section.key) ? 'chevron_right' : 'expand_more'
+        }}</mat-icon>
+      </button>
+    </th>
+    <th scope="rowgroup" class="c-code c-person sticky" colspan="2">
+      <span class="section__name">{{ section.label }}</span>
+      <span class="muted">
+        · {{ section.rowCount }} {{ section.rowCount === 1 ? 'riga' : 'righe' }}</span
+      >
+    </th>
+    @if (infoColumns().length > 0) {
+      <td class="sticky info-span" [attr.colspan]="infoColumns().length"></td>
+    }
+    <td class="c-total sticky">{{ format(section.total) }}</td>
+    @for (week of weeks(); track week.weekStart) {
+      <td class="c-week" [class.current]="week.current">
+        {{ format(section.weekTotals[week.weekStart]) }}
+      </td>
+    }
+  </tr>
+</ng-template>
+
+<!-- Freccia di ordinamento e, con due livelli, il numero del livello (1 o 2); ↕ tenue = ordinabile -->
+<ng-template #sortIndicator let-id>
+  @if (sortOf(id); as sort) {
+    <span
+      class="sort-ind"
+      [attr.aria-label]="
+        (sort.direction === 'asc' ? 'crescente' : 'decrescente') + ', livello ' + sort.position
+      "
+    >
+      {{ sort.direction === 'asc' ? '↑' : '↓' }}
+      @if (sortLevels().length > 1) {
+        <sup>{{ sort.position }}</sup>
+      }
+    </span>
+  } @else {
+    <span class="sort-ind sort-ind--off" aria-hidden="true">↕</span>
+  }
+</ng-template>
+
+<!-- Intestazione compatta: titolo, periodo, filtri e azioni su una riga (va a capo solo se serve) -->
+<div class="toolbar">
+  <h1 class="toolbar__title">Piano settimanale</h1>
+
+  <div class="toolbar__period">
+    <button
+      mat-icon-button
+      type="button"
+      aria-label="Una settimana prima"
+      matTooltip="Una settimana indietro"
+      (click)="shift(-1)"
+    >
+      <mat-icon aria-hidden="true">chevron_left</mat-icon>
+    </button>
+    <span class="toolbar__label" aria-live="polite">{{ periodLabel() }}</span>
+    <button
+      mat-icon-button
+      type="button"
+      aria-label="Una settimana dopo"
+      matTooltip="Una settimana avanti"
+      (click)="shift(1)"
+    >
+      <mat-icon aria-hidden="true">chevron_right</mat-icon>
+    </button>
+    <button
+      mat-stroked-button
+      type="button"
+      matTooltip="Torna alla settimana corrente"
+      (click)="goToday()"
+    >
+      Oggi
+    </button>
+  </div>
+
+  <!-- Ricerca dal vivo: filtra la griglia a ogni lettera -->
+  <label class="inline-search">
+    <mat-icon aria-hidden="true">search</mat-icon>
+    <span class="visually-hidden">Cerca progetto, codice o nota</span>
+    <input
+      type="search"
+      class="inline-search__input"
+      placeholder="Cerca progetto, codice o nota"
+      [value]="search()"
+      (input)="search.set($any($event.target).value)"
+    />
+  </label>
+
+  <gov-excel-filter
+    label="Stato"
+    [options]="statusFilterOptions()"
+    [selected]="selectedStatuses()"
+    [summaryText]="statusSummary()"
+    [allMeansNoFilter]="false"
+    [presets]="statusPresets"
+    (selectedChange)="setStatuses($event)"
+  />
+  <gov-excel-filter
+    label="Persone"
+    [options]="resourceFilterOptions()"
+    [selected]="selectedResources()"
+    [summaryText]="resourceSummary()"
+    [filtered]="resourceFilter() !== null"
+    [allMeansNoFilter]="false"
+    (selectedChange)="resourceFilter.set($event)"
+  />
+  @if (hasFilters() || viewChanged()) {
+    <button
+      mat-button
+      type="button"
+      matTooltip="Torna alla vista di partenza: niente ricerca e filtri (stato: solo aperti), ordinamento, colonne e raggruppamento standard, gruppi aperti e settimana corrente"
+      (click)="clearFilters()"
+    >
+      <mat-icon aria-hidden="true">filter_alt_off</mat-icon>
+      Togli filtri
+    </button>
+  }
+
+  <button
+    mat-button
+    type="button"
+    matTooltip="Raggruppa le righe per persona, per persona e sistema, o per sistema"
+    [matMenuTriggerFor]="groupingMenu"
+  >
+    <mat-icon aria-hidden="true">account_tree</mat-icon>
+    Raggruppa: {{ groupingLabels[grouping()] }}
+  </button>
+  <mat-menu #groupingMenu="matMenu">
+    @for (option of groupingOptions; track option) {
+      <button
+        mat-menu-item
+        type="button"
+        role="menuitemradio"
+        [attr.aria-checked]="grouping() === option"
+        (click)="setGrouping(option)"
+      >
+        <mat-icon aria-hidden="true">{{ grouping() === option ? 'check' : '' }}</mat-icon>
+        {{ groupingLabels[option] }}
+      </button>
+    }
+  </mat-menu>
+  <button
+    mat-button
+    type="button"
+    matTooltip="Scegli le colonne e il loro ordine"
+    (click)="openColumnChooser()"
+  >
+    <mat-icon aria-hidden="true">view_column</mat-icon>
+    Colonne
+  </button>
+  @if (sortLevels().length > 0) {
+    <button
+      mat-button
+      type="button"
+      [matTooltip]="'Ordinato per ' + sortSummary()"
+      (click)="clearSort()"
+    >
+      <mat-icon aria-hidden="true">swap_vert</mat-icon>
+      Togli ordinamento
+    </button>
+  }
+  <gov-saved-views page="plan" [state]="viewState()" (apply)="applyView($event)" />
+  <mat-checkbox [ngModel]="showArchived()" (ngModelChange)="showArchived.set($event)"
+    >Archiviate</mat-checkbox
+  >
+
+  <span class="toolbar__spacer"></span>
+  @if (pending() > 0) {
+    <span class="toolbar__saving" role="status">
+      <mat-progress-spinner diameter="16" mode="indeterminate" aria-hidden="true" />
+      Salvataggio…
+    </span>
+  }
+  <span class="legend" tabindex="0" [matTooltip]="legendText">
+    <span class="sat-pill sat-pill--free">&lt;90%</span>
+    <span class="sat-pill sat-pill--full">90–100%</span>
+    <span class="sat-pill sat-pill--over">&gt;100%</span>
+  </span>
+  @if (canWrite()) {
+    <button mat-flat-button type="button" (click)="addRow()">
+      <mat-icon aria-hidden="true">add</mat-icon>
+      Riga
+    </button>
+  }
+  <gov-help-button [help]="help" />
+</div>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="state" role="status">
+      <mat-progress-spinner diameter="24" mode="indeterminate" aria-hidden="true" />
+      Caricamento del piano…
+    </p>
+  }
+  @case ('error') {
+    <p class="state state--error" role="alert">Piano non disponibile: backend non raggiungibile.</p>
+  }
+  @case ('ready') {
+    @if (!isMobile()) {
+      <div
+        #gridWrap
+        class="grid-wrap"
+        role="region"
+        aria-label="Piano settimanale: le settimane scorrono in orizzontale"
+        tabindex="0"
+        (scroll)="onGridScroll()"
+      >
+        <table class="grid">
+          <thead>
+            <tr>
+              <th scope="col" class="c-menu sticky">
+                <!-- Scelta delle colonne anche dall'angolo della griglia, come il menu di Excel -->
+                <button
+                  type="button"
+                  class="icon-btn"
+                  aria-label="Scegli le colonne da mostrare e il loro ordine"
+                  matTooltip="Colonne: aggiungi, togli, riordina"
+                  (click)="openColumnChooser()"
+                >
+                  <mat-icon aria-hidden="true">view_column</mat-icon>
+                </button>
+              </th>
+              <th scope="col" class="c-code sticky" [attr.aria-sort]="ariaSort('code')">
+                <span class="head-filter">
+                  <span matTooltip="Filtra le persone (righe grigie)">Risorsa</span>
+                  <gov-excel-filter
+                    label="Risorsa"
+                    [compact]="true"
+                    [options]="resourceFilterOptions()"
+                    [selected]="selectedResources()"
+                    [summaryText]="resourceSummary()"
+                    [filtered]="resourceFilter() !== null"
+                    [allMeansNoFilter]="false"
+                    (selectedChange)="resourceFilter.set($event)"
+                  />
+                  <span class="muted">·</span>
+                  <button
+                    type="button"
+                    class="sort-btn"
+                    [matTooltip]="sortHint"
+                    (click)="toggleSort('code')"
+                  >
+                    Codice
+                    <ng-container
+                      *ngTemplateOutlet="sortIndicator; context: { $implicit: 'code' }"
+                    />
+                  </button>
+                </span>
+              </th>
+              <th scope="col" class="c-project sticky" [attr.aria-sort]="ariaSort('project')">
+                <span class="head-filter">
+                  <button
+                    type="button"
+                    class="sort-btn"
+                    [matTooltip]="sortHint"
+                    (click)="toggleSort('project')"
+                  >
+                    Progetto
+                    <ng-container
+                      *ngTemplateOutlet="sortIndicator; context: { $implicit: 'project' }"
+                    />
+                  </button>
+                  <gov-excel-filter
+                    label="Progetto"
+                    [compact]="true"
+                    [options]="projectFilterOptions()"
+                    [selected]="projectFilter()"
+                    [sortable]="true"
+                    [sortDirection]="sortDirection('project')"
+                    (selectedChange)="projectFilter.set($event)"
+                    (sortChange)="sortFromMenu('project', $event)"
+                  />
+                </span>
+              </th>
+              <!-- Colonne a scelta (pulsante "Colonne"), nell'ordine dell'utente -->
+              @for (id of infoColumns(); track id) {
+                <th scope="col" [class]="'c-' + id + ' sticky'" [attr.aria-sort]="ariaSort(id)">
+                  <span class="head-filter">
+                    <button
+                      type="button"
+                      class="sort-btn"
+                      [matTooltip]="sortHint"
+                      (click)="toggleSort(id)"
+                    >
+                      {{ sortLabels[id] }}
+                      <ng-container *ngTemplateOutlet="sortIndicator; context: { $implicit: id }" />
+                    </button>
+                    @if (id === 'status') {
+                      <gov-excel-filter
+                        label="Stato"
+                        [compact]="true"
+                        [options]="statusFilterOptions()"
+                        [selected]="selectedStatuses()"
+                        [summaryText]="statusSummary()"
+                        [allMeansNoFilter]="false"
+                        [presets]="statusPresets"
+                        [sortable]="true"
+                        [sortDirection]="sortDirection('status')"
+                        sortAscLabel="Ordina come la lista (To Start → Completed)"
+                        sortDescLabel="Ordina al contrario"
+                        (selectedChange)="setStatuses($event)"
+                        (sortChange)="sortFromMenu('status', $event)"
+                      />
+                    } @else if (id === 'prio') {
+                      <gov-excel-filter
+                        label="Priorità IT"
+                        [compact]="true"
+                        [options]="priorityFilterOptions"
+                        [selected]="priorityFilter()"
+                        [sortable]="true"
+                        [sortDirection]="sortDirection('prio')"
+                        sortAscLabel="Ordina 1 → 4 (prima le più importanti)"
+                        sortDescLabel="Ordina 4 → 1"
+                        (selectedChange)="priorityFilter.set($event)"
+                        (sortChange)="sortFromMenu('prio', $event)"
+                      />
+                    }
+                  </span>
+                </th>
+              }
+              <th scope="col" class="c-total sticky" [attr.aria-sort]="ariaSort('total')">
+                <button
+                  type="button"
+                  class="sort-btn"
+                  matTooltip="Totale delle settimane visibili (passa sulla cifra per l'anno). Clic per ordinare"
+                  (click)="toggleSort('total')"
+                >
+                  Tot
+                  <ng-container
+                    *ngTemplateOutlet="sortIndicator; context: { $implicit: 'total' }"
+                  />
+                </button>
+              </th>
+              @for (week of weeks(); track week.weekStart) {
+                <th
+                  scope="col"
+                  class="c-week c-week--head"
+                  [class.current]="week.current"
+                  [class.past]="isPastWeek(week.weekStart)"
+                  [attr.aria-sort]="ariaSort(weekSortPrefix + week.weekStart)"
+                >
+                  <button
+                    type="button"
+                    class="sort-btn"
+                    [matTooltip]="
+                      (week.current
+                        ? 'Settimana corrente'
+                        : isPastWeek(week.weekStart)
+                          ? 'Settimana passata (scaduta)'
+                          : 'Settimana futura') + ' · clic per ordinare per giornate'
+                    "
+                    (click)="toggleSort(weekSortPrefix + week.weekStart)"
+                  >
+                    W{{ week.isoWeek }}
+                    <span class="week-date">{{ dayLabel(week.weekStart) }}</span>
+                    <ng-container
+                      *ngTemplateOutlet="
+                        sortIndicator;
+                        context: { $implicit: weekSortPrefix + week.weekStart }
+                      "
+                    />
+                  </button>
+                </th>
+              }
+            </tr>
+          </thead>
+          @if (grouping() === 'system') {
+            <!-- In alto la saturazione di ogni persona mostrata, come nella vista per persona -->
+            <tbody>
+              @for (group of groups(); track group.resource.resourceId) {
+                <tr class="person">
+                  <td class="c-menu sticky"></td>
+                  <th scope="row" class="c-code c-person sticky" colspan="2">
+                    <a
+                      class="person__name link"
+                      [routerLink]="['/resources', group.resource.resourceId]"
+                      >{{ group.resource.name }}</a
+                    >
+                    @if (infoColumns().length === 0) {
+                      <span class="sat-label"> · Saturazione</span>
+                    }
+                  </th>
+                  @if (infoColumns().length > 0) {
+                    <td class="sticky info-span" [attr.colspan]="infoColumns().length">
+                      <span class="sat-label">
+                        <strong>Saturazione</strong> · caricato ÷ capacità della settimana
+                      </span>
+                    </td>
+                  }
+                  <td
+                    class="c-total sticky"
+                    [title]="'Giornate dell’anno ' + currentYear + ', tutte le righe'"
+                  >
+                    {{ format(group.yearAllocated) }}
+                  </td>
+                  @for (total of group.totals; track total.weekStart) {
+                    <td class="c-week" [class.current]="weekIsCurrent(total.weekStart)">
+                      <span
+                        class="sat-pill sat-pill--{{ total.level }}"
+                        [matTooltip]="
+                          'Caricato ' +
+                          (format(total.allocated) || '0') +
+                          ' su ' +
+                          (format(total.capacity) || '0') +
+                          ' giornate di capacità'
+                        "
+                      >
+                        {{ total.percent === null ? '—' : total.percent + '%' }}
+                      </span>
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+            @for (section of systemSections(); track section.key) {
+              <tbody>
+                <ng-container *ngTemplateOutlet="sectionTpl; context: { $implicit: section }" />
+                @if (!collapsedSections().has(section.key)) {
+                  @for (entry of section.entries; track rowKey(entry.gridRow)) {
+                    <ng-container
+                      *ngTemplateOutlet="
+                        rowTpl;
+                        context: { group: entry.group, gridRow: entry.gridRow }
+                      "
+                    />
+                  }
+                }
+              </tbody>
+            }
+            @if (systemVacation(); as vacation) {
+              @if (vacation.rowCount > 0) {
+                <tbody>
+                  <ng-container *ngTemplateOutlet="sectionTpl; context: { $implicit: vacation }" />
+                  @if (!collapsedSections().has(vacation.key)) {
+                    @for (entry of vacation.entries; track rowKey(entry.gridRow)) {
+                      <ng-container
+                        *ngTemplateOutlet="
+                          rowTpl;
+                          context: { group: entry.group, gridRow: entry.gridRow }
+                        "
+                      />
+                    }
+                  }
+                </tbody>
+              }
+            }
+            @if (systemHolidays(); as holidays) {
+              <tbody>
+                <ng-container *ngTemplateOutlet="sectionTpl; context: { $implicit: holidays }" />
+                @if (!collapsedSections().has(holidays.key)) {
+                  @for (calendar of holidays.calendars; track calendar.name) {
+                    <tr class="holiday">
+                      <td class="c-menu sticky"></td>
+                      <td class="c-code sticky"></td>
+                      <th scope="row" class="c-project sticky">Festività · {{ calendar.name }}</th>
+                      @if (infoColumns().length > 0) {
+                        <td class="sticky info-span" [attr.colspan]="infoColumns().length">
+                          calendario nazionale
+                        </td>
+                      }
+                      <td class="c-total sticky"></td>
+                      @for (week of weeks(); track week.weekStart) {
+                        <td
+                          class="c-week"
+                          [class.current]="week.current"
+                          [matTooltip]="calendar.weeks[week.weekStart]?.names?.join(', ') ?? ''"
+                          [matTooltipDisabled]="!calendar.weeks[week.weekStart]?.days"
+                        >
+                          {{ format(calendar.weeks[week.weekStart]?.days) }}
+                        </td>
+                      }
+                    </tr>
+                  }
+                }
+              </tbody>
+            }
+          } @else {
+            @for (group of groups(); track group.resource.resourceId) {
+              <tbody>
+                <tr class="person">
+                  <th scope="rowgroup" class="c-menu sticky">
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      [attr.aria-expanded]="!collapsed().has(group.resource.resourceId)"
+                      [attr.aria-label]="
+                        (collapsed().has(group.resource.resourceId)
+                          ? 'Mostra le righe di '
+                          : 'Nascondi le righe di ') + group.resource.name
+                      "
+                      (click)="toggle(group.resource.resourceId)"
+                    >
+                      <mat-icon aria-hidden="true">
+                        {{
+                          collapsed().has(group.resource.resourceId)
+                            ? 'chevron_right'
+                            : 'expand_more'
+                        }}
+                      </mat-icon>
+                    </button>
+                  </th>
+                  <th scope="rowgroup" class="c-code c-person sticky" colspan="2">
+                    <a
+                      class="person__name link"
+                      [routerLink]="['/resources', group.resource.resourceId]"
+                      [matTooltip]="'Apri la scheda di ' + group.resource.name"
+                      >{{ group.resource.name }}</a
+                    >
+                    @if (!group.resource.active) {
+                      <span class="muted"> · disattivata</span>
+                    }
+                    <span class="muted">
+                      @if (group.resource.hoursPerDay) {
+                        · {{ format(group.resource.hoursPerDay) }} h ×
+                        {{ format(group.resource.workingDaysPerWeek ?? 0) }} gg
+                      }
+                      @if (group.resource.siteName) {
+                        · {{ group.resource.siteName }}
+                      }
+                    </span>
+                    @if (canWrite()) {
+                      <button
+                        type="button"
+                        class="icon-btn person__add"
+                        matTooltip="Aggiungi una riga a {{ group.resource.name }}"
+                        [attr.aria-label]="'Aggiungi una riga a ' + group.resource.name"
+                        (click)="addRow(group.resource.resourceId)"
+                      >
+                        <mat-icon aria-hidden="true">add</mat-icon>
+                      </button>
+                    }
+                  </th>
+                  @if (infoColumns().length > 0) {
+                    <td class="sticky info-span muted" [attr.colspan]="infoColumns().length">
+                      {{ group.rows.length }} {{ group.rows.length === 1 ? 'riga' : 'righe' }}
+                    </td>
+                  }
+                  <td
+                    class="c-total sticky"
+                    [title]="'Giornate dell’anno ' + currentYear + ', tutte le righe'"
+                  >
+                    {{ format(group.yearAllocated) }}
+                  </td>
+                  @for (total of group.totals; track total.weekStart) {
+                    <td class="c-week" [class.current]="weekIsCurrent(total.weekStart)">
+                      <span
+                        class="sat-pill sat-pill--{{ total.level }}"
+                        [matTooltip]="
+                          'Caricato ' +
+                          (format(total.allocated) || '0') +
+                          ' su ' +
+                          (format(total.capacity) || '0') +
+                          ' giornate di capacità'
+                        "
+                      >
+                        {{ total.percent === null ? '—' : total.percent + '%' }}
+                      </span>
+                    </td>
+                  }
+                </tr>
+
+                @if (!collapsed().has(group.resource.resourceId)) {
+                  @if (grouping() === 'personSystem') {
+                    @for (
+                      section of personSections().get(group.resource.resourceId) ?? [];
+                      track section.key
+                    ) {
+                      <ng-container
+                        *ngTemplateOutlet="sectionTpl; context: { $implicit: section }"
+                      />
+                      @if (!collapsedSections().has(section.key)) {
+                        @for (entry of section.entries; track rowKey(entry.gridRow)) {
+                          <ng-container
+                            *ngTemplateOutlet="
+                              rowTpl;
+                              context: { group: entry.group, gridRow: entry.gridRow }
+                            "
+                          />
+                        }
+                      }
+                    }
+                    @for (gridRow of vacationRows(group); track rowKey(gridRow)) {
+                      <ng-container
+                        *ngTemplateOutlet="rowTpl; context: { group: group, gridRow: gridRow }"
+                      />
+                    }
+                  } @else {
+                    @for (gridRow of group.rows; track rowKey(gridRow)) {
+                      <ng-container
+                        *ngTemplateOutlet="rowTpl; context: { group: group, gridRow: gridRow }"
+                      />
+                    }
+                  }
+                  @if (canWrite()) {
+                    <!-- Aggiunta veloce: scrivi codice o nome, scegli con Invio, la riga nasce subito -->
+                    <tr class="quick-add">
+                      <td class="c-menu sticky">
+                        <mat-icon class="quick-add__icon" aria-hidden="true">add</mat-icon>
+                      </td>
+                      <td class="c-code c-person sticky" colspan="2">
+                        <input
+                          class="quick-add__input"
+                          autocomplete="off"
+                          placeholder="Aggiungi progetto a {{ group.resource.name }}…"
+                          [attr.aria-label]="'Aggiungi un progetto a ' + group.resource.name"
+                          [matAutocomplete]="quickAuto"
+                          [value]="quickText()[group.resource.resourceId] ?? ''"
+                          (input)="
+                            setQuickText(group.resource.resourceId, $any($event.target).value)
+                          "
+                        />
+                        <mat-autocomplete
+                          #quickAuto="matAutocomplete"
+                          [autoActiveFirstOption]="true"
+                          (optionSelected)="quickAdd(group.resource, $event.option.value)"
+                        >
+                          @for (
+                            project of quickMatches(group.resource.resourceId);
+                            track project.id
+                          ) {
+                            <mat-option [value]="project.id">
+                              {{ project.label }} <small class="muted">· {{ project.meta }}</small>
+                            </mat-option>
+                          }
+                        </mat-autocomplete>
+                      </td>
+                      @if (infoColumns().length > 0) {
+                        <td class="sticky info-span" [attr.colspan]="infoColumns().length"></td>
+                      }
+                      <td class="c-total sticky"></td>
+                      @for (week of weeks(); track week.weekStart) {
+                        <td class="c-week" [class.current]="week.current"></td>
+                      }
+                    </tr>
+                  }
+                  <ng-container *ngTemplateOutlet="holidayTpl; context: { $implicit: group }" />
+                }
+              </tbody>
+            }
+          }
+        </table>
+      </div>
+    } @else {
+      <!-- Telefono: una settimana alla volta, una scheda per persona -->
+      <gov-plan-mobile-week
+        [groups]="groups()"
+        [weeks]="weeks()"
+        [canWrite]="canWrite()"
+        [(index)]="mobileWeek"
+        [cellTasks]="cellTasks()"
+        (cellChanged)="commitChange($event)"
+        (tasksRequested)="openTasks($event.group, $event.gridRow, $event.weekStart)"
+      />
+    }
+  }
+}
