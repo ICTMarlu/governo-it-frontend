@@ -21,9 +21,11 @@ import {
 } from '@angular/router';
 import { catchError, filter, interval, map, merge, of, startWith, switchMap } from 'rxjs';
 
-import { ROLES } from '../../../shared/crud/crud.model';
+import { ModuleKey, canView } from '../../auth/permissions';
+import { ANAGRAFICHE, AnagraficaEntry } from '../anagrafiche';
 import { AuthService } from '../../auth/auth.service';
 import { ChangePasswordDialog } from '../../auth/change-password-dialog';
+import { McpTokensDialog } from '../../auth/mcp-tokens-dialog';
 import { ThemeMode, ThemeService } from '../../theme/theme.service';
 import { ReminderSummary, Task, dueLabel } from '../../../features/tasks/models/task.model';
 import { TaskCommands } from '../../../features/tasks/services/task-commands.service';
@@ -34,8 +36,10 @@ interface NavItem {
   readonly label: string;
   readonly icon: string;
   readonly route: string;
-  /** Ruoli che vedono la voce; assente = tutti. */
-  readonly roles?: readonly string[];
+  /** Voce a menu: il clic apre le scelte (la voce "Panoramica" porta alla sua home). */
+  readonly children?: readonly AnagraficaEntry[];
+  /** Moduli: la voce si vede se l'utente ne vede almeno uno; assente = tutti. */
+  readonly modules?: readonly ModuleKey[];
 }
 
 /** Promemoria dei task: aggiornati a ogni cambio pagina e ogni 5 minuti. */
@@ -48,15 +52,19 @@ const DESKTOP_QUERY = '(min-width: 1024px)';
 
 const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Home', icon: 'home', route: '/home' },
-  { label: 'Progetti', icon: 'work', route: '/projects' },
-  { label: 'Piano settimanale', icon: 'calendar_view_week', route: '/plan' },
-  { label: 'Task', icon: 'task_alt', route: '/tasks' },
-  { label: 'Ticket AMS', icon: 'support_agent', route: '/tickets' },
-  { label: 'Risorse', icon: 'groups', route: '/resources' },
-  { label: 'Richiedenti', icon: 'contact_mail', route: '/requesters' },
-  { label: 'Direzione', icon: 'record_voice_over', route: '/management' },
-  { label: 'Anagrafiche e liste', icon: 'tune', route: '/master-data' },
-  { label: 'Utenti', icon: 'manage_accounts', route: '/users', roles: [ROLES.admin] },
+  { label: 'Progetti', icon: 'work', route: '/projects', modules: ['PROJECTS'] },
+  { label: 'Piano settimanale', icon: 'calendar_view_week', route: '/plan', modules: ['PLAN'] },
+  { label: 'Task', icon: 'task_alt', route: '/tasks', modules: ['TASKS'] },
+  { label: 'Ticket AMS', icon: 'support_agent', route: '/tickets', modules: ['TICKETS'] },
+  { label: 'Direzione', icon: 'record_voice_over', route: '/management', modules: ['MANAGEMENT'] },
+  {
+    label: 'Anagrafiche',
+    icon: 'database',
+    route: '/anagrafiche',
+    children: ANAGRAFICHE,
+    modules: ['RESOURCES', 'REQUESTERS', 'TECHNOLOGY', 'MASTER_DATA'],
+  },
+  { label: 'Utenti', icon: 'manage_accounts', route: '/users', modules: ['USERS'] },
 ];
 
 /** Dati della rotta più interna (le pagine dichiarano qui `fullWidth`). */
@@ -154,13 +162,34 @@ export class Shell {
     return `Promemoria: ${summary.overdue} in ritardo, ${summary.dueSoon} in scadenza`;
   });
 
-  /** Voci di menu visibili al ruolo dell'utente. */
+  /** Voci di menu visibili con i permessi dell'utente. */
   protected readonly navItems = computed(() => {
-    const role = this.currentUser()?.role;
-    return NAV_ITEMS.filter(
-      (item) => !item.roles || (role !== undefined && item.roles.includes(role)),
+    const permissions = this.currentUser()?.permissions;
+    const visible = (module: ModuleKey) => canView(permissions, module);
+    return NAV_ITEMS.filter((item) => !item.modules || item.modules.some(visible)).map((item) =>
+      // Nel menu a tendina restano solo le scelte che l'utente può aprire
+      item.children
+        ? { ...item, children: item.children.filter((child) => visible(child.module)) }
+        : item,
     );
   });
+
+  /** Indirizzo corrente: serve a evidenziare la voce a menu quando si è in una delle sue pagine. */
+  private readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      startWith(null),
+      map(() => this.router.url),
+    ),
+    { initialValue: this.router.url },
+  );
+
+  /** La voce a menu è attiva se si è sulla sua home o su una delle sue pagine. */
+  protected isGroupActive(item: NavItem): boolean {
+    const url = this.currentUrl().split(/[?#]/)[0];
+    const routes = [item.route, ...(item.children ?? []).map((child) => child.route)];
+    return routes.some((route) => url === route || url.startsWith(route + '/'));
+  }
 
   protected reminderDue(task: Task): string {
     return dueLabel(task, toIsoDate(new Date())) || (task.remindOn ? 'promemoria' : '');
@@ -183,6 +212,10 @@ export class Shell {
       .afterClosed()
       .pipe(filter((changed) => changed === true))
       .subscribe(() => this.snackBar.open('Password aggiornata', 'OK', { duration: 3000 }));
+  }
+
+  protected mcpTokens(): void {
+    this.dialog.open(McpTokensDialog, { width: '640px', maxWidth: '100vw' });
   }
 
   protected logout(): void {

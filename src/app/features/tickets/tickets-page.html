@@ -89,7 +89,16 @@
         }
       </span>
     </li>
-    <li *govKpi="'ops.unassigned'" class="kpi" [class.kpi--alert]="data.kpis.unassigned > 0">
+    <li
+      *govKpi="'ops.unassigned'"
+      class="kpi kpi--link"
+      [class.kpi--alert]="data.kpis.unassigned > 0"
+      role="link"
+      tabindex="0"
+      title="Vedi i ticket senza assegnatario"
+      (click)="openUnassigned()"
+      (keydown.enter)="openUnassigned()"
+    >
       <span class="kpi__value">{{ data.kpis.unassigned }}</span>
       <span class="kpi__label">senza assegnatario</span>
       @if (data.kpis.unassigned > 0) {
@@ -98,6 +107,70 @@
         </span>
       }
     </li>
+    <li
+      *govKpi="'ops.priority'"
+      class="kpi kpi--link"
+      [class.kpi--alert]="data.kpis.highest + data.kpis.high > 0"
+      role="link"
+      tabindex="0"
+      title="Vedi i ticket con priorità Highest o High"
+      (click)="openPriority('prio-high')"
+      (keydown.enter)="openPriority('prio-high')"
+    >
+      <span class="kpi__value">{{ data.kpis.highest + data.kpis.high }}</span>
+      <span class="kpi__label">priorità alta</span>
+      <span class="kpi__meta">
+        <button
+          type="button"
+          class="kpi__link"
+          [disabled]="data.kpis.highest === 0"
+          (click)="$event.stopPropagation(); openPriority('prio-highest')"
+        >
+          {{ data.kpis.highest }} Highest
+        </button>
+        ·
+        <button
+          type="button"
+          class="kpi__link"
+          [disabled]="data.kpis.high === 0"
+          (click)="$event.stopPropagation(); openPriority('prio-high-only')"
+        >
+          {{ data.kpis.high }} High
+        </button>
+      </span>
+    </li>
+    <li
+      *govKpi="'ops.impact'"
+      class="kpi kpi--link"
+      [class.kpi--alert]="data.kpis.extensive + data.kpis.significant > 0"
+      role="link"
+      tabindex="0"
+      title="Vedi i ticket con impatto Extensive o Significant"
+      (click)="openPriority('impact-high')"
+      (keydown.enter)="openPriority('impact-high')"
+    >
+      <span class="kpi__value">{{ data.kpis.extensive + data.kpis.significant }}</span>
+      <span class="kpi__label">impatto alto</span>
+      <span class="kpi__meta">
+        <button
+          type="button"
+          class="kpi__link"
+          [disabled]="data.kpis.extensive === 0"
+          (click)="$event.stopPropagation(); openPriority('impact-extensive')"
+        >
+          {{ data.kpis.extensive }} Extensive
+        </button>
+        ·
+        <button
+          type="button"
+          class="kpi__link"
+          [disabled]="data.kpis.significant === 0"
+          (click)="$event.stopPropagation(); openPriority('impact-significant')"
+        >
+          {{ data.kpis.significant }} Significant
+        </button>
+      </span>
+    </li>
     <li *govKpi="'ops.overdue'" class="kpi" [class.kpi--alert]="data.kpis.overdue > 0">
       <span class="kpi__value">{{ data.kpis.overdue }}</span>
       <span class="kpi__label">con la scadenza passata</span>
@@ -105,6 +178,14 @@
     <li *govKpi="'ops.waiting'" class="kpi">
       <span class="kpi__value">{{ data.kpis.waitingCustomer }}</span>
       <span class="kpi__label">in attesa del cliente</span>
+      <button
+        type="button"
+        class="kpi__link"
+        [disabled]="confirmIdleCount() === 0"
+        (click)="showConfirmIdle()"
+      >
+        {{ confirmIdleCount() }} in conferma/UAT da oltre {{ confirmIdleDays }} gg
+      </button>
     </li>
     <li *govKpi="'ops.stale'" class="kpi">
       <span class="kpi__value">{{ data.kpis.stale }}</span>
@@ -315,23 +396,20 @@
   <div class="columns">
     <section *govKpi="'ops.areas'" class="card" aria-labelledby="areas-title">
       <h2 id="areas-title" class="card__title">Per area (campo "Progetto Marlù")</h2>
-      <table class="table">
+      <p class="muted period">{{ period28() }}</p>
+      <table class="table table--centered">
         <thead>
           <tr>
             <th scope="col">Area</th>
             <th scope="col">Aperti</th>
-            <th scope="col">Chiusi in 4 settimane</th>
+            <th scope="col">Chiusi</th>
           </tr>
         </thead>
         <tbody>
           @for (area of data.areas; track area.area) {
             <tr>
               <th scope="row">
-                <button
-                  type="button"
-                  class="link-btn"
-                  (click)="setFilter({ label: area.area, area: area.area })"
-                >
+                <button type="button" class="link-btn" (click)="openArea(area.area)">
                   {{ area.area }}
                 </button>
               </th>
@@ -351,23 +429,20 @@
           ICT26ERP127).
         </p>
       } @else {
-        <table class="table">
+        <p class="muted period">{{ period28() }}</p>
+        <table class="table table--centered">
           <thead>
             <tr>
               <th scope="col">Progetto</th>
               <th scope="col">Aperti</th>
-              <th scope="col">Chiusi in 4 settimane</th>
+              <th scope="col">Chiusi</th>
             </tr>
           </thead>
           <tbody>
             @for (project of data.projects; track project.projectId) {
               <tr>
                 <th scope="row">
-                  <button
-                    type="button"
-                    class="link-btn"
-                    (click)="setFilter({ label: project.code, projectId: project.projectId })"
-                  >
+                  <button type="button" class="link-btn" (click)="openProject(project.code)">
                     {{ project.code }}
                   </button>
                   <a class="muted" [routerLink]="['/projects', project.projectId]">
@@ -477,6 +552,7 @@
                   }
                 </td>
                 <td>{{ ticket.assigneeName ?? '—' }}</td>
+                <td>{{ ticket.reporterName ?? '' }}</td>
                 <td>{{ ticket.area ?? '' }}</td>
                 <td>{{ ticket.projectCode ?? '' }}</td>
                 <td class="num">{{ ticket.ageDays }} gg</td>

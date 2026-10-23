@@ -28,6 +28,7 @@ import { RouterLink } from '@angular/router';
 import { filter, map, switchMap } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { canEdit } from '../../core/auth/permissions';
 import { UserPreferencesService } from '../../core/preferences/user-preferences.service';
 import {
   ExcelFilter,
@@ -42,7 +43,6 @@ import {
 import { ColumnLayout, orderedColumns } from '../../shared/crud/column-layout';
 import { ConfirmDialog, ConfirmDialogData } from '../../shared/crud/confirm-dialog/confirm-dialog';
 import { CrudApiService, errorMessage } from '../../shared/crud/crud-api.service';
-import { ROLES } from '../../shared/crud/crud.model';
 import { toIsoDate } from '../../shared/dates/italian-date-adapter';
 import { matchesTerms, searchTerms } from '../../shared/util/text-search';
 import { HelpButton } from '../../shared/help/help-button';
@@ -104,7 +104,6 @@ import { TasksService } from '../tasks/services/tasks.service';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
-const WRITE_ROLES: readonly string[] = [ROLES.admin, ROLES.pm];
 /** Preferenza dell'utente: stati progetto mostrati. */
 const PLAN_PREFERENCES = 'plan.view';
 
@@ -403,10 +402,7 @@ export class PlanPage {
       .slice(0, 12);
   }
 
-  protected readonly canWrite = computed(() => {
-    const role = this.currentUser()?.role;
-    return role !== undefined && WRITE_ROLES.includes(role);
-  });
+  protected readonly canWrite = computed(() => canEdit(this.currentUser()?.permissions, 'PLAN'));
 
   protected readonly weeks = computed<readonly PlanWeek[]>(() => this.plan()?.weeks ?? []);
 

@@ -34,6 +34,12 @@
   background: var(--bar-bg);
   color: var(--bar-fg);
   --mat-icon-button-icon-color: var(--bar-fg);
+
+  // Telefoni stretti (375px): senza spazi extra logo e icone stanno nella barra senza scorrimento
+  @media (max-width: 399.98px) {
+    gap: 0;
+    padding-inline: 0.5rem;
+  }
 }
 
 .brand {
@@ -73,8 +79,11 @@
     gap: 0.375rem;
     height: 2.5rem;
     padding-inline: 0.625rem;
+    border: 0;
     border-radius: 1.25rem;
+    background: transparent;
     color: var(--bar-fg);
+    cursor: pointer;
     font: var(--mat-sys-label-large);
     text-decoration: none;
     white-space: nowrap;
@@ -93,6 +102,13 @@
   &__item--active:hover {
     background: var(--bar-active-bg);
     color: var(--bar-active-fg);
+  }
+
+  &__caret {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-inline: -0.375rem -0.25rem;
+    font-size: 1.25rem;
   }
 
   // Nascosta alla vista ma letta dai lettori di schermo
@@ -219,4 +235,9 @@
   margin: 0;
   padding: 0.75rem 1rem;
   color: var(--mat-sys-on-surface-variant);
+}
+
+// Scelte di un gruppo nel menu a scomparsa: rientrate
+.nav-child {
+  margin-inline-start: 1.5rem;
 }

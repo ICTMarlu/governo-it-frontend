@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -6,12 +7,14 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { Router } from '@angular/router';
 import { filter, finalize, switchMap } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { canEdit } from '../../core/auth/permissions';
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { CrudApiService, errorMessage } from '../../shared/crud/crud-api.service';
 import { CrudSection } from '../../shared/crud/crud-section/crud-section';
@@ -24,7 +27,6 @@ import {
 } from './components/start-meeting-dialog/start-meeting-dialog';
 import {
   ACTIONS_CONFIG,
-  MANAGEMENT_WRITE_ROLES,
   MEETING_ROLES,
   MEETINGS_CONFIG,
   TOPICS_CONFIG,
@@ -47,6 +49,7 @@ import { ExportTopic, agendaText, formatDay } from './models/management-export';
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
+    MatSelectModule,
     MatTabsModule,
   ],
   templateUrl: './management-page.html',
@@ -65,10 +68,9 @@ export class ManagementPage {
   protected readonly meetings = MEETINGS_CONFIG;
   protected readonly typeOptions = TOPIC_TYPE_OPTIONS;
 
-  protected readonly canWrite = computed(() => {
-    const role = this.currentUser()?.role;
-    return role !== undefined && MANAGEMENT_WRITE_ROLES.includes(role);
-  });
+  protected readonly canWrite = computed(() =>
+    canEdit(this.currentUser()?.permissions, 'MANAGEMENT'),
+  );
 
   /** Solo l'Admin vede tutto e gestisce le riunioni; gli altri i punti di cui sono owner (D-31). */
   protected readonly seesAll = computed(() => {
@@ -80,6 +82,12 @@ export class ManagementPage {
   /** Inserimento veloce: titolo e tipo, il resto si completa dopo. */
   protected readonly quickTitle = signal('');
   protected readonly quickType = signal('TOPIC');
+  /** "Rivolto a" (facoltativo): a quali direttori va chiesto il punto. */
+  protected readonly quickAudience = signal<number[]>([]);
+  protected readonly audienceOptions = toSignal(
+    this.api.options(TOPICS_CONFIG.fields.find((field) => field.key === 'audienceIds')!.options!),
+    { initialValue: [] },
+  );
   protected readonly adding = signal(false);
   /** Fa ricaricare l'elenco dei punti dopo un inserimento veloce. */
   protected readonly topicsRefresh = signal(0);
@@ -91,11 +99,16 @@ export class ManagementPage {
     }
     this.adding.set(true);
     this.api
-      .create(TOPICS_CONFIG.endpoint, { title, topicType: this.quickType() })
+      .create(TOPICS_CONFIG.endpoint, {
+        title,
+        topicType: this.quickType(),
+        ...(this.quickAudience().length > 0 ? { audienceIds: this.quickAudience() } : {}),
+      })
       .pipe(finalize(() => this.adding.set(false)))
       .subscribe({
         next: () => {
           this.quickTitle.set('');
+          this.quickAudience.set([]);
           this.topicsRefresh.update((value) => value + 1);
           this.snackBar.open(`Punto aggiunto: ${title}`, 'OK', { duration: 2500 });
         },

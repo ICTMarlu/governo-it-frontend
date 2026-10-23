@@ -64,6 +64,7 @@ import { TicketSyncService } from '../services/ticket-sync.service';
           Togli filtri
         </button>
       }
+      <ng-content />
       <span class="filters__spacer"></span>
       <gov-saved-views
         page="tickets.bi"

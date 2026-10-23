@@ -36,6 +36,8 @@ function ticket(changes: Partial<BiTicket>): BiTicket {
     resolved: null,
     updated: new Date(2026, 9, 1).toISOString(),
     due: null,
+    impact: null,
+    statusChanged: null,
     ...changes,
   };
 }
@@ -154,16 +156,16 @@ describe('bi.model', () => {
 });
 
 describe('personTrends', () => {
-  it('saldo delle ultime 4 settimane complete per persona, dal peggiore', () => {
+  it('saldo degli ultimi 30 giorni per persona, dal peggiore', () => {
     const day = (d: number) => new Date(2026, 9, d, 10).toISOString();
     const trends = personTrends(
       [
-        // Jonny: 4 entrati (21/09-18/10), nessuno chiuso → +1 a settimana
+        // Jonny: 4 entrati (dal 22/09 a oggi), nessuno chiuso → 4 ÷ 4,3 settimane = +0,9
         ticket({ key: 'A', created: day(1) }),
         ticket({ key: 'B', created: day(5) }),
         ticket({ key: 'C', created: day(12) }),
         ticket({ key: 'D', created: day(16) }),
-        // Elia: 1 entrato, 3 chiusi → −0,5 a settimana
+        // Elia: 2 entrati, 3 chiusi → −1 ÷ 4,3 = −0,2
         ticket({ key: 'E', assignee: 'Elia', resourceId: 3, created: day(2) }),
         ...['F', 'G', 'H'].map((key) =>
           ticket({
@@ -175,7 +177,7 @@ describe('personTrends', () => {
             resolved: day(8),
           }),
         ),
-        // Settimana in corso: non conta
+        // Ultimi giorni: contano
         ticket({ key: 'I', assignee: 'Elia', resourceId: 3, created: day(20) }),
       ],
       NOW,
@@ -183,9 +185,9 @@ describe('personTrends', () => {
     );
 
     expect(trends.map((t) => [t.name, t.perWeek, t.direction])).toEqual([
-      ['Jonny Collari', 1, 'up'],
-      ['Elia', -0.5, 'down'],
+      ['Jonny Collari', 0.9, 'up'],
+      ['Elia', -0.2, 'flat'],
     ]);
-    expect(trends[1]).toMatchObject({ open: 2, openBefore: 3, created: 1, resolved: 3 });
+    expect(trends[1]).toMatchObject({ open: 2, openBefore: 3, created: 2, resolved: 3 });
   });
 });

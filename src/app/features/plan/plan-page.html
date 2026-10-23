@@ -23,8 +23,37 @@
   </tr>
 </ng-template>
 
+<!-- Festività nazionali di un calendario; lead = etichetta in grassetto se è l'unica riga della sezione -->
+<ng-template #holidayRowTpl let-calendar let-lead="lead">
+  <tr class="holiday">
+    <td class="c-menu sticky"></td>
+    <td class="c-code sticky"></td>
+    <th scope="row" class="c-project sticky">
+      @if (lead) {
+        <strong class="lead">{{ lead }}</strong> <span class="muted">·</span>
+      }
+      {{ lead ? '' : 'Festività · ' }}{{ calendar.name }}
+    </th>
+    @if (infoColumns().length > 0) {
+      <td class="sticky info-span" [attr.colspan]="infoColumns().length">calendario nazionale</td>
+    }
+    <td class="c-total sticky"></td>
+    @for (week of weeks(); track week.weekStart) {
+      <td
+        class="c-week"
+        [class.current]="week.current"
+        [matTooltip]="calendar.weeks[week.weekStart]?.names?.join(', ') ?? ''"
+        [matTooltipDisabled]="!calendar.weeks[week.weekStart]?.days"
+      >
+        {{ format(calendar.weeks[week.weekStart]?.days) }}
+      </td>
+    }
+  </tr>
+</ng-template>
+
 <!-- Riga del piano (persona + progetto), usata in tutti i raggruppamenti -->
-<ng-template #rowTpl let-group="group" let-gridRow="gridRow">
+<!-- lead: con una sola riga nel sistema, il sistema (in grassetto) sta sulla riga stessa, senza intestazione -->
+<ng-template #rowTpl let-group="group" let-gridRow="gridRow" let-lead="lead">
   <tr [class.archived]="gridRow.row.archived" [class.vacation]="gridRow.row.vacation">
     <td class="c-menu sticky">
       @if (canWrite()) {
@@ -66,15 +95,22 @@
     <th
       scope="row"
       class="c-project sticky"
-      [title]="gridRow.row.vacation ? 'Ferie' : gridRow.row.projectName"
+      [title]="
+        (lead ? lead + ' · ' : '') + (gridRow.row.vacation ? 'Ferie' : gridRow.row.projectName)
+      "
     >
+      @if (lead) {
+        <strong class="lead">{{ lead }}</strong> <span class="muted">·</span>
+      }
       @if (gridRow.row.vacation) {
-        @if (grouping() === 'system') {
+        @if (grouping() === 'system' && groups().length > 1) {
           <span class="muted">{{ group.resource.name }} ·</span>
         }
-        Ferie
+        @if (!lead) {
+          Ferie
+        }
       } @else {
-        @if (grouping() === 'system') {
+        @if (grouping() === 'system' && groups().length > 1) {
           <span class="muted">{{ group.resource.name }} ·</span>
         }
         <a class="link" [routerLink]="['/projects', gridRow.row.projectId]">{{
@@ -657,25 +693,22 @@
             </tbody>
             @for (section of systemSections(); track section.key) {
               <tbody>
-                <ng-container *ngTemplateOutlet="sectionTpl; context: { $implicit: section }" />
-                @if (!collapsedSections().has(section.key)) {
-                  @for (entry of section.entries; track rowKey(entry.gridRow)) {
-                    <ng-container
-                      *ngTemplateOutlet="
-                        rowTpl;
-                        context: { group: entry.group, gridRow: entry.gridRow }
-                      "
-                    />
-                  }
-                }
-              </tbody>
-            }
-            @if (systemVacation(); as vacation) {
-              @if (vacation.rowCount > 0) {
-                <tbody>
-                  <ng-container *ngTemplateOutlet="sectionTpl; context: { $implicit: vacation }" />
-                  @if (!collapsedSections().has(vacation.key)) {
-                    @for (entry of vacation.entries; track rowKey(entry.gridRow)) {
+                @if (section.entries.length === 1) {
+                  <!-- Una sola riga: niente intestazione, il sistema sta sulla riga -->
+                  <ng-container
+                    *ngTemplateOutlet="
+                      rowTpl;
+                      context: {
+                        group: section.entries[0].group,
+                        gridRow: section.entries[0].gridRow,
+                        lead: section.label,
+                      }
+                    "
+                  />
+                } @else {
+                  <ng-container *ngTemplateOutlet="sectionTpl; context: { $implicit: section }" />
+                  @if (!collapsedSections().has(section.key)) {
+                    @for (entry of section.entries; track rowKey(entry.gridRow)) {
                       <ng-container
                         *ngTemplateOutlet="
                           rowTpl;
@@ -684,35 +717,60 @@
                       />
                     }
                   }
+                }
+              </tbody>
+            }
+            @if (systemVacation(); as vacation) {
+              @if (vacation.rowCount > 0) {
+                <tbody>
+                  @if (vacation.entries.length === 1) {
+                    <!-- Una sola riga Ferie: nessuna intestazione -->
+                    <ng-container
+                      *ngTemplateOutlet="
+                        rowTpl;
+                        context: {
+                          group: vacation.entries[0].group,
+                          gridRow: vacation.entries[0].gridRow,
+                          lead: vacation.label,
+                        }
+                      "
+                    />
+                  } @else {
+                    <ng-container
+                      *ngTemplateOutlet="sectionTpl; context: { $implicit: vacation }"
+                    />
+                    @if (!collapsedSections().has(vacation.key)) {
+                      @for (entry of vacation.entries; track rowKey(entry.gridRow)) {
+                        <ng-container
+                          *ngTemplateOutlet="
+                            rowTpl;
+                            context: { group: entry.group, gridRow: entry.gridRow }
+                          "
+                        />
+                      }
+                    }
+                  }
                 </tbody>
               }
             }
             @if (systemHolidays(); as holidays) {
               <tbody>
-                <ng-container *ngTemplateOutlet="sectionTpl; context: { $implicit: holidays }" />
-                @if (!collapsedSections().has(holidays.key)) {
-                  @for (calendar of holidays.calendars; track calendar.name) {
-                    <tr class="holiday">
-                      <td class="c-menu sticky"></td>
-                      <td class="c-code sticky"></td>
-                      <th scope="row" class="c-project sticky">Festività · {{ calendar.name }}</th>
-                      @if (infoColumns().length > 0) {
-                        <td class="sticky info-span" [attr.colspan]="infoColumns().length">
-                          calendario nazionale
-                        </td>
-                      }
-                      <td class="c-total sticky"></td>
-                      @for (week of weeks(); track week.weekStart) {
-                        <td
-                          class="c-week"
-                          [class.current]="week.current"
-                          [matTooltip]="calendar.weeks[week.weekStart]?.names?.join(', ') ?? ''"
-                          [matTooltipDisabled]="!calendar.weeks[week.weekStart]?.days"
-                        >
-                          {{ format(calendar.weeks[week.weekStart]?.days) }}
-                        </td>
-                      }
-                    </tr>
+                @if (holidays.calendars.length === 1) {
+                  <!-- Un solo calendario: una riga sola, senza intestazione -->
+                  <ng-container
+                    *ngTemplateOutlet="
+                      holidayRowTpl;
+                      context: { $implicit: holidays.calendars[0], lead: holidays.label }
+                    "
+                  />
+                } @else {
+                  <ng-container *ngTemplateOutlet="sectionTpl; context: { $implicit: holidays }" />
+                  @if (!collapsedSections().has(holidays.key)) {
+                    @for (calendar of holidays.calendars; track calendar.name) {
+                      <ng-container
+                        *ngTemplateOutlet="holidayRowTpl; context: { $implicit: calendar }"
+                      />
+                    }
                   }
                 }
               </tbody>

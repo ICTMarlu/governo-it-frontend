@@ -7,10 +7,13 @@ export interface PeriodChartPoint {
   readonly created: number;
   readonly resolved: number;
   readonly open: number;
+  /** Periodo ancora in corso: barre più chiare, asterisco sull'asse e nota in legenda. */
+  readonly partial?: boolean;
 }
 
 const WIDTH = 720;
 const HEIGHT = 280;
+const TALL_HEIGHT = 380;
 const PAD = { top: 18, right: 16, bottom: 24, left: 36 };
 
 function bar(x: number, y: number, width: number, height: number): string {
@@ -45,10 +48,14 @@ function ticks(max: number): number[] {
           <li><span class="swatch swatch--created" aria-hidden="true"></span>Creati</li>
           <li><span class="swatch swatch--resolved" aria-hidden="true"></span>Risolti</li>
           <li><span class="swatch swatch--line" aria-hidden="true"></span>{{ lineTitle() }}</li>
+          @if (hasPartial()) {
+            <li class="legend__partial">* periodo in corso (parziale)</li>
+          }
         </ul>
       </div>
       <div class="viz__plot" (mouseleave)="hover.set(null)">
         <svg
+          [class.big]="slot() >= 60"
           [attr.viewBox]="'0 0 ' + width + ' ' + height"
           role="img"
           [attr.aria-label]="
@@ -68,11 +75,41 @@ function ticks(max: number): number[] {
             </text>
           }
           @for (item of bars(); track $index) {
-            <path class="bar bar--created" [attr.d]="item.created" />
-            <path class="bar bar--resolved" [attr.d]="item.resolved" />
+            <path
+              class="bar bar--created"
+              [class.bar--partial]="item.point.partial"
+              [attr.d]="item.created"
+            />
+            <path
+              class="bar bar--resolved"
+              [class.bar--partial]="item.point.partial"
+              [attr.d]="item.resolved"
+            />
+            @if (showValues()) {
+              @if (item.point.created > 0) {
+                <text
+                  class="barval"
+                  [attr.x]="item.createdCenter"
+                  [attr.y]="item.createdTop - 3"
+                  text-anchor="middle"
+                >
+                  {{ item.point.created }}
+                </text>
+              }
+              @if (item.point.resolved > 0) {
+                <text
+                  class="barval"
+                  [attr.x]="item.resolvedCenter"
+                  [attr.y]="item.resolvedTop - 3"
+                  text-anchor="middle"
+                >
+                  {{ item.point.resolved }}
+                </text>
+              }
+            }
             @if (item.showLabel) {
               <text class="axis" [attr.x]="item.center" [attr.y]="height - 6" text-anchor="middle">
-                {{ item.point.label }}
+                {{ item.point.label }}{{ item.point.partial ? '*' : '' }}
               </text>
             }
           }
@@ -139,7 +176,7 @@ function ticks(max: number): number[] {
             </tr>
           </thead>
           <tbody>
-            @for (point of points(); track $index) {
+            @for (point of tableRows(); track $index) {
               <tr>
                 <th scope="row">{{ point.title }}</th>
                 <td>{{ point.created }}</td>
@@ -234,8 +271,47 @@ function ticks(max: number): number[] {
       font-weight: 600;
     }
 
+    // Numero in cima a ogni barra: si legge senza aprire il riquadro
+    // Con pochi periodi (barre larghe) i numeri e gli assi si ingrandiscono
+    .big {
+      .barval {
+        font-size: 14px;
+      }
+
+      .axis {
+        font-size: 13px;
+      }
+
+      .value {
+        font-size: 16px;
+      }
+    }
+
+    .barval {
+      fill: var(--mat-sys-on-surface);
+      font-size: 10px;
+      font-weight: 600;
+      pointer-events: none;
+    }
+
     .bar--created {
       fill: var(--series-1);
+    }
+
+    // Periodo in corso: barre più chiare con bordo tratteggiato
+    .bar--partial {
+      fill-opacity: 0.45;
+      stroke: currentColor;
+      stroke-dasharray: 3 2;
+      stroke-width: 1;
+    }
+
+    .bar--created.bar--partial {
+      stroke: var(--series-1);
+    }
+
+    .bar--resolved.bar--partial {
+      stroke: var(--series-2);
     }
 
     .bar--resolved {
@@ -313,9 +389,19 @@ export class PeriodChart {
   readonly points = input.required<readonly PeriodChartPoint[]>();
   readonly barsTitle = input('Creati e risolti');
   readonly lineTitle = input('Aperti a fine periodo');
+  /** Righe della tabella "Dati" se più estese del grafico (es. 20 settimane contro 8); altrimenti i punti. */
+  readonly dataPoints = input<readonly PeriodChartPoint[] | null>(null);
+  protected readonly hasPartial = computed(() => this.points().some((point) => point.partial));
+  protected readonly tableRows = computed(() => this.dataPoints() ?? this.points());
 
   protected readonly width = WIDTH;
-  protected readonly height = HEIGHT;
+  /** Grafico più alto (es. affiancato a una tabella): più spazio per barre e numeri. */
+  readonly tall = input(false);
+
+  protected get height(): number {
+    return this.tall() ? TALL_HEIGHT : HEIGHT;
+  }
+
   protected readonly pad = PAD;
   protected readonly hover = signal<number | null>(null);
 
@@ -331,11 +417,15 @@ export class PeriodChart {
   /** Ogni quante etichette se ne mostra una (circa 14 al massimo). */
   private readonly labelEvery = computed(() => Math.max(1, Math.ceil(this.points().length / 14)));
 
+  /** Con poche barre (fino a circa 30 periodi) il valore si scrive in cima a ognuna. */
+  protected readonly showValues = computed(() => this.slot() >= 28);
+
   protected readonly bars = computed(() => {
     const slot = this.slot();
     const top = this.yTicks()[3];
-    const plot = HEIGHT - PAD.top - PAD.bottom;
-    const width = Math.max(2, Math.min(18, (slot - 4) / 2 - 1));
+    const plot = this.height - PAD.top - PAD.bottom;
+    // Barre larghe quando i periodi sono pochi (fino a 40), sottili quando sono tanti
+    const width = Math.max(2, Math.min(40, (slot * 0.72 - 2) / 2));
     return this.points().map((point, index) => {
       const x = PAD.left + index * slot;
       const start = x + (slot - width * 2 - 2) / 2;
@@ -346,6 +436,10 @@ export class PeriodChart {
         x,
         center: x + slot / 2,
         showLabel: index % this.labelEvery() === 0,
+        createdCenter: start + width / 2,
+        createdTop: PAD.top + plot - h1,
+        resolvedCenter: start + width + 2 + width / 2,
+        resolvedTop: PAD.top + plot - h2,
         created: bar(start, PAD.top + plot - h1, width, h1),
         resolved: bar(start + width + 2, PAD.top + plot - h2, width, h2),
       };
@@ -359,7 +453,7 @@ export class PeriodChart {
   );
 
   protected y(value: number): number {
-    const plot = HEIGHT - PAD.top - PAD.bottom;
+    const plot = this.height - PAD.top - PAD.bottom;
     return PAD.top + plot - (value / this.yTicks()[3]) * plot;
   }
 

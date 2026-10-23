@@ -27,6 +27,11 @@ export interface TicketKpis {
   readonly resolvedLast7Days: number;
   readonly withProject: number;
   readonly averageAgeDays: number;
+  /** Aperti per le due priorità più alte (Highest, High) e i due impatti più alti. */
+  readonly highest: number;
+  readonly high: number;
+  readonly extensive: number;
+  readonly significant: number;
 }
 
 export interface WeekFlow {
@@ -135,6 +140,8 @@ export interface Ticket {
   readonly priority: string | null;
   readonly resourceId: number | null;
   readonly assigneeName: string | null;
+  /** Chi ha aperto il ticket (richiedente). */
+  readonly reporterName: string | null;
   readonly projectId: number | null;
   readonly projectCode: string | null;
   readonly createdAt: string;
@@ -144,6 +151,8 @@ export interface Ticket {
   readonly ageDays: number;
   /** Giorni dall'ultimo aggiornamento in Jira. */
   readonly idleDays: number;
+  /** Giorni nello stato attuale (dal cambio di stato, non conta le modifiche automatiche). */
+  readonly statusDays: number;
   readonly overdue: boolean;
   readonly stale: boolean;
   readonly url: string | null;
@@ -156,7 +165,19 @@ export interface TicketFilter {
   readonly unassigned?: boolean;
   readonly area?: string;
   readonly projectId?: number;
+  /** Solo i ticket in conferma cliente / UAT senza aggiornamenti da troppo (filtro lato browser). */
+  readonly confirmIdle?: boolean;
 }
+
+/** Stati "In attesa di risposta dal cliente" (o conferma) e "User Acceptance test". */
+export function isConfirmStatus(statusName: string): boolean {
+  return /attesa.*cliente|conferma.*cliente|waiting.*customer|acceptance|accepta|\buat\b/i.test(
+    statusName,
+  );
+}
+
+/** Giorni nello stato oltre i quali un ticket in conferma/UAT va chiuso o sollecitato. */
+export const CONFIRM_IDLE_DAYS = 8;
 
 export const SEVERITY_LABELS: Readonly<Record<AdviceSeverity, string>> = {
   HIGH: 'Urgente',

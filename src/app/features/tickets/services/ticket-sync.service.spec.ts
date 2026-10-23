@@ -25,6 +25,8 @@ const user = (role: string): CurrentUser => ({
   roleLabel: role,
   canViewCosts: false,
   resourceId: null,
+  // Chi aggiorna i ticket da Jira ha "Modifica" su Ticket AMS: qui Admin e PM
+  permissions: { TICKETS: role === 'ADMIN' || role === 'PM' ? 'EDIT' : 'VIEW' },
 });
 
 describe('TicketSyncService', () => {

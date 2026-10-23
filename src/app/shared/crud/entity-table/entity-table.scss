@@ -211,3 +211,12 @@
     display: block;
   }
 }
+
+.select {
+  width: 2.5rem;
+  padding-inline: 0.25rem;
+}
+
+tr.selected {
+  background: var(--mat-sys-secondary-container);
+}

@@ -8,12 +8,12 @@ export const USERS_CONFIG: EntityConfig = {
   title: 'Utenti',
   singular: 'Utente',
   subtitle:
-    'Accessi all’applicazione: ruolo, permesso sui costi e collegamento alla risorsa del team. In fase 2 il login passerà a Microsoft.',
+    'Accessi all’applicazione: profilo, permesso sui costi e collegamento alla risorsa del team. Cosa vede e modifica ognuno si imposta nelle schede Permessi e Profili. In fase 2 il login passerà a Microsoft.',
   endpoint: '/users',
   help: USERS_HELP,
   writeRoles: [ROLES.admin],
   searchKeys: ['displayName', 'username', 'email', 'resourceName'],
-  quickFilters: [{ key: 'roleLabel', label: 'Ruolo' }],
+  quickFilters: [{ key: 'roleLabel', label: 'Profilo' }],
   fields: [
     {
       key: 'username',
@@ -37,11 +37,11 @@ export const USERS_CONFIG: EntityConfig = {
     { key: 'email', label: 'E-mail', type: 'text', maxLength: 200 },
     {
       key: 'appRoleId',
-      label: 'Ruolo applicativo',
+      label: 'Profilo',
       type: 'select',
       required: true,
       options: { endpoint: '/users/roles', activeOnly: false },
-      hint: 'Admin, Project Manager, Editor, Contributor (solo ciò che gli è assegnato), Viewer (lettura)',
+      hint: 'Dà i livelli di partenza per modulo; per singole eccezioni usa la scheda Permessi',
     },
     {
       key: 'resourceId',
@@ -70,7 +70,7 @@ export const USERS_CONFIG: EntityConfig = {
   columns: [
     { key: 'displayName', label: 'Nome', primary: true },
     { key: 'username', label: 'Utente' },
-    { key: 'roleLabel', label: 'Ruolo' },
+    { key: 'roleLabel', label: 'Profilo' },
     { key: 'canViewCosts', label: 'Costi', type: 'boolean' },
     { key: 'resourceName', label: 'Risorsa', hideOnMobile: true },
     {

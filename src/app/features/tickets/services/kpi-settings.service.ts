@@ -26,6 +26,8 @@ export const KPI_GROUPS: readonly KpiGroup[] = [
       { id: 'ops.flow7', label: 'Entrati / chiusi in 7 giorni' },
       { id: 'ops.unassigned', label: 'Senza assegnatario' },
       { id: 'ops.overdue', label: 'Con la scadenza passata' },
+      { id: 'ops.priority', label: 'Priorità più alte (Highest e High)' },
+      { id: 'ops.impact', label: 'Impatto più alto (Extensive e Significant)' },
       { id: 'ops.waiting', label: 'In attesa del cliente' },
       { id: 'ops.stale', label: 'Fermi senza aggiornamenti' },
       { id: 'ops.age', label: 'Età media degli aperti' },

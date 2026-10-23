@@ -29,17 +29,46 @@
   @if (isDesktop()) {
     <nav class="topnav" aria-label="Navigazione principale">
       @for (item of navItems(); track item.route) {
-        <a
-          class="topnav__item"
-          [routerLink]="item.route"
-          routerLinkActive="topnav__item--active"
-          #topLink="routerLinkActive"
-          [attr.aria-current]="topLink.isActive ? 'page' : null"
-          [matTooltip]="item.label"
-        >
-          <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
-          <span class="topnav__label">{{ item.label }}</span>
-        </a>
+        @if (item.children; as children) {
+          <!-- Voce a menu: il clic apre le scelte; la prima porta alla home del gruppo -->
+          <button
+            type="button"
+            class="topnav__item"
+            [class.topnav__item--active]="isGroupActive(item)"
+            [attr.aria-current]="isGroupActive(item) ? 'page' : null"
+            [matMenuTriggerFor]="groupMenu"
+            [matTooltip]="item.label"
+            aria-haspopup="menu"
+          >
+            <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+            <span class="topnav__label">{{ item.label }}</span>
+            <mat-icon class="topnav__caret" aria-hidden="true">arrow_drop_down</mat-icon>
+          </button>
+          <mat-menu #groupMenu="matMenu">
+            <a mat-menu-item [routerLink]="item.route">
+              <mat-icon aria-hidden="true">apps</mat-icon>
+              Tutte le {{ item.label.toLowerCase() }}
+            </a>
+            @for (child of children; track child.route) {
+              <a mat-menu-item [routerLink]="child.route">
+                <mat-icon aria-hidden="true">{{ child.icon }}</mat-icon>
+                {{ child.label }}
+              </a>
+            }
+          </mat-menu>
+        } @else {
+          <a
+            class="topnav__item"
+            [routerLink]="item.route"
+            routerLinkActive="topnav__item--active"
+            #topLink="routerLinkActive"
+            [attr.aria-current]="topLink.isActive ? 'page' : null"
+            [matTooltip]="item.label"
+          >
+            <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+            <span class="topnav__label">{{ item.label }}</span>
+          </a>
+        }
       }
     </nav>
   }
@@ -118,15 +147,26 @@
     }
   </mat-menu>
 
+  <!-- Account: password e accesso da Claude in un solo menu, per non allargare la barra su mobile -->
   <button
     mat-icon-button
     type="button"
-    aria-label="Cambia password"
-    matTooltip="Cambia password"
-    (click)="changePassword()"
+    aria-label="Il mio account"
+    matTooltip="Il mio account"
+    [matMenuTriggerFor]="accountMenu"
   >
-    <mat-icon aria-hidden="true">key</mat-icon>
+    <mat-icon aria-hidden="true">manage_accounts</mat-icon>
   </button>
+  <mat-menu #accountMenu="matMenu">
+    <button mat-menu-item type="button" (click)="changePassword()">
+      <mat-icon aria-hidden="true">key</mat-icon>
+      <span>Cambia password</span>
+    </button>
+    <button mat-menu-item type="button" (click)="mcpTokens()">
+      <mat-icon aria-hidden="true">smart_toy</mat-icon>
+      <span>Accesso da Claude</span>
+    </button>
+  </mat-menu>
 
   <button mat-icon-button type="button" aria-label="Esci" matTooltip="Esci" (click)="logout()">
     <mat-icon aria-hidden="true">logout</mat-icon>
@@ -156,6 +196,19 @@
             <mat-icon matListItemIcon aria-hidden="true">{{ item.icon }}</mat-icon>
             <span matListItemTitle>{{ item.label }}</span>
           </a>
+          <!-- Le scelte del gruppo, rientrate sotto la voce -->
+          @for (child of item.children ?? []; track child.route) {
+            <a
+              mat-list-item
+              class="nav-child"
+              [routerLink]="child.route"
+              routerLinkActive="active"
+              (click)="onNavigate(sidenav)"
+            >
+              <mat-icon matListItemIcon aria-hidden="true">{{ child.icon }}</mat-icon>
+              <span matListItemTitle>{{ child.label }}</span>
+            </a>
+          }
         }
       </mat-nav-list>
     </nav>

@@ -11,9 +11,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { filter, map, switchMap } from 'rxjs';
+import { Observable, catchError, filter, forkJoin, map, of, switchMap } from 'rxjs';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { canEdit, moduleOfEndpoint } from '../../../core/auth/permissions';
 import { UserPreferencesService } from '../../../core/preferences/user-preferences.service';
 import {
   ColumnChooserData,
@@ -23,7 +24,7 @@ import {
 import { ColumnLayout, orderedColumns } from '../column-layout';
 import { ConfirmDialog, ConfirmDialogData } from '../confirm-dialog/confirm-dialog';
 import { CrudApiService, errorMessage } from '../crud-api.service';
-import { EntityConfig, EntityRow, readPath } from '../crud.model';
+import { BulkActionConfig, EntityConfig, EntityRow, readPath } from '../crud.model';
 import { EntityFormDialog, EntityFormDialogData } from '../entity-form-dialog/entity-form-dialog';
 import { EntityTable, SortState } from '../entity-table/entity-table';
 import { SavedViews } from '../../views/saved-views';
@@ -109,6 +110,11 @@ export class CrudSection {
     if (this.config().readOnly) {
       return false;
     }
+    // Con un modulo (dall'indirizzo API) decide il permesso "Modifica" dell'utente su quel modulo
+    const module = moduleOfEndpoint(this.config().endpoint);
+    if (module) {
+      return canEdit(this.currentUser()?.permissions, module);
+    }
     const roles = this.config().writeRoles ?? [];
     const role = this.currentUser()?.role;
     return roles.length === 0 || (role !== undefined && roles.includes(role));
@@ -153,6 +159,20 @@ export class CrudSection {
     );
     return config.sort ? [...rows].sort(config.sort) : rows;
   });
+
+  /** Righe selezionate per le azioni massive (id). */
+  protected readonly selection = signal<ReadonlySet<number>>(new Set());
+  protected readonly bulkBusy = signal(false);
+
+  /** Selezione solo dove la configurazione prevede azioni massive (e si può modificare). */
+  protected readonly selectable = computed(
+    () => this.canWrite() && (this.config().bulkActions ?? []).length > 0,
+  );
+
+  /** Solo le righe selezionate ancora visibili (un filtro nuovo le toglie dall'azione). */
+  protected readonly selectedRows = computed(() =>
+    this.visibleRows().filter((row) => this.selection().has(row.id!)),
+  );
 
   constructor() {
     effect(() => {
@@ -260,6 +280,90 @@ export class CrudSection {
         this.snackBar.open(`${this.config().singular} salvato`, 'OK', { duration: 3000 });
         this.reload();
       });
+  }
+
+  protected clearSelection(): void {
+    this.selection.set(new Set());
+  }
+
+  /** Azione massiva che imposta dei campi (es. chiudi): una richiesta per riga, esito riassunto. */
+  protected confirmBulk(action: BulkActionConfig): void {
+    const rows = this.selectedRows();
+    const data: ConfirmDialogData = {
+      title: action.confirmTitle ?? `${action.label}: ${rows.length} elementi?`,
+      message:
+        action.confirmMessage ??
+        `L'azione si applica a tutti i ${rows.length} elementi selezionati.`,
+      confirmLabel: action.label,
+    };
+    this.dialog
+      .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, { data })
+      .afterClosed()
+      .pipe(filter((confirmed) => confirmed === true))
+      .subscribe(() =>
+        this.runBulk(
+          rows,
+          (row) => this.api.update(this.config().endpoint, row.id!, this.bulkBody(row, action)),
+          action.label,
+        ),
+      );
+  }
+
+  /** Elimina tutte le righe selezionate, dopo conferma. */
+  protected confirmBulkDelete(): void {
+    const rows = this.selectedRows();
+    const data: ConfirmDialogData = {
+      title: `Eliminare ${rows.length} ${rows.length === 1 ? 'elemento' : 'elementi'}?`,
+      message: "L'operazione non si può annullare.",
+      confirmLabel: 'Elimina',
+    };
+    this.dialog
+      .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, { data })
+      .afterClosed()
+      .pipe(filter((confirmed) => confirmed === true))
+      .subscribe(() =>
+        this.runBulk(rows, (row) => this.api.delete(this.config().endpoint, row.id!), 'Eliminati'),
+      );
+  }
+
+  private runBulk(
+    rows: readonly EntityRow[],
+    request: (row: EntityRow) => Observable<unknown>,
+    label: string,
+  ): void {
+    this.bulkBusy.set(true);
+    forkJoin(
+      rows.map((row) =>
+        request(row).pipe(
+          map(() => null),
+          catchError((error: unknown) => of(errorMessage(error))),
+        ),
+      ),
+    ).subscribe((results) => {
+      const failed = results.filter((result): result is string => result !== null);
+      const done = rows.length - failed.length;
+      this.bulkBusy.set(false);
+      this.snackBar.open(
+        failed.length === 0
+          ? `${label}: ${done} ${done === 1 ? 'elemento' : 'elementi'}`
+          : `${label}: ${done} su ${rows.length}. Non riusciti ${failed.length}: ${failed[0]}`,
+        'OK',
+        { duration: failed.length === 0 ? 3000 : 8000 },
+      );
+      this.selection.set(new Set());
+      this.reload();
+    });
+  }
+
+  /** Corpo di una modifica che lascia la riga com'è e cambia solo i campi dell'azione. */
+  private bulkBody(row: EntityRow, action: BulkActionConfig): Record<string, unknown> {
+    const body: Record<string, unknown> = { version: row.version ?? null };
+    for (const field of this.config().fields) {
+      if (!field.attribute) {
+        body[field.key] = row[field.key] ?? null;
+      }
+    }
+    return { ...body, ...action.patch };
   }
 
   protected confirmDelete(row: EntityRow): void {

@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { SavedViews } from '../../shared/views/saved-views';
@@ -25,6 +25,8 @@ import {
   TicketDashboard,
   TicketAlert,
   TicketFilter,
+  CONFIRM_IDLE_DAYS,
+  isConfirmStatus,
   jiraSearchUrl,
 } from './models/ticket.model';
 import { KpiSettingsService } from './services/kpi-settings.service';
@@ -47,6 +49,7 @@ const LIST_COLUMNS: readonly {
   { id: 'summary', label: 'Titolo' },
   { id: 'status', label: 'Stato' },
   { id: 'person', label: 'Persona' },
+  { id: 'reporter', label: 'Richiedente' },
   { id: 'area', label: 'Area' },
   { id: 'project', label: 'Progetto' },
   { id: 'age', label: 'Età', num: true },
@@ -72,6 +75,8 @@ function listValue(ticket: Ticket, id: string): string | number | null {
       return ticket.statusName;
     case 'person':
       return ticket.assigneeName;
+    case 'reporter':
+      return ticket.reporterName;
     case 'area':
       return ticket.area;
     case 'project':
@@ -118,6 +123,7 @@ type AdviceView = 'all' | 'EM' | 'PERSON';
 })
 export class TicketsPage {
   private readonly service = inject(TicketsService);
+  private readonly router = inject(Router);
   protected readonly sync = inject(TicketSyncService);
 
   protected readonly help = TICKETS_HELP;
@@ -148,6 +154,21 @@ export class TicketsPage {
   protected readonly sortHint =
     "Clic: ordina (poi decrescente, poi togli). Su un'altra colonna diventa il secondo livello";
 
+  /** Periodo delle colonne per area e progetto: aperti di oggi, chiusi negli ultimi 28 giorni. */
+  protected readonly period28 = computed(() => {
+    const to = new Date();
+    const from = new Date(to.getFullYear(), to.getMonth(), to.getDate() - 28);
+    const fmt = (d: Date) =>
+      d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return `Aperti: oggi · Chiusi: dal ${fmt(from)} al ${fmt(to)} (ultime 4 settimane)`;
+  });
+  protected readonly confirmIdleDays = CONFIRM_IDLE_DAYS;
+  /** Tutti i ticket aperti, senza filtri: base del numero "in conferma/UAT da oltre N giorni". */
+  private readonly openTickets = signal<readonly Ticket[]>([]);
+  protected readonly confirmIdleCount = computed(
+    () => this.openTickets().filter(isConfirmIdle).length,
+  );
+
   protected readonly hiddenPending = computed(
     () => (this.tickets() ?? []).filter((ticket) => ticket.pending).length,
   );
@@ -155,8 +176,10 @@ export class TicketsPage {
   /** Ticket mostrati: senza Pending (se richiesto), ordinati; a parità dal più recente. */
   protected readonly visibleTickets = computed(() => {
     const levels = [...this.listSort(), ...DEFAULT_LIST_SORT];
+    const confirmIdle = this.filter()?.confirmIdle === true;
     return (this.tickets() ?? [])
-      .filter((ticket) => this.includePending() || !ticket.pending)
+      .filter((ticket) => !confirmIdle || isConfirmIdle(ticket))
+      .filter((ticket) => confirmIdle || this.includePending() || !ticket.pending)
       .sort((a, b) => compareByLevels(a, b, levels, listValue));
   });
 
@@ -218,19 +241,49 @@ export class TicketsPage {
         this.sync.known(dashboard.sync);
         this.loadError.set(null);
         this.loadTickets();
+        this.service.tickets(null).subscribe({ next: (tickets) => this.openTickets.set(tickets) });
       },
       error: (error: unknown) => this.loadError.set(errorMessage(error)),
     });
   }
 
+  /** Ogni clic che apre un elenco porta alla pagina di dettaglio dedicata. */
+  private openDetail(queryParams: Record<string, string>): void {
+    void this.router.navigate(['/tickets/dettaglio'], { queryParams });
+  }
+
+  /** Persona del carico: i suoi ticket aperti (o quelli senza assegnatario). */
   protected selectPerson(person: PersonLoad): void {
-    this.setFilter(
-      person.resourceId !== null
-        ? { label: person.name ?? '', resourceId: person.resourceId }
-        : person.name === null
-          ? { label: 'Senza assegnatario', unassigned: true }
-          : null,
-    );
+    if (person.name === null) {
+      this.openDetail({ scope: 'unassigned' });
+    } else {
+      this.openDetail({ scope: 'open', dim: 'assignee', value: person.name });
+    }
+  }
+
+  /** Ticket aperti di un'area ("Progetto Marlù"). */
+  protected openArea(area: string): void {
+    this.openDetail({ scope: 'open', dim: 'area', value: area });
+  }
+
+  /** Ticket aperti di un progetto (codice). */
+  protected openProject(code: string): void {
+    this.openDetail({ scope: 'open', dim: 'project', value: code });
+  }
+
+  /** Ticket in conferma cliente / UAT fermi da oltre la soglia. */
+  protected showConfirmIdle(): void {
+    this.openDetail({ scope: 'confirm-idle' });
+  }
+
+  /** Clic sui box priorità e impatto: elenco di dettaglio con priorità e impatto di ogni ticket. */
+  protected openPriority(scope: string): void {
+    void this.router.navigate(['/tickets/dettaglio'], { queryParams: { scope } });
+  }
+
+  /** Clic su "senza assegnatario": elenco di dettaglio dei ticket aperti non assegnati. */
+  protected openUnassigned(): void {
+    this.openDetail({ scope: 'unassigned' });
   }
 
   protected setFilter(filter: TicketFilter | null): void {
@@ -263,10 +316,10 @@ export class TicketsPage {
 
   /** Allerta su una persona o un'area: ne apre i ticket nell'elenco sotto. */
   protected alertFilter(alert: TicketAlert): void {
-    if (alert.resourceId !== null) {
-      this.setFilter({ label: alert.personName ?? '', resourceId: alert.resourceId });
+    if (alert.resourceId !== null && alert.personName) {
+      this.openDetail({ scope: 'open', dim: 'assignee', value: alert.personName });
     } else if (alert.area !== null) {
-      this.setFilter({ label: alert.area, area: alert.area });
+      this.openArea(alert.area);
     }
   }
 
@@ -276,8 +329,8 @@ export class TicketsPage {
 
   /** Persona dell'azione: apre i suoi ticket nell'elenco. */
   protected adviceFilter(item: Advice): void {
-    if (item.resourceId !== null) {
-      this.setFilter({ label: item.personName ?? '', resourceId: item.resourceId });
+    if (item.resourceId !== null && item.personName) {
+      this.openDetail({ scope: 'open', dim: 'assignee', value: item.personName });
     }
   }
 
@@ -292,4 +345,9 @@ export class TicketsPage {
       error: () => this.tickets.set([]),
     });
   }
+}
+
+/** In attesa del cliente / UAT da oltre la soglia di giorni nello stato. */
+function isConfirmIdle(ticket: Ticket): boolean {
+  return isConfirmStatus(ticket.statusName) && ticket.statusDays > CONFIRM_IDLE_DAYS;
 }

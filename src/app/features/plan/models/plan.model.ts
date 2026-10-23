@@ -25,6 +25,8 @@ export interface PlanRow {
   readonly mainSystemLabel: string | null;
   /** Ordine del sistema nella lista valori Sistemi. */
   readonly mainSystemSortOrder: number | null;
+  /** Ranking del progetto: decide l'ordine dei progetti nel piano (1 il primo). */
+  readonly ranking: number | null;
   readonly statusCode: string | null;
   readonly statusLabel: string | null;
   readonly statusSortOrder: number;

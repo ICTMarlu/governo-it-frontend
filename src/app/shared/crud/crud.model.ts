@@ -38,6 +38,8 @@ export type FieldType =
   | 'checkbox'
   | 'color'
   | 'select'
+  /** Come 'select' ma con ricerca mentre si scrive (per elenchi lunghi). */
+  | 'search'
   | 'multiselect'
   | 'password';
 
@@ -107,6 +109,17 @@ export interface QuickFilterConfig {
   readonly orderKey?: string;
 }
 
+/** Azione massiva sulle righe selezionate: imposta dei campi (es. chiudere i punti scelti). */
+export interface BulkActionConfig {
+  readonly id: string;
+  readonly label: string;
+  readonly icon: string;
+  /** Campi da impostare su ogni riga selezionata (gli altri restano come sono). */
+  readonly patch: Readonly<Record<string, unknown>>;
+  readonly confirmTitle?: string;
+  readonly confirmMessage?: string;
+}
+
 export interface EntityConfig {
   /** Titolo plurale (pagina) e singolare (dialog). */
   readonly title: string;
@@ -125,6 +138,8 @@ export interface EntityConfig {
   readonly readOnly?: boolean;
   readonly canCreate?: boolean;
   readonly canDelete?: boolean;
+  /** Azioni massive sulle righe selezionate (oltre a "Elimina" se canDelete). */
+  readonly bulkActions?: readonly BulkActionConfig[];
   /** Link di dettaglio della riga (es. ['/resources', id]). */
   readonly rowLink?: (row: EntityRow) => readonly (string | number)[];
   /** Clic sul titolo della riga = apre la scheda di modifica (per chi può modificare). */

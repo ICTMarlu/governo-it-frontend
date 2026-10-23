@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, input, model, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
@@ -38,6 +39,7 @@ export interface SortState {
     RouterLink,
     NgTemplateOutlet,
     MatButtonModule,
+    MatCheckboxModule,
     MatFormFieldModule,
     MatIconModule,
     MatSelectModule,
@@ -56,6 +58,11 @@ export class EntityTable {
   /** Il titolo della riga apre la modifica (oltre alla matita). */
   readonly titleOpensEdit = input(false);
 
+  /** Colonna con le caselle per selezionare più righe (azioni massive). */
+  readonly selectable = input(false);
+  /** Righe selezionate (id); il genitore lo legge per le azioni massive. */
+  readonly selection = model<ReadonlySet<number>>(new Set());
+
   readonly edit = output<EntityRow>();
   readonly remove = output<EntityRow>();
 
@@ -68,6 +75,39 @@ export class EntityTable {
   protected readonly detailColumns = computed(() =>
     this.columns().filter((column) => column !== this.primaryColumn() && !column.hideOnMobile),
   );
+  protected readonly allSelected = computed(
+    () => this.rows().length > 0 && this.rows().every((row) => this.selection().has(row.id!)),
+  );
+  protected readonly someSelected = computed(
+    () => !this.allSelected() && this.rows().some((row) => this.selection().has(row.id!)),
+  );
+
+  protected toggleRow(row: EntityRow): void {
+    this.selection.update((current) => {
+      const next = new Set(current);
+      if (!next.delete(row.id!)) {
+        next.add(row.id!);
+      }
+      return next;
+    });
+  }
+
+  /** Seleziona tutte le righe mostrate (con i filtri attivi), o le toglie tutte. */
+  protected toggleAll(): void {
+    const all = this.allSelected();
+    this.selection.update((current) => {
+      const next = new Set(current);
+      for (const row of this.rows()) {
+        if (all) {
+          next.delete(row.id!);
+        } else {
+          next.add(row.id!);
+        }
+      }
+      return next;
+    });
+  }
+
   protected readonly hasActions = computed(() => this.canEdit() || this.canDelete());
 
   /** Righe nell'ordine scelto; senza ordinamento restano nell'ordine ricevuto. */

@@ -24,6 +24,11 @@
   &__types {
     flex-wrap: wrap;
   }
+
+  &__audience {
+    flex: 1 1 14rem;
+    max-width: 20rem;
+  }
 }
 
 .tab-intro {

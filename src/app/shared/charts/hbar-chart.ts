@@ -21,21 +21,40 @@ export interface HBarItem {
       <ul class="bars" [style.max-height]="maxHeight()" [attr.aria-label]="title()">
         @for (item of items(); track item.label) {
           <li class="bars__row">
-            @if (selectable()) {
+            @if (selectable() || drillable()) {
               <button
                 type="button"
                 class="bars__label bars__label--button"
                 [class.bars__label--on]="selected()?.includes(item.label)"
-                [title]="item.label + ': ' + item.value + ' · clic per filtrare'"
-                [attr.aria-pressed]="selected()?.includes(item.label) ?? false"
-                (click)="pick.emit(item.label)"
+                [title]="
+                  item.label +
+                  ': ' +
+                  item.value +
+                  (selectable() ? ' · clic per filtrare' : ' · clic per vedere i ticket')
+                "
+                [attr.aria-pressed]="
+                  selectable() ? (selected()?.includes(item.label) ?? false) : null
+                "
+                (click)="selectable() ? pick.emit(item.label) : drill.emit(item.label)"
               >
                 {{ item.label }}
               </button>
             } @else {
               <span class="bars__label" [title]="item.label">{{ item.label }}</span>
             }
-            <span class="bars__track" aria-hidden="true">
+            <span
+              class="bars__track"
+              [class.bars__track--link]="drillable()"
+              [attr.aria-hidden]="drillable() ? null : true"
+              [attr.role]="drillable() ? 'button' : null"
+              [attr.tabindex]="drillable() ? 0 : null"
+              [attr.aria-label]="
+                drillable() ? 'Vedi i ' + item.value + ' ticket: ' + item.label : null
+              "
+              [title]="drillable() ? 'Clic per vedere i ' + item.value + ' ticket' : ''"
+              (click)="drillable() && drill.emit(item.label)"
+              (keydown.enter)="drillable() && drill.emit(item.label)"
+            >
               <span
                 class="bars__bar"
                 [class.bars__bar--alt]="color() === 'alt'"
@@ -43,7 +62,18 @@ export interface HBarItem {
                 [style.width.%]="(item.value / max()) * 100"
               ></span>
             </span>
-            <span class="bars__value">{{ item.value }}</span>
+            @if (drillable()) {
+              <button
+                type="button"
+                class="bars__value bars__value--link"
+                [title]="'Vedi i ' + item.value + ' ticket'"
+                (click)="drill.emit(item.label)"
+              >
+                {{ item.value }}
+              </button>
+            } @else {
+              <span class="bars__value">{{ item.value }}</span>
+            }
           </li>
         }
       </ul>
@@ -113,6 +143,15 @@ export interface HBarItem {
       &__track {
         display: block;
         height: 0.875rem;
+
+        &--link {
+          cursor: pointer;
+
+          &:hover .bars__bar,
+          &:focus-visible .bars__bar {
+            filter: brightness(1.15);
+          }
+        }
       }
 
       // Barra sottile con l'estremità arrotondata (4px), appoggiata all'asse
@@ -135,6 +174,19 @@ export interface HBarItem {
       &__value {
         color: var(--mat-sys-on-surface-variant);
         font: var(--mat-sys-label-medium);
+
+        &--link {
+          padding: 0;
+          border: 0;
+          background: none;
+          text-align: start;
+          cursor: pointer;
+
+          &:hover {
+            color: var(--mat-sys-primary);
+            text-decoration: underline;
+          }
+        }
       }
     }
   `,
@@ -149,7 +201,11 @@ export class HBarChart {
   /** Altezza massima (di partenza 10 barre da 1,5rem): oltre, l'elenco scorre. */
   readonly maxHeight = input('15rem');
 
+  /** Barre cliccabili (anche sul valore) per arrivare all'elenco dei ticket. */
+  readonly drillable = input(false);
+
   readonly pick = output<string>();
+  readonly drill = output<string>();
 
   protected readonly max = computed(() => Math.max(1, ...this.items().map((item) => item.value)));
 }

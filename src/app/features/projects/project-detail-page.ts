@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { filter, map } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { canEdit } from '../../core/auth/permissions';
 import { BackLink } from '../../shared/components/back-link/back-link';
 import { CrudApiService } from '../../shared/crud/crud-api.service';
 import { EntityRow } from '../../shared/crud/crud.model';
@@ -65,10 +66,7 @@ export class ProjectDetailPage {
   protected readonly projectId = computed(() => Number(this.id()));
   protected readonly state = signal<LoadState>('loading');
   protected readonly project = signal<EntityRow | null>(null);
-  protected readonly canEdit = computed(() => {
-    const role = this.currentUser()?.role;
-    return role !== undefined && (PROJECTS_CONFIG.writeRoles ?? []).includes(role);
-  });
+  protected readonly canEdit = computed(() => canEdit(this.currentUser()?.permissions, 'PROJECTS'));
 
   protected readonly details = computed<DetailItem[]>(() => {
     const p = this.project();

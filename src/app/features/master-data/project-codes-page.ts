@@ -10,11 +10,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { canEdit } from '../../core/auth/permissions';
 import { API_BASE_URL } from '../../core/config/api.config';
 import { BackLink } from '../../shared/components/back-link/back-link';
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { errorMessage } from '../../shared/crud/crud-api.service';
-import { ROLES } from '../../shared/crud/crud.model';
 import { PROJECT_CODES_HELP } from '../../shared/help/help-content';
 
 interface SystemNextCode {
@@ -69,7 +69,9 @@ export class ProjectCodesPage {
   protected readonly busy = signal(false);
   protected readonly result = signal<GenerateResult | null>(null);
   protected readonly help = PROJECT_CODES_HELP;
-  protected readonly isAdmin = computed(() => this.currentUser()?.role === ROLES.admin);
+  protected readonly isAdmin = computed(() =>
+    canEdit(this.currentUser()?.permissions, 'MASTER_DATA'),
+  );
   /** Codici brevi in modifica, per id del sistema. */
   protected readonly shortCodes = signal<Record<number, string>>({});
 

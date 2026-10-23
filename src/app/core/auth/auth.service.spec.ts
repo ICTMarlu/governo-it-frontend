@@ -13,6 +13,7 @@ const USER: CurrentUser = {
   roleLabel: 'Editor',
   canViewCosts: false,
   resourceId: null,
+  permissions: {},
 };
 
 describe('AuthService', () => {

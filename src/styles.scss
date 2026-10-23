@@ -286,6 +286,16 @@ td:focus-within > .task-dot--empty {
     font: var(--mat-sys-title-medium);
   }
 
+  // Numero cliccabile: porta all'elenco dei ticket che lo compongono
+  &--link {
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--mat-sys-surface-container);
+    }
+  }
+
   // Colori di stato, sempre con l'etichetta accanto (mai solo colore)
   &--info {
     --bi-kpi-color: light-dark(#2a78d6, #3987e5);

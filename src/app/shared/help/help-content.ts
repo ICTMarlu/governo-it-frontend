@@ -368,26 +368,35 @@ export const PROJECT_CODES_HELP: HelpContent = {
 };
 
 export const USERS_HELP: HelpContent = {
-  title: 'Utenti',
-  intro: 'Accessi all’applicazione, ruoli e permessi. Pagina riservata agli amministratori.',
+  title: 'Utenti e permessi',
+  intro:
+    'Accessi all’applicazione e cosa può vedere o modificare ognuno. Pagina riservata a chi gestisce gli utenti.',
   sections: [
     LIST_SECTION,
     {
-      title: 'Ruoli',
+      title: 'Livelli per modulo',
       items: [
-        'Admin: modifica tutto, compresi utenti, liste valori, anagrafiche di base, codici progetto e festività.',
-        'Project Manager: risorse (con capacità e ore extra), progetti e richiedenti.',
-        'Editor: progetti e richiedenti.',
-        'Contributor: solo ciò che gli è assegnato (piano settimanale e task, in arrivo); oggi sola lettura.',
-        'Viewer: sola lettura (es. direzione).',
-        'Permesso costi: separato dal ruolo, permette di vedere e modificare le tariffe.',
+        'Ogni voce del menu è un modulo: Progetti, Piano settimanale, Task, Ticket AMS, Direzione, Risorse, Richiedenti, Liste e tabelle, Utenti.',
+        'Nascosto: la voce sparisce dal menu e le pagine e i dati del modulo non si aprono.',
+        'Vista: legge ma non modifica. Modifica: legge e modifica.',
+        'Le liste di riferimento (progetti, risorse, sedi, stati…) restano leggibili per riempire i menu a tendina degli altri moduli, anche se il loro modulo è nascosto.',
+      ],
+    },
+    {
+      title: 'Profili ed eccezioni',
+      items: [
+        'Il profilo dà i livelli di partenza: Amministratore, Project Manager, Collaboratore, Sola lettura. Si modificano nella scheda Profili e valgono per tutti gli utenti di quel profilo.',
+        'Per una sola persona usa la scheda Permessi: apri la riga e scegli, modulo per modulo, "Come il profilo" oppure un livello diverso. Le eccezioni sono segnate con un pallino.',
+        'Direzione parte nascosta per tutti tranne l’Amministratore: si abilita utente per utente come eccezione.',
+        'La scheda Storico mostra chi ha cambiato quale permesso e quando.',
+        'Permesso costi: resta separato, permette di vedere e modificare le tariffe.',
       ],
     },
     {
       title: 'Regole di sicurezza',
       items: [
         'La password deve avere almeno 10 caratteri; in modifica lasciala vuota per non cambiarla.',
-        'Non puoi disattivare il tuo utente né toglierti il ruolo Admin.',
+        'Non puoi disattivare il tuo utente né togliere a te stesso la modifica degli utenti.',
         'Deve restare sempre almeno un amministratore attivo.',
         '"Risorsa del team" collega l’utente alla persona del piano (vuoto per chi non è nel team).',
       ],
@@ -760,18 +769,54 @@ export const PEOPLE_TREND_HELP: HelpContent = {
     'Per ogni persona: il suo backlog cresce o cala? Ogni ticket conta per l’assegnatario di oggi in Jira (lo storico delle assegnazioni non c’è). Valgono i filtri di area e persona; anni e mesi no.',
   sections: [
     {
-      title: 'Saldo a settimana',
+      title: 'Saldo del periodo',
       items: [
-        '(Entrati − chiusi) nelle ultime 4 settimane complete (da lunedì a domenica, esclusa quella in corso) ÷ 4.',
-        'Positivo (freccia in su, "cresce"): entrano più ticket di quanti ne chiude, il backlog sale. Negativo ("cala"): sta smaltendo. Tra −0,5 e +0,5: stabile.',
-        'Aperti 4 sett. fa e Aperti oggi mostrano lo stesso andamento in numeri assoluti.',
+        'Entrati − chiusi negli ultimi 30 giorni, oggi compreso (finestra mobile: si sposta ogni giorno). Tra parentesi la media a settimana, cioè il saldo diviso 4,3 settimane. Le colonne Entrati e Chiusi usano lo stesso periodo (la data di inizio è nell\u2019intestazione).',
+        'Positivo (freccia in su, "cresce"): entrano più ticket di quanti ne chiude, il backlog sale. Negativo ("cala"): sta smaltendo. Stabile: la media a settimana è tra −0,5 e +0,5.',
+        'Aperti al (data di inizio) e Aperti ad oggi mostrano lo stesso andamento in numeri assoluti. I ticket Declined contano come chiusi.',
       ],
     },
     {
       title: 'Grafico della persona',
       items: [
-        'Clic sul nome: entrati e chiusi per settimana nelle ultime 12 settimane, con la linea degli aperti a fine settimana.',
+        'Clic sul nome: entrati e chiusi per settimana nelle ultime 8 settimane, con la linea degli aperti a fine settimana. L\u2019ultima barra è la settimana in corso: è parziale e si riconosce dall\u2019asterisco e dal colore più chiaro.',
         'L’interruttore dei Pending decide se contare negli aperti i ticket che oggi sono in Pending.',
+      ],
+    },
+  ],
+};
+
+/** Sistemi e tecnologie: inventario, fine supporto, vulnerabilità e regole di priorità (D-34). */
+export const TECHNOLOGIES_HELP: HelpContent = {
+  title: 'Sistemi e tecnologie',
+  intro:
+    'Cosa si usa, in che versione, fino a quando è supportato e se ha vulnerabilità note. Ogni tecnologia riceve una priorità, così si vede subito cosa fare ora e cosa si può pianificare.',
+  sections: [
+    {
+      title: 'Come si usa',
+      items: [
+        'Inventario: una riga per ogni prodotto e versione (es. Windows Server 2016, SQL Server 2017, PHP 8.1), legato a uno o più sistemi.',
+        'Indica la fine del supporto del produttore e la criticità per il business: servono alle regole di priorità.',
+        'Vulnerabilità: registra le CVE o i bollettini che riguardano una tecnologia, con gravità, stato e scadenza.',
+        '"Identificativo endoflife.date" e "Nome CPE" sono facoltativi: serviranno ai controlli automatici in rete.',
+      ],
+    },
+    {
+      title: 'Regole di priorità',
+      items: [
+        'Urgente: vulnerabilità sfruttata attivamente o critica non risolta; vulnerabilità con scadenza superata; vulnerabilità alta su sistema di criticità alta o critica; fuori supporto su sistema di criticità alta o critica; fine supporto entro 90 giorni su sistema critico.',
+        'Da pianificare: fuori supporto su sistema di criticità media o bassa; fine supporto entro 180 giorni; vulnerabilità alta non risolta.',
+        'Da tenere d’occhio: fine supporto entro un anno; vulnerabilità media, bassa o solo mitigata; versione più recente disponibile; fine supporto non indicata.',
+        'Ok: nessuno dei casi sopra. Le tecnologie dismesse (non attive) non contano.',
+        'Una vulnerabilità pesa finché è aperta, pianificata o mitigata; risolta o accettata no.',
+      ],
+    },
+    {
+      title: 'Cosa vedi dove',
+      items: [
+        'Attenzione: solo le tecnologie urgenti, con il motivo di ognuna.',
+        'Da pianificare: quelle da programmare e quelle da tenere d’occhio, senza notifiche.',
+        'Una versione più recente da sola non è mai urgente.',
       ],
     },
   ],

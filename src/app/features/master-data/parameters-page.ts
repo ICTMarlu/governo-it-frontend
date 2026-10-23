@@ -5,11 +5,11 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { canEdit } from '../../core/auth/permissions';
 import { API_BASE_URL } from '../../core/config/api.config';
 import { BackLink } from '../../shared/components/back-link/back-link';
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { errorMessage } from '../../shared/crud/crud-api.service';
-import { ROLES } from '../../shared/crud/crud.model';
 import { PARAMETERS_HELP } from '../../shared/help/help-content';
 
 interface Parameter {
@@ -159,7 +159,9 @@ export class ParametersPage {
   protected readonly parameters = signal<Parameter[]>([]);
   protected readonly draft = signal<Readonly<Record<string, string>>>({});
   protected readonly error = signal<string | null>(null);
-  protected readonly canEdit = computed(() => this.currentUser()?.role === ROLES.admin);
+  protected readonly canEdit = computed(() =>
+    canEdit(this.currentUser()?.permissions, 'MASTER_DATA'),
+  );
 
   constructor() {
     this.load();

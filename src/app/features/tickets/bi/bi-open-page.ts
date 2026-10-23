@@ -1,9 +1,18 @@
 import { Component, computed, inject, input } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { HBarChart } from '../../../shared/charts/hbar-chart';
 import { BiFilters } from './bi-filters';
-import { agingBuckets, areaOf, assigneeOf, countBy, countByPriority, isOpen } from './bi.model';
+import {
+  DrillDimension,
+  agingBuckets,
+  areaOf,
+  assigneeOf,
+  countBy,
+  countByPriority,
+  isOpen,
+} from './bi.model';
 import { BiStore } from './bi-store.service';
 
 /**
@@ -29,9 +38,13 @@ import { BiStore } from './bi-store.service';
         <div class="head">
           <ul class="bi-kpis" aria-label="Ticket di oggi">
             <li
-              class="bi-kpi"
+              class="bi-kpi bi-kpi--link"
               [class.bi-kpi--alert]="!pendingOnly()"
               [class.bi-kpi--warn]="pendingOnly()"
+              role="link"
+              tabindex="0"
+              (click)="openAll()"
+              (keydown.enter)="openAll()"
             >
               <span class="bi-kpi__value">{{ tickets().length }}</span>
               <span class="bi-kpi__label">{{
@@ -46,7 +59,13 @@ import { BiStore } from './bi-store.service';
         </div>
         <div class="bi-grid bi-grid--3">
           <section class="bi-card">
-            <gov-hbar-chart title="Per anzianità" color="alt" [items]="aging()" />
+            <gov-hbar-chart
+              title="Per anzianità"
+              color="alt"
+              [items]="aging()"
+              [drillable]="true"
+              (drill)="drill('aging', $event)"
+            />
           </section>
           <section class="bi-card">
             <gov-hbar-chart
@@ -55,11 +74,19 @@ import { BiStore } from './bi-store.service';
               [items]="byArea()"
               [selectable]="true"
               [selected]="store.areas()"
+              [drillable]="true"
               (pick)="store.toggle('areas', $event)"
+              (drill)="drill('area', $event)"
             />
           </section>
           <section class="bi-card">
-            <gov-hbar-chart title="Per priorità" color="alt" [items]="byPriority()" />
+            <gov-hbar-chart
+              title="Per priorità"
+              color="alt"
+              [items]="byPriority()"
+              [drillable]="true"
+              (drill)="drill('priority', $event)"
+            />
           </section>
           <section class="bi-card">
             <gov-hbar-chart
@@ -68,14 +95,28 @@ import { BiStore } from './bi-store.service';
               [items]="byAssignee()"
               [selectable]="true"
               [selected]="store.assignees()"
+              [drillable]="true"
               (pick)="store.toggle('assignees', $event)"
+              (drill)="drill('assignee', $event)"
             />
           </section>
           <section class="bi-card">
-            <gov-hbar-chart title="Per richiedente" color="alt" [items]="byReporter()" />
+            <gov-hbar-chart
+              title="Per richiedente"
+              color="alt"
+              [items]="byReporter()"
+              [drillable]="true"
+              (drill)="drill('reporter', $event)"
+            />
           </section>
           <section class="bi-card">
-            <gov-hbar-chart title="Per stato" color="alt" [items]="byStatus()" />
+            <gov-hbar-chart
+              title="Per stato"
+              color="alt"
+              [items]="byStatus()"
+              [drillable]="true"
+              (drill)="drill('status', $event)"
+            />
           </section>
         </div>
       }
@@ -103,6 +144,7 @@ import { BiStore } from './bi-store.service';
 })
 export class BiOpenPage {
   protected readonly store = inject(BiStore);
+  private readonly router = inject(Router);
 
   /** Dalla rotta: "open" (tutti gli aperti) o "pending". */
   readonly mode = input<'open' | 'pending'>('open');
@@ -122,5 +164,17 @@ export class BiOpenPage {
 
   constructor() {
     this.store.load();
+  }
+
+  /** Clic sul numero in alto: tutti i ticket della pagina. */
+  protected openAll(): void {
+    void this.router.navigate(['/tickets/dettaglio'], { queryParams: { scope: this.mode() } });
+  }
+
+  /** Clic su una barra: elenco dei ticket di quella barra. */
+  protected drill(dim: DrillDimension, value: string): void {
+    void this.router.navigate(['/tickets/dettaglio'], {
+      queryParams: { scope: this.mode(), dim, value },
+    });
   }
 }

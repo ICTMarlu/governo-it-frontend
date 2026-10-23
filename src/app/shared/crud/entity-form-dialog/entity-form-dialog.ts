@@ -8,16 +8,19 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Observable, finalize, of } from 'rxjs';
 
+import { matchesTerms, searchTerms } from '../../util/text-search';
 import { fromIsoDate, toIsoDate } from '../../dates/italian-date-adapter';
 import { CrudApiService, errorMessage } from '../crud-api.service';
 import { EntityConfig, EntityRow, FieldConfig, SelectOption } from '../crud.model';
@@ -41,6 +44,8 @@ export interface EntityFormDialogData {
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatAutocompleteModule,
+    MatIconModule,
     MatCheckboxModule,
     MatDatepickerModule,
     MatButtonModule,
@@ -80,12 +85,78 @@ export class EntityFormDialog {
       .map((field) => [field.key, this.loadOptions(field)]),
   );
 
+  /** Testo digitato nei campi con ricerca; assente = mostra l'etichetta del valore scelto. */
+  private readonly searchTexts = signal<Record<string, string>>({});
+
   constructor() {
     // I campi nascosti non vengono validati
     this.form.valueChanges.pipe(takeUntilDestroyed(inject(DestroyRef))).subscribe(() => {
       this.syncHiddenFields();
     });
     this.syncHiddenFields();
+  }
+
+  /** Testo mostrato nel campo con ricerca: quello digitato, o l'etichetta del valore scelto. */
+  protected searchDisplay(field: FieldConfig): string {
+    return this.searchTexts()[field.key] ?? this.labelOf(field, this.control(field.key).value);
+  }
+
+  /** Opzioni che contengono tutte le parole digitate (senza testo: tutte). */
+  protected searchOptions(field: FieldConfig): SelectOption[] {
+    const typed = this.searchTexts()[field.key];
+    const selected = this.labelOf(field, this.control(field.key).value);
+    // Con una scelta già fatta e testo non toccato si mostra l'elenco completo
+    const terms = typed === undefined || typed === selected ? [] : searchTerms(typed);
+    return this.optionsByKey[field.key]().filter((option) => matchesTerms(terms, [option.label]));
+  }
+
+  /** Scrivendo, la scelta precedente decade finché non se ne clicca una nuova. */
+  protected searchType(field: FieldConfig, text: string): void {
+    this.searchTexts.update((texts) => ({ ...texts, [field.key]: text }));
+    const control = this.control(field.key);
+    if (control.value !== null && text !== this.labelOf(field, control.value)) {
+      control.setValue(null);
+    }
+    control.markAsDirty();
+  }
+
+  protected searchPick(field: FieldConfig, value: unknown): void {
+    this.control(field.key).setValue(value);
+    this.control(field.key).markAsDirty();
+    this.searchTexts.update((texts) => {
+      return Object.fromEntries(Object.entries(texts).filter(([key]) => key !== field.key));
+    });
+  }
+
+  private readonly displayFns = new Map<string, (value: unknown) => string>();
+
+  /** Etichetta da scrivere nel campo quando si sceglie un'opzione (altrimenti comparirebbe l'id). */
+  protected searchDisplayFn(field: FieldConfig): (value: unknown) => string {
+    let fn = this.displayFns.get(field.key);
+    if (!fn) {
+      fn = (value) => this.labelOf(field, value);
+      this.displayFns.set(field.key, fn);
+    }
+    return fn;
+  }
+
+  protected searchClear(field: FieldConfig): void {
+    this.searchPick(field, null);
+  }
+
+  /** All'uscita dal campo, il testo senza scelta corrispondente viene tolto. */
+  protected searchLeave(field: FieldConfig): void {
+    setTimeout(() => {
+      if (this.control(field.key).value === null) {
+        this.searchTexts.update((texts) => {
+          return Object.fromEntries(Object.entries(texts).filter(([key]) => key !== field.key));
+        });
+      }
+    }, 200);
+  }
+
+  private labelOf(field: FieldConfig, value: unknown): string {
+    return this.optionsByKey[field.key]?.().find((option) => option.value === value)?.label ?? '';
   }
 
   protected isRequired(field: FieldConfig): boolean {

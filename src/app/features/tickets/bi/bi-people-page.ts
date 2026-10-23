@@ -1,4 +1,5 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -8,11 +9,20 @@ import { HelpButton } from '../../../shared/help/help-button';
 import { PEOPLE_TREND_HELP } from '../../../shared/help/help-content';
 import { KpiDirective } from '../components/kpi.directive';
 import { BiFilters } from './bi-filters';
-import { PERSON_TREND_WEEKS, PersonTrend, assigneeOf, personTrends, weekly } from './bi.model';
+import {
+  PERSON_TREND_DAYS,
+  PersonTrend,
+  assigneeOf,
+  personTrendPeriod,
+  personTrends,
+  weekly,
+} from './bi.model';
 import { BiStore } from './bi-store.service';
 
 /** Settimane del grafico della persona scelta. */
-const CHART_WEEKS = 12;
+/** Settimane del grafico e, più indietro, della tabella "Dati" sotto. */
+const CHART_WEEKS = 8;
+const DATA_WEEKS = 20;
 
 const DIRECTIONS: Readonly<
   Record<PersonTrend['direction'], { readonly icon: string; readonly label: string }>
@@ -39,7 +49,15 @@ const DIRECTIONS: Readonly<
   ],
   template: `
     <div class="bi-page">
-      <gov-bi-filters />
+      <gov-bi-filters>
+        <mat-slide-toggle
+          [checked]="store.includePending()"
+          (change)="store.includePending.set($event.checked)"
+        >
+          Includi i Pending negli aperti
+        </mat-slide-toggle>
+        <gov-help-button [help]="help" [compact]="true" label="Come si leggono i KPI per persona" />
+      </gov-bi-filters>
       @if (store.error(); as error) {
         <p class="bi-state" role="alert">{{ error }}</p>
       } @else if (!store.data()) {
@@ -48,101 +66,165 @@ const DIRECTIONS: Readonly<
           dei ticket…
         </p>
       } @else {
-        <div class="head">
-          <p class="note">
-            Saldo = (entrati − chiusi) delle ultime {{ weeks }} settimane complete ÷ {{ weeks }}: di
-            quanti ticket cresce o cala il backlog di ognuno a settimana. Gli anni e i mesi del
-            filtro qui non contano.
-          </p>
-          <mat-slide-toggle
-            [checked]="store.includePending()"
-            (change)="store.includePending.set($event.checked)"
-          >
-            Includi i Pending negli aperti
-          </mat-slide-toggle>
-          <gov-help-button
-            [help]="help"
-            [compact]="true"
-            label="Come si leggono i KPI per persona"
-          />
-        </div>
-
-        <section *govKpi="'people.table'" class="bi-card" aria-labelledby="people-title">
-          <h2 id="people-title" class="title">Backlog per persona</h2>
-          @if (trends().length === 0) {
-            <p class="bi-state">Nessun ticket per i filtri scelti.</p>
-          } @else {
-            <div class="scroll">
-              <table class="table table--centered">
-                <thead>
-                  <tr>
-                    <th scope="col">Persona</th>
-                    <th scope="col">Aperti {{ weeks }} sett. fa</th>
-                    <th scope="col">Aperti oggi</th>
-                    <th scope="col">Entrati</th>
-                    <th scope="col">Chiusi</th>
-                    <th scope="col">Saldo a settimana</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (row of trends(); track row.name) {
-                    <tr [class.selected]="row.name === selected()">
-                      <th scope="row">
-                        <button
-                          type="button"
-                          class="link-btn"
-                          [attr.aria-pressed]="row.name === selected()"
-                          (click)="selection.set(row.name)"
-                        >
-                          {{ row.name }}
-                        </button>
-                      </th>
-                      <td>{{ row.openBefore }}</td>
-                      <td>{{ row.open }}</td>
-                      <td>{{ row.created }}</td>
-                      <td>{{ row.resolved }}</td>
+        <div class="split">
+          <section *govKpi="'people.table'" class="bi-card" aria-labelledby="people-title">
+            <header class="card-head">
+              <h2 id="people-title" class="title">Backlog per persona</h2>
+              <p class="note">
+                <strong>Periodo: ultimi {{ days }} giorni</strong> (dal {{ since() }} a oggi, oggi
+                compreso). Saldo = entrati − chiusi nel periodo: di quanti ticket cresce o cala il
+                backlog di ognuno. Tra parentesi la media a settimana (saldo ÷ {{ elapsedWeeks() }}
+                settimane). Gli anni e i mesi del filtro qui non contano.
+              </p>
+            </header>
+            @if (trends().length === 0) {
+              <p class="bi-state">Nessun ticket per i filtri scelti.</p>
+            } @else {
+              <div class="scroll">
+                <table class="table table--centered">
+                  <thead>
+                    <tr>
+                      <th scope="col">Persona</th>
+                      <th scope="col">Aperti al {{ since() }}</th>
+                      <th scope="col">Aperti ad oggi</th>
+                      <th scope="col">Entrati dal {{ since() }}</th>
+                      <th scope="col">Chiusi dal {{ since() }}</th>
+                      <th scope="col">Saldo del periodo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of trends(); track row.name) {
+                      <tr
+                        class="pick"
+                        [class.selected]="row.name === selected()"
+                        (click)="selection.set(row.name)"
+                      >
+                        <th scope="row">
+                          <button
+                            type="button"
+                            class="link-btn"
+                            [attr.aria-pressed]="row.name === selected()"
+                            (click)="selection.set(row.name)"
+                          >
+                            {{ row.name }}
+                          </button>
+                        </th>
+                        <td>{{ row.openBefore }}</td>
+                        <td>
+                          <button
+                            type="button"
+                            class="link-btn"
+                            [title]="'Vedi i ticket aperti di ' + row.name"
+                            (click)="open(row.name, store.includePending() ? 'open' : 'workable')"
+                          >
+                            {{ row.open }}
+                          </button>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            class="link-btn"
+                            [title]="'Vedi i ticket entrati di ' + row.name"
+                            (click)="open(row.name, 'created4w')"
+                          >
+                            {{ row.created }}
+                          </button>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            class="link-btn"
+                            [title]="'Vedi i ticket chiusi di ' + row.name"
+                            (click)="open(row.name, 'resolved4w')"
+                          >
+                            {{ row.resolved }}
+                          </button>
+                        </td>
+                        <td>
+                          <span class="trend trend--{{ row.direction }}">
+                            <mat-icon aria-hidden="true">{{
+                              directions[row.direction].icon
+                            }}</mat-icon>
+                            {{ signed(row.created - row.resolved) }} ·
+                            {{ directions[row.direction].label }}
+                            <span class="per-week">({{ signed(row.perWeek) }} a sett.)</span>
+                          </span>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                  <tfoot>
+                    <tr class="total">
+                      <th scope="row">Totale</th>
+                      <td>{{ total().openBefore }}</td>
+                      <td>{{ total().open }}</td>
+                      <td>{{ total().created }}</td>
+                      <td>{{ total().resolved }}</td>
                       <td>
-                        <span class="trend trend--{{ row.direction }}">
+                        <span class="trend trend--{{ total().direction }}">
                           <mat-icon aria-hidden="true">{{
-                            directions[row.direction].icon
+                            directions[total().direction].icon
                           }}</mat-icon>
-                          {{ signed(row.perWeek) }} · {{ directions[row.direction].label }}
+                          {{ signed(total().created - total().resolved) }} ·
+                          {{ directions[total().direction].label }}
+                          <span class="per-week">({{ signed(total().perWeek) }} a sett.)</span>
                         </span>
                       </td>
                     </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-        </section>
-
-        @if (selected(); as name) {
-          <section *govKpi="'people.chart'" class="bi-card">
-            <gov-period-chart
-              [barsTitle]="name + ': entrati e chiusi per settimana'"
-              [lineTitle]="
-                store.includePending()
-                  ? 'Aperti a fine settimana (con i Pending)'
-                  : 'Aperti a fine settimana (senza Pending)'
-              "
-              [points]="chart()"
-            />
+                  </tfoot>
+                </table>
+              </div>
+            }
           </section>
-        }
+
+          @if (selected(); as name) {
+            <section *govKpi="'people.chart'" class="bi-card">
+              <gov-period-chart
+                [barsTitle]="name + ': entrati e chiusi per settimana'"
+                [lineTitle]="
+                  store.includePending()
+                    ? 'Aperti a fine settimana (con i Pending)'
+                    : 'Aperti a fine settimana (senza Pending)'
+                "
+                [points]="chart()"
+                [tall]="true"
+                [dataPoints]="dataRows()"
+              />
+            </section>
+          }
+        </div>
       }
     </div>
   `,
   styles: `
-    .head {
+    // Tabella e spiegazione del saldo affiancate: niente riga in più sopra
+    // Tabella a sinistra e grafico a destra su schermo largo; impilati su schermo stretto
+    .split {
+      display: grid;
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    @media (min-width: 1200px) {
+      .split {
+        grid-template-columns: minmax(0, 38rem) minmax(0, 1fr);
+      }
+    }
+
+    .card-head {
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
-      gap: 0.5rem 1rem;
+      align-items: baseline;
+      gap: 0.25rem 1rem;
+      margin-block-end: 0.5rem;
+
+      .title {
+        margin: 0;
+      }
     }
 
     .note {
-      flex: 1 1 24rem;
+      flex: 1 1 12rem;
       margin: 0;
       color: var(--mat-sys-on-surface-variant);
       font: var(--mat-sys-body-small);
@@ -157,6 +239,68 @@ const DIRECTIONS: Readonly<
       overflow-x: auto;
     }
 
+    // Tabella ordinata: intestazioni che vanno a capo, numeri centrati sotto il loro titolo
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font: var(--mat-sys-body-medium);
+
+      th,
+      td {
+        padding: 0.3125rem 0.5rem;
+        border-bottom: 1px solid var(--mat-sys-outline-variant);
+        white-space: nowrap;
+      }
+
+      thead th {
+        color: var(--mat-sys-on-surface-variant);
+        font: var(--mat-sys-label-medium);
+        line-height: 1.2;
+        padding-block: 0.5rem;
+        text-align: center;
+        vertical-align: bottom;
+        white-space: normal;
+      }
+
+      // Persona e saldo a sinistra, i quattro numeri centrati
+      th:first-child,
+      td:first-child {
+        text-align: start;
+      }
+
+      thead th:last-child,
+      tbody td:last-child {
+        text-align: start;
+      }
+
+      tbody td:not(:first-child):not(:last-child) {
+        width: 5.5rem;
+        text-align: center;
+      }
+
+      tbody tr:last-child td,
+      tbody tr:last-child th {
+        border-bottom: 0;
+      }
+
+      // Riga dei totali: separata da una linea e in grassetto
+      tfoot td,
+      tfoot th {
+        border-top: 2px solid var(--mat-sys-outline);
+        border-bottom: 0;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      tfoot th {
+        text-align: start;
+      }
+
+      tfoot td:last-child {
+        text-align: start;
+      }
+    }
+
     .link-btn {
       padding: 0;
       border: 0;
@@ -167,8 +311,18 @@ const DIRECTIONS: Readonly<
       cursor: pointer;
     }
 
+    .pick {
+      cursor: pointer;
+    }
+
     .selected {
       background: color-mix(in srgb, var(--mat-sys-primary) 8%, transparent);
+    }
+
+    .per-week {
+      color: var(--mat-sys-on-surface-variant);
+      font-weight: 400;
+      font-size: 0.8125rem;
     }
 
     // Direzione con icona ed etichetta, mai solo colore
@@ -191,14 +345,45 @@ const DIRECTIONS: Readonly<
 export class BiPeoplePage {
   protected readonly store = inject(BiStore);
   protected readonly help = PEOPLE_TREND_HELP;
-  protected readonly weeks = PERSON_TREND_WEEKS;
+  protected readonly days = PERSON_TREND_DAYS;
+  private readonly period = computed(() => personTrendPeriod(new Date()));
+  /** Primo giorno del periodo (30 giorni, oggi compreso), gg/mm. */
+  protected readonly since = computed(() =>
+    this.period().start.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }),
+  );
+  /** Settimane del periodo (30 giorni = 4,3), per cui si divide il saldo. */
+  protected readonly elapsedWeeks = computed(() =>
+    this.period().weeks.toLocaleString('it-IT', { maximumFractionDigits: 1 }),
+  );
   protected readonly directions = DIRECTIONS;
+
+  /** Totale di ogni colonna sulle persone mostrate; il saldo è ricalcolato sui totali. */
+  protected readonly total = computed(() => {
+    const rows = this.trends();
+    const sum = (pick: (row: PersonTrend) => number) =>
+      rows.reduce((acc, row) => acc + pick(row), 0);
+    const created = sum((row) => row.created);
+    const resolved = sum((row) => row.resolved);
+    const perWeek = Math.round(((created - resolved) / this.period().weeks) * 10) / 10;
+    return {
+      openBefore: sum((row) => row.openBefore),
+      open: sum((row) => row.open),
+      created,
+      resolved,
+      perWeek,
+      direction: (perWeek >= 0.5
+        ? 'up'
+        : perWeek <= -0.5
+          ? 'down'
+          : 'flat') as PersonTrend['direction'],
+    };
+  });
 
   protected readonly trends = computed(() =>
     personTrends(this.store.scoped(), new Date(), this.store.includePending()),
   );
 
-  /** Persona scelta; di partenza quella con il saldo peggiore. */
+  /** Persona scelta (filtro in alto o clic nella tabella); di partenza quella con il saldo peggiore. */
   protected readonly selection = signal<string | null>(null);
   protected readonly selected = computed(() => {
     const names = this.trends().map((row) => row.name);
@@ -206,15 +391,36 @@ export class BiPeoplePage {
     return chosen !== null && names.includes(chosen) ? chosen : (names[0] ?? null);
   });
 
-  protected readonly chart = computed(() => {
+  /** Serie delle ultime DATA_WEEKS settimane della persona scelta: il grafico ne usa le ultime. */
+  private readonly series = computed(() => {
     const name = this.selected();
     const now = new Date();
-    const from = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7 * (CHART_WEEKS - 1));
+    const from = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7 * (DATA_WEEKS - 1));
     const tickets = this.store.scoped().filter((ticket) => assigneeOf(ticket) === name);
     return weekly(tickets, from, now, this.store.includePending());
   });
+  protected readonly chart = computed(() => this.series().slice(-CHART_WEEKS));
+  protected readonly dataRows = computed(() => this.series());
+
+  private readonly router = inject(Router);
+
+  /** Clic su un numero della persona: i suoi ticket (aperti, entrati o chiusi). */
+  protected open(name: string, scope: string): void {
+    void this.router.navigate(['/tickets/dettaglio'], {
+      queryParams: { scope, dim: 'assignee', value: name },
+    });
+  }
 
   constructor() {
+    // Il filtro "Assegnatario" in alto con una sola persona la sceglie; poi vale il clic sulle righe
+    effect(() => {
+      const filtered = this.store.assignees();
+      untracked(() => {
+        if (filtered?.length === 1) {
+          this.selection.set(filtered[0]);
+        }
+      });
+    });
     this.store.load();
   }
 

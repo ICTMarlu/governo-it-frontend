@@ -3,6 +3,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 
+import { BackLink } from '../../shared/components/back-link/back-link';
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { LOOKUP_CONFIGS } from './master-data.configs';
 import { MASTER_DATA_HELP } from '../../shared/help/help-content';
@@ -17,8 +18,9 @@ interface Shortcut {
 /** Punto di accesso alle anagrafiche di base e alle liste valori configurabili. */
 @Component({
   selector: 'gov-master-data-page',
-  imports: [RouterLink, MatCardModule, MatIconModule, PageHeader],
+  imports: [BackLink, RouterLink, MatCardModule, MatIconModule, PageHeader],
   template: `
+    <gov-back-link [target]="{ link: '/anagrafiche', label: 'Anagrafiche' }" />
     <gov-page-header
       title="Anagrafiche e liste"
       subtitle="Dati di base usati da progetti e risorse. Le modifiche sono riservate agli amministratori."

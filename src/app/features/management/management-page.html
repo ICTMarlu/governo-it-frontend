@@ -54,6 +54,19 @@
         <mat-button-toggle [value]="option.value">{{ option.label }}</mat-button-toggle>
       }
     </mat-button-toggle-group>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="quick__audience">
+      <mat-label>Rivolto a (facoltativo)</mat-label>
+      <mat-select
+        multiple
+        name="quickAudience"
+        [ngModel]="quickAudience()"
+        (ngModelChange)="quickAudience.set($event)"
+      >
+        @for (option of audienceOptions(); track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
     <button mat-stroked-button type="submit" [disabled]="adding() || !quickTitle().trim()">
       Aggiungi
     </button>

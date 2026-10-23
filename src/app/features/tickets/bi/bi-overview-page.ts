@@ -1,11 +1,12 @@
 import { Component, computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { HBarChart } from '../../../shared/charts/hbar-chart';
 import { PeriodChart } from '../../../shared/charts/period-chart';
 import { KpiDirective } from '../components/kpi.directive';
 import { BiFilters } from './bi-filters';
-import { areaOf, assigneeOf, countBy, monthly, overview } from './bi.model';
+import { DrillDimension, areaOf, assigneeOf, countBy, monthly, overview } from './bi.model';
 import { BiStore } from './bi-store.service';
 
 /**
@@ -29,26 +30,61 @@ import { BiStore } from './bi-store.service';
       } @else {
         @let n = numbers();
         <ul class="bi-kpis" aria-label="Numeri del periodo">
-          <li *govKpi="'bi.created'" class="bi-kpi bi-kpi--info">
+          <li
+            *govKpi="'bi.created'"
+            class="bi-kpi bi-kpi--link bi-kpi--info"
+            role="link"
+            tabindex="0"
+            (click)="open('created')"
+            (keydown.enter)="open('created')"
+          >
             <span class="bi-kpi__value">{{ n.created }}</span
             ><span class="bi-kpi__label">ticket creati</span>
           </li>
-          <li *govKpi="'bi.open'" class="bi-kpi bi-kpi--alert">
+          <li
+            *govKpi="'bi.open'"
+            class="bi-kpi bi-kpi--link bi-kpi--alert"
+            role="link"
+            tabindex="0"
+            (click)="open('created-open')"
+            (keydown.enter)="open('created-open')"
+          >
             <span class="bi-kpi__value">{{ n.open }}</span
             ><span class="bi-kpi__label">aperti</span>
             <span class="bi-kpi__meta">{{ n.openPct }}%</span>
           </li>
-          <li *govKpi="'bi.workable'" class="bi-kpi bi-kpi--alert">
+          <li
+            *govKpi="'bi.workable'"
+            class="bi-kpi bi-kpi--link bi-kpi--alert"
+            role="link"
+            tabindex="0"
+            (click)="open('created-workable')"
+            (keydown.enter)="open('created-workable')"
+          >
             <span class="bi-kpi__value">{{ n.openWorkable }}</span
             ><span class="bi-kpi__label">open (lavorabili)</span>
             <span class="bi-kpi__meta">{{ n.openWorkablePct }}%</span>
           </li>
-          <li *govKpi="'bi.pending'" class="bi-kpi bi-kpi--warn">
+          <li
+            *govKpi="'bi.pending'"
+            class="bi-kpi bi-kpi--link bi-kpi--warn"
+            role="link"
+            tabindex="0"
+            (click)="open('created-pending')"
+            (keydown.enter)="open('created-pending')"
+          >
             <span class="bi-kpi__value">{{ n.pending }}</span
             ><span class="bi-kpi__label">pending</span>
             <span class="bi-kpi__meta">{{ n.pendingPct }}%</span>
           </li>
-          <li *govKpi="'bi.resolved'" class="bi-kpi bi-kpi--good">
+          <li
+            *govKpi="'bi.resolved'"
+            class="bi-kpi bi-kpi--link bi-kpi--good"
+            role="link"
+            tabindex="0"
+            (click)="open('created-resolved')"
+            (keydown.enter)="open('created-resolved')"
+          >
             <span class="bi-kpi__value">{{ n.resolved }}</span
             ><span class="bi-kpi__label">risolti</span>
             <span class="bi-kpi__meta">{{ n.resolvedPct }}%</span>
@@ -69,7 +105,9 @@ import { BiStore } from './bi-store.service';
               [items]="byArea()"
               [selectable]="true"
               [selected]="store.areas()"
+              [drillable]="true"
               (pick)="store.toggle('areas', $event)"
+              (drill)="drill('area', $event)"
             />
           </section>
         </div>
@@ -80,14 +118,26 @@ import { BiStore } from './bi-store.service';
               [items]="byAssignee()"
               [selectable]="true"
               [selected]="store.assignees()"
+              [drillable]="true"
               (pick)="store.toggle('assignees', $event)"
+              (drill)="drill('assignee', $event)"
             />
           </section>
           <section class="bi-card">
-            <gov-hbar-chart title="Ticket per stato" [items]="byStatus()" />
+            <gov-hbar-chart
+              title="Ticket per stato"
+              [items]="byStatus()"
+              [drillable]="true"
+              (drill)="drill('status', $event)"
+            />
           </section>
           <section class="bi-card">
-            <gov-hbar-chart title="Ticket per tipo di richiesta" [items]="byRequestType()" />
+            <gov-hbar-chart
+              title="Ticket per tipo di richiesta"
+              [items]="byRequestType()"
+              [drillable]="true"
+              (drill)="drill('requestType', $event)"
+            />
           </section>
         </div>
       }
@@ -96,6 +146,7 @@ import { BiStore } from './bi-store.service';
 })
 export class BiOverviewPage {
   protected readonly store = inject(BiStore);
+  private readonly router = inject(Router);
 
   protected readonly numbers = computed(() => overview(this.store.createdInPeriod()));
   protected readonly months = computed(() =>
@@ -112,5 +163,17 @@ export class BiOverviewPage {
 
   constructor() {
     this.store.load();
+  }
+
+  /** Clic su un numero: elenco dei ticket che lo compongono. */
+  protected open(scope: string): void {
+    void this.router.navigate(['/tickets/dettaglio'], { queryParams: { scope } });
+  }
+
+  /** Clic su una barra: elenco dei ticket creati nel periodo di quella barra. */
+  protected drill(dim: DrillDimension, value: string): void {
+    void this.router.navigate(['/tickets/dettaglio'], {
+      queryParams: { scope: 'created', dim, value },
+    });
   }
 }

@@ -32,17 +32,13 @@ export const TOPIC_TYPE_COLORS: Readonly<Record<string, string>> = {
 /** Da quanti rinvii un punto va segnalato: o si decide, o si riassegna, o si annulla. */
 export const DEFERRAL_WARNING = 2;
 
-const STATUS_ORDER = TOPIC_STATUS_OPTIONS.map((option) => option.value);
-
 const projectLabel = (row: EntityRow): string =>
   row['code'] ? `${String(row['code'])} · ${String(row['name'])}` : String(row['name']);
 
-/** Prima i punti vivi nell'ordine degli stati, poi per priorità (senza in fondo), poi i più recenti. */
-const byStatusThenPriority = (a: EntityRow, b: EntityRow): number => {
-  const status = (row: EntityRow) => STATUS_ORDER.indexOf(String(row['status']));
-  const priority = (row: EntityRow) => Number(row['priorityLevel'] ?? 99);
-  return status(a) - status(b) || priority(a) - priority(b) || Number(b.id) - Number(a.id);
-};
+/** I più recenti in alto: per data di creazione, a parità l'ultimo inserito. */
+const byCreatedDesc = (a: EntityRow, b: EntityRow): number =>
+  String(b['createdOn'] ?? '').localeCompare(String(a['createdOn'] ?? '')) ||
+  Number(b.id) - Number(a.id);
 
 /** Punti da portare alla direzione: la lista viva. */
 export const TOPICS_CONFIG: EntityConfig = {
@@ -51,6 +47,16 @@ export const TOPICS_CONFIG: EntityConfig = {
   endpoint: '/management/topics',
   writeRoles: MANAGEMENT_WRITE_ROLES,
   canDelete: true,
+  bulkActions: [
+    {
+      id: 'close',
+      label: 'Chiudi',
+      icon: 'check_circle',
+      patch: { status: 'CLOSED' },
+      confirmTitle: 'Chiudere i punti selezionati?',
+      confirmMessage: 'I punti passano allo stato "Chiuso". I punti già chiusi restano com’è.',
+    },
+  ],
   searchKeys: [
     'title',
     'notes',
@@ -66,10 +72,21 @@ export const TOPICS_CONFIG: EntityConfig = {
     { key: 'audienceNames', label: 'Rivolto a' },
     { key: 'ownerName', label: 'Owner' },
   ],
-  sort: byStatusThenPriority,
+  sort: byCreatedDesc,
   // Clic sul titolo: si apre la scheda del punto per modificarlo
   titleOpensForm: true,
   fields: [
+    {
+      key: 'audienceIds',
+      label: 'Rivolto a',
+      type: 'multiselect',
+      options: {
+        endpoint: '/requesters',
+        labelKey: 'fullName',
+        filter: (row) => row['management'] === true,
+      },
+      hint: 'A quale direttore va chiesto: uno o più membri della direzione (si indicano in Richiedenti › "Fa parte della direzione")',
+    },
     {
       key: 'title',
       label: 'Titolo',
@@ -85,17 +102,6 @@ export const TOPICS_CONFIG: EntityConfig = {
       required: true,
       defaultValue: 'TOPIC',
       options: { static: TOPIC_TYPE_OPTIONS },
-    },
-    {
-      key: 'audienceIds',
-      label: 'Rivolto a',
-      type: 'multiselect',
-      options: {
-        endpoint: '/requesters',
-        labelKey: 'fullName',
-        filter: (row) => row['management'] === true,
-      },
-      hint: 'Uno o più membri della direzione (si indicano in Richiedenti › "Fa parte della direzione")',
     },
     {
       key: 'status',
@@ -134,7 +140,8 @@ export const TOPICS_CONFIG: EntityConfig = {
     {
       key: 'projectId',
       label: 'Progetto collegato',
-      type: 'select',
+      type: 'search',
+      hint: 'Scrivi codice o nome per cercare',
       options: { endpoint: '/projects', labelKey: projectLabel },
     },
     {

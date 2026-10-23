@@ -77,6 +77,34 @@
     font: var(--mat-sys-body-small);
   }
 
+  &__link {
+    align-self: flex-start;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--mat-sys-primary);
+    font: var(--mat-sys-body-small);
+    text-align: start;
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:disabled {
+      color: var(--mat-sys-on-surface-variant);
+      text-decoration: none;
+      cursor: default;
+    }
+  }
+
+  // Numero cliccabile: porta all'elenco dei ticket che lo compongono
+  &--link {
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--mat-sys-surface-container);
+    }
+  }
+
   &--alert {
     border-color: var(--mat-sys-error);
 
@@ -191,6 +219,11 @@
 
 .table-wrap {
   overflow-x: auto;
+}
+
+.period {
+  margin: 0 0 0.5rem;
+  font: var(--mat-sys-body-small);
 }
 
 .table {

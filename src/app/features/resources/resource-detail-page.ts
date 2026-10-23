@@ -10,6 +10,7 @@ import { RouterLink } from '@angular/router';
 import { filter, map } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { canEdit } from '../../core/auth/permissions';
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { CrudApiService } from '../../shared/crud/crud-api.service';
 import { CrudSection } from '../../shared/crud/crud-section/crud-section';
@@ -69,10 +70,9 @@ export class ResourceDetailPage {
   protected readonly extraConfig = computed(() => extraCapacitiesConfig(this.resourceId()));
   protected readonly ratesConfig = computed(() => ratesConfig(this.resourceId()));
   protected readonly canViewCosts = computed(() => this.currentUser()?.canViewCosts === true);
-  protected readonly canEdit = computed(() => {
-    const role = this.currentUser()?.role;
-    return role !== undefined && (RESOURCES_CONFIG.writeRoles ?? []).includes(role);
-  });
+  protected readonly canEdit = computed(() =>
+    canEdit(this.currentUser()?.permissions, 'RESOURCES'),
+  );
 
   protected readonly details = computed(() => {
     const resource = this.resource();

@@ -84,6 +84,38 @@
     <p class="count" aria-live="polite">
       {{ visibleRows().length }} {{ visibleRows().length === 1 ? 'elemento' : 'elementi' }}
     </p>
+    @if (selectedRows().length > 0) {
+      <div class="bulk" role="region" aria-label="Azioni sulla selezione">
+        <span class="bulk__count" aria-live="polite">
+          {{ selectedRows().length }}
+          {{ selectedRows().length === 1 ? 'selezionato' : 'selezionati' }}
+        </span>
+        @for (action of config().bulkActions ?? []; track action.id) {
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="bulkBusy()"
+            (click)="confirmBulk(action)"
+          >
+            <mat-icon aria-hidden="true">{{ action.icon }}</mat-icon>
+            {{ action.label }}
+          </button>
+        }
+        @if (config().canDelete) {
+          <button
+            mat-stroked-button
+            type="button"
+            class="bulk__delete"
+            [disabled]="bulkBusy()"
+            (click)="confirmBulkDelete()"
+          >
+            <mat-icon aria-hidden="true">delete</mat-icon>
+            Elimina
+          </button>
+        }
+        <button mat-button type="button" (click)="clearSelection()">Deseleziona</button>
+      </div>
+    }
     <gov-entity-table
       [rows]="visibleRows()"
       [columns]="visibleColumns()"
@@ -92,6 +124,8 @@
       [canDelete]="canWrite() && config().canDelete === true"
       [rowLink]="config().rowLink"
       [titleOpensEdit]="config().titleOpensForm === true"
+      [selectable]="selectable()"
+      [(selection)]="selection"
       [(sort)]="sort"
       (edit)="openForm($event)"
       (remove)="confirmDelete($event)"

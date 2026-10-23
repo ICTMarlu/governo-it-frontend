@@ -8,4 +8,6 @@ export interface CurrentUser {
   readonly canViewCosts: boolean;
   /** Risorsa del team collegata all'utente (es. per "i miei task"), se c'è. */
   readonly resourceId: number | null;
+  /** Livello (NONE, VIEW, EDIT) di ogni modulo: decide menu, pagine e pulsanti. */
+  readonly permissions: Readonly<Record<string, string>>;
 }

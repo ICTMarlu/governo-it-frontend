@@ -13,6 +13,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Observable, filter, finalize } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { canEdit } from '../../core/auth/permissions';
 import { BackLink } from '../../shared/components/back-link/back-link';
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { ConfirmDialog, ConfirmDialogData } from '../../shared/crud/confirm-dialog/confirm-dialog';
@@ -22,7 +23,6 @@ import { fromIsoDate, toIsoDate } from '../../shared/dates/italian-date-adapter'
 import { MEETING_HELP } from '../../shared/help/help-content';
 import { AgendaItem, NewAction } from './components/agenda-item/agenda-item';
 import { ExportDialog, ExportDialogData } from './components/export-dialog/export-dialog';
-import { MANAGEMENT_WRITE_ROLES } from './management.configs';
 import { ExportMeeting, formatDay, summaryText } from './models/management-export';
 import { ManagementAction, ManagementTopic, Meeting, MeetingItem } from './models/management.model';
 import { MarkBody, MeetingsService } from './services/meetings.service';
@@ -75,10 +75,9 @@ export class MeetingDetailPage {
   protected readonly editNotes = signal('');
   protected readonly toAdd = signal<number[]>([]);
 
-  protected readonly canWrite = computed(() => {
-    const role = this.currentUser()?.role;
-    return role !== undefined && MANAGEMENT_WRITE_ROLES.includes(role);
-  });
+  protected readonly canWrite = computed(() =>
+    canEdit(this.currentUser()?.permissions, 'MANAGEMENT'),
+  );
 
   protected readonly heading = computed(() => {
     const meeting = this.meeting();

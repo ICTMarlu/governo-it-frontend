@@ -1,4 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
@@ -35,15 +36,35 @@ import { BiStore } from './bi-store.service';
       } @else {
         <div class="head">
           <ul class="bi-kpis" aria-label="Numeri di oggi">
-            <li *govKpi="'trend.backlogDays'" class="bi-kpi bi-kpi--info">
+            <li
+              *govKpi="'trend.backlogDays'"
+              class="bi-kpi bi-kpi--link bi-kpi--info"
+              role="link"
+              tabindex="0"
+              (click)="openWorkable()"
+              (keydown.enter)="openWorkable()"
+            >
               <span class="bi-kpi__value">{{ backlog() ?? '—' }}</span>
               <span class="bi-kpi__label">giorni lavorativi di backlog</span>
             </li>
-            <li *govKpi="'trend.workable'" class="bi-kpi bi-kpi--alert">
+            <li
+              *govKpi="'trend.workable'"
+              class="bi-kpi bi-kpi--link bi-kpi--alert"
+              role="link"
+              tabindex="0"
+              (click)="openWorkable()"
+              (keydown.enter)="openWorkable()"
+            >
               <span class="bi-kpi__value">{{ workable() }}</span>
               <span class="bi-kpi__label">lavorabili oggi</span>
             </li>
-            <li class="bi-kpi">
+            <li
+              class="bi-kpi bi-kpi--link"
+              role="link"
+              tabindex="0"
+              (click)="open('resolved3w')"
+              (keydown.enter)="open('resolved3w')"
+            >
               <span class="bi-kpi__value">{{ closeRate() }}</span>
               <span class="bi-kpi__label">chiusi al giorno (media)</span>
               <span class="period">ultime {{ weeksCount }} settimane: {{ closePeriod() }}</span>
@@ -158,7 +179,18 @@ export class BiTrendPage {
     (this.store.data()?.pendingStatuses ?? []).join(', '),
   );
 
+  private readonly router = inject(Router);
+
   constructor() {
     this.store.load();
+  }
+
+  /** Lavorabili di oggi: con o senza i Pending, come il numero mostrato. */
+  protected openWorkable(): void {
+    this.open(this.store.includePending() ? 'open' : 'workable');
+  }
+
+  protected open(scope: string): void {
+    void this.router.navigate(['/tickets/dettaglio'], { queryParams: { scope } });
   }
 }

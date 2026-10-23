@@ -36,6 +36,55 @@
               }
             </mat-form-field>
           }
+          @case ('search') {
+            <mat-form-field
+              appearance="outline"
+              subscriptSizing="dynamic"
+              [class.full]="field.fullWidth"
+            >
+              <mat-label>{{ field.label }}</mat-label>
+              <input
+                matInput
+                type="text"
+                autocomplete="off"
+                placeholder="Scrivi per cercare…"
+                [matAutocomplete]="auto"
+                [value]="searchDisplay(field)"
+                [required]="isRequired(field)"
+                (input)="searchType(field, $any($event.target).value)"
+                (blur)="searchLeave(field)"
+              />
+              @if (searchDisplay(field)) {
+                <button
+                  matSuffix
+                  mat-icon-button
+                  type="button"
+                  [attr.aria-label]="'Togli ' + field.label"
+                  (click)="searchClear(field)"
+                >
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+              <mat-autocomplete
+                #auto="matAutocomplete"
+                autoActiveFirstOption
+                [displayWith]="searchDisplayFn(field)"
+                (optionSelected)="searchPick(field, $event.option.value)"
+              >
+                @for (option of searchOptions(field); track option.value) {
+                  <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                } @empty {
+                  <mat-option disabled>Nessun risultato</mat-option>
+                }
+              </mat-autocomplete>
+              @if (field.hint) {
+                <mat-hint>{{ field.hint }}</mat-hint>
+              }
+              @if (control(field.key).hasError('required')) {
+                <mat-error>Scegli un valore dall'elenco</mat-error>
+              }
+            </mat-form-field>
+          }
           @case ('multiselect') {
             <mat-form-field
               appearance="outline"

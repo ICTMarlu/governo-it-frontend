@@ -84,6 +84,13 @@
     @for (row of sortedRows(); track row.id) {
       <li class="card" [class.card--inactive]="row['active'] === false">
         <div class="card__header">
+          @if (selectable()) {
+            <mat-checkbox
+              [checked]="selection().has(row.id!)"
+              [aria-label]="'Seleziona ' + rowTitle(row)"
+              (change)="toggleRow(row)"
+            />
+          }
           <span class="card__title">
             <ng-container *ngTemplateOutlet="title; context: { $implicit: row }" />
           </span>
@@ -117,6 +124,16 @@
       </caption>
       <thead>
         <tr>
+          @if (selectable()) {
+            <th scope="col" class="select">
+              <mat-checkbox
+                aria-label="Seleziona tutti"
+                [checked]="allSelected()"
+                [indeterminate]="someSelected()"
+                (change)="toggleAll()"
+              />
+            </th>
+          }
           @for (column of columns(); track columnId(column)) {
             <th
               scope="col"
@@ -145,7 +162,19 @@
       </thead>
       <tbody>
         @for (row of sortedRows(); track row.id) {
-          <tr [class.inactive]="row['active'] === false">
+          <tr
+            [class.inactive]="row['active'] === false"
+            [class.selected]="selection().has(row.id!)"
+          >
+            @if (selectable()) {
+              <td class="select">
+                <mat-checkbox
+                  [checked]="selection().has(row.id!)"
+                  [aria-label]="'Seleziona ' + rowTitle(row)"
+                  (change)="toggleRow(row)"
+                />
+              </td>
+            }
             @for (column of columns(); track $index) {
               <td
                 [class.col--narrow]="widthOf(column) === 'narrow'"

@@ -22,6 +22,10 @@ export interface BiTicket {
   readonly resolved: string | null;
   readonly updated: string;
   readonly due: string | null;
+  /** Impatto (campo Impact di Jira), es. "Significant / Large". */
+  readonly impact: string | null;
+  /** Quando il ticket è entrato nello stato attuale (cambio di categoria di stato in Jira). */
+  readonly statusChanged: string | null;
 }
 
 export interface BiData {
@@ -46,6 +50,8 @@ export interface Count {
 }
 
 export interface PeriodPoint {
+  /** Periodo ancora in corso (es. la settimana di oggi): i numeri sono parziali. */
+  readonly partial?: boolean;
   readonly label: string;
   /** Etichetta lunga per il riquadro con i numeri (es. "settimana del 19/10/2026"). */
   readonly title: string;
@@ -131,6 +137,50 @@ export function countBy(
   return [...counts.entries()]
     .map(([label, value]) => ({ label, value }))
     .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label, 'it'));
+}
+
+/** Voci dei grafici a barre da cui si può passare all'elenco dei ticket. */
+export type DrillDimension =
+  'area' | 'assignee' | 'reporter' | 'status' | 'priority' | 'aging' | 'requestType' | 'project';
+
+export const DRILL_LABELS: Readonly<Record<DrillDimension, string>> = {
+  area: 'Progetto Marlù',
+  assignee: 'Assegnatario',
+  reporter: 'Richiedente',
+  status: 'Stato',
+  priority: 'Priorità',
+  aging: 'Anzianità',
+  requestType: 'Tipo di richiesta',
+  project: 'Progetto',
+};
+
+/** Vero se il ticket appartiene alla barra {@code value} del grafico {@code dim}. */
+export function matchesDimension(
+  ticket: BiTicket,
+  dim: DrillDimension,
+  value: string,
+  now: Date,
+): boolean {
+  switch (dim) {
+    case 'area':
+      return areaOf(ticket) === value;
+    case 'assignee':
+      return assigneeOf(ticket) === value;
+    case 'reporter':
+      return (ticket.reporter ?? '(non indicato)') === value;
+    case 'status':
+      return ticket.status === value;
+    case 'priority':
+      return (ticket.priority ?? '(nessuna)') === value;
+    case 'requestType':
+      return (ticket.requestType ?? '(non indicato)') === value;
+    case 'project':
+      return ticket.projectCode === value;
+    case 'aging': {
+      const age = ageDays(ticket, now);
+      return AGING_BUCKETS.find((bucket) => age <= bucket.max)?.label === value;
+    }
+  }
 }
 
 /** Priorità nell'ordine di Jira (da Highest a Lowest), non per frequenza. */
@@ -257,7 +307,8 @@ export function weekly(
     const day = `${String(start.getDate()).padStart(2, '0')}/${String(start.getMonth() + 1).padStart(2, '0')}`;
     points.push({
       label: day,
-      title: `settimana del ${day}/${start.getFullYear()}`,
+      title: `settimana del ${day}/${start.getFullYear()}${end.getTime() > now.getTime() ? ' (in corso)' : ''}`,
+      partial: end.getTime() > now.getTime(),
       created: tickets.filter((t) => within(t.created, start.getTime(), end.getTime())).length,
       resolved: tickets.filter((t) => within(t.resolved, start.getTime(), end.getTime())).length,
       open: openAt(tickets, Math.min(end.getTime(), now.getTime()), includePending),
@@ -344,27 +395,40 @@ function rank(order: readonly string[], value: string): number {
   return index === -1 ? order.length : index;
 }
 
-/** Settimane complete per il saldo di ogni persona (come le allerte, D-30). */
-export const PERSON_TREND_WEEKS = 4;
+/** Giorni del saldo di ogni persona: gli ultimi 30, oggi compreso (finestra mobile). */
+export const PERSON_TREND_DAYS = 30;
+
+/**
+ * Periodo del saldo per persona: gli ultimi {@code PERSON_TREND_DAYS} giorni, oggi compreso.
+ * {@code weeks}: quante settimane sono (30 giorni = 4,3), per cui si divide il saldo.
+ */
+export function personTrendPeriod(now: Date): { start: Date; weeks: number } {
+  const start = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() - (PERSON_TREND_DAYS - 1),
+  );
+  const weeks = Math.round((PERSON_TREND_DAYS / 7) * 10) / 10;
+  return { start, weeks };
+}
 
 /** Andamento del backlog di una persona (KPI per risorsa). */
 export interface PersonTrend {
   readonly name: string;
   readonly resourceId: number | null;
-  /** Aperti oggi e al lunedì di 4 settimane fa. */
+  /** Aperti oggi e 30 giorni fa. */
   readonly open: number;
   readonly openBefore: number;
-  /** Entrati e chiusi nelle ultime 4 settimane complete. */
+  /** Entrati e chiusi negli ultimi 30 giorni. */
   readonly created: number;
   readonly resolved: number;
-  /** (entrati − chiusi) ÷ 4: di quanto cresce (positivo) o cala il backlog a settimana. */
+  /** (entrati − chiusi) ÷ settimane trascorse: di quanto cresce (positivo) o cala il backlog a settimana. */
   readonly perWeek: number;
   readonly direction: 'up' | 'down' | 'flat';
 }
 
 /**
- * Saldo del backlog per persona nelle ultime 4 settimane complete (da lunedì a domenica, esclusa
- * quella in corso), dal peggiore. La persona è l'assegnatario di oggi: Jira non dà lo storico
+ * Saldo del backlog per persona negli ultimi 30 giorni (finestra mobile), dal peggiore. La persona è l'assegnatario di oggi: Jira non dà lo storico
  * delle assegnazioni in questa copia. Sotto mezzo ticket a settimana il saldo è "stabile".
  */
 export function personTrends(
@@ -372,16 +436,8 @@ export function personTrends(
   now: Date,
   includePending: boolean,
 ): PersonTrend[] {
-  const monday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() - ((now.getDay() + 6) % 7),
-  );
-  const start = new Date(
-    monday.getFullYear(),
-    monday.getMonth(),
-    monday.getDate() - 7 * PERSON_TREND_WEEKS,
-  );
+  const { start, weeks } = personTrendPeriod(now);
+  const end = now.getTime() + 1;
   const byPerson = new Map<string, BiTicket[]>();
   for (const ticket of tickets) {
     const name = assigneeOf(ticket);
@@ -389,13 +445,9 @@ export function personTrends(
   }
   return [...byPerson.entries()]
     .map(([name, list]) => {
-      const created = list.filter((t) =>
-        within(t.created, start.getTime(), monday.getTime()),
-      ).length;
-      const resolved = list.filter((t) =>
-        within(t.resolved, start.getTime(), monday.getTime()),
-      ).length;
-      const perWeek = Math.round(((created - resolved) / PERSON_TREND_WEEKS) * 10) / 10;
+      const created = list.filter((t) => within(t.created, start.getTime(), end)).length;
+      const resolved = list.filter((t) => within(t.resolved, start.getTime(), end)).length;
+      const perWeek = Math.round(((created - resolved) / weeks) * 10) / 10;
       return {
         name,
         resourceId: list.find((t) => t.resourceId !== null)?.resourceId ?? null,

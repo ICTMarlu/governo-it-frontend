@@ -108,25 +108,50 @@ export function compareSystems(a: PlanRow, b: PlanRow): number {
   );
 }
 
-/** Righe (già ordinate per sistema) divise per sistema, con i totali per settimana. */
+/** Sistema con i progetti ricorrenti (AMS e Continuous): sta sempre in cima al piano. */
+const PINNED_SYSTEM = /ricorrent/i;
+
+/** Ranking del progetto: chi non ce l'ha va dopo chi ce l'ha. */
+function rankOf(entry: GridEntry): number {
+  return entry.gridRow.row.ranking ?? Number.POSITIVE_INFINITY;
+}
+
+/**
+ * Righe (già ordinate per sistema) divise per sistema, con i totali per settimana. L'ordine lo
+ * decide il Ranking dei progetti: dentro ogni sistema prima i progetti con ranking più basso e i
+ * sistemi seguono il loro progetto migliore; i ricorrenti (AMS) restano sempre in cima e, a
+ * parità o senza ranking, vale l'ordine ricevuto.
+ */
 export function buildSections(entries: readonly GridEntry[], keyPrefix: string): GridSection[] {
   const sections = new Map<string, GridEntry[]>();
   for (const entry of entries) {
     const label = systemOf(entry.gridRow.row);
     sections.set(label, [...(sections.get(label) ?? []), entry]);
   }
-  return [...sections.entries()].map(([label, items]) => {
-    const weekTotals = weekTotalsOf(items);
-    const total = items.reduce((sum, { gridRow }) => sum + gridRow.total, 0);
-    return {
-      key: `${keyPrefix}|${label}`,
-      label,
-      entries: items,
-      rowCount: items.length,
-      weekTotals,
-      total: Math.round(total * 100) / 100,
-    };
-  });
+  return [...sections.entries()]
+    .map(([label, items], position) => {
+      // Sort stabile: a parità di ranking resta l'ordine di arrivo (colonne scelte dall'utente)
+      const ordered = [...items].sort((a, b) => rankOf(a) - rankOf(b) || 0);
+      return { label, ordered, position, best: Math.min(...ordered.map(rankOf)) };
+    })
+    .sort(
+      (a, b) =>
+        Number(PINNED_SYSTEM.test(b.label)) - Number(PINNED_SYSTEM.test(a.label)) ||
+        (a.best === b.best ? 0 : a.best < b.best ? -1 : 1) ||
+        a.position - b.position,
+    )
+    .map(({ label, ordered }) => {
+      const weekTotals = weekTotalsOf(ordered);
+      const total = ordered.reduce((sum, { gridRow }) => sum + gridRow.total, 0);
+      return {
+        key: `${keyPrefix}|${label}`,
+        label,
+        entries: ordered,
+        rowCount: ordered.length,
+        weekTotals,
+        total: Math.round(total * 100) / 100,
+      };
+    });
 }
 
 /** Valore di una cella che cambia, con il campo da riportare indietro se non valido. */

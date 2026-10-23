@@ -4,9 +4,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subscription, interval } from 'rxjs';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { canEdit } from '../../../core/auth/permissions';
 import { API_BASE_URL } from '../../../core/config/api.config';
 import { errorMessage } from '../../../shared/crud/crud-api.service';
-import { ROLES } from '../../../shared/crud/crud.model';
 import { TicketSync, sinceLabel } from '../models/ticket.model';
 
 /** Ogni quanto le pagine dei ticket controllano se Jira è stato aggiornato (anche in automatico). */
@@ -35,10 +35,7 @@ export class TicketSyncService {
   private readonly now = signal(Date.now());
 
   /** Admin e PM chiedono l'aggiornamento a Jira; gli altri ricaricano i dati già copiati. */
-  readonly canSync = computed(() => {
-    const role = this.currentUser()?.role;
-    return role === ROLES.admin || role === ROLES.pm;
-  });
+  readonly canSync = computed(() => canEdit(this.currentUser()?.permissions, 'TICKETS'));
 
   /** "Aggiornato da Jira 3 min fa", sempre attuale. */
   readonly sinceText = computed(() =>

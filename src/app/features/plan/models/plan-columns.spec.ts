@@ -14,6 +14,7 @@ const row = (overrides: Partial<PlanRow>): { row: PlanRow; total: number } => ({
     workTypeLabel: 'Project',
     mainSystemLabel: null,
     mainSystemSortOrder: null,
+    ranking: null,
     statusCode: 'IN_PROGRESS',
     statusLabel: 'In Progress',
     statusSortOrder: 3,
