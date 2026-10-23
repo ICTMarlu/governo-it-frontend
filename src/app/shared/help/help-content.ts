@@ -25,8 +25,31 @@ const PERMISSIONS_ADMIN: HelpSection = {
 
 export const HOME_HELP: HelpContent = {
   title: 'Home',
-  intro: 'Punto di partenza dell’applicazione: dal menu arrivi a progetti, risorse e anagrafiche.',
+  intro:
+    'Il punto di oggi: in pochi secondi come vanno ticket, piano, task e direzione, cosa conviene anticipare e cosa tocca a te.',
   sections: [
+    {
+      title: 'Chi vede cosa',
+      items: [
+        'Admin e Project Manager vedono i numeri del team; gli altri ruoli vedono i propri: ticket assegnati, il proprio piano, i propri task e i punti per la direzione di cui sono owner.',
+        'Per i numeri personali il tuo utente deve essere collegato a una persona del team (Utenti › Risorsa).',
+      ],
+    },
+    {
+      title: 'Numeri flash',
+      items: [
+        'Ticket AMS: aperti oggi e saldo a settimana = (entrati − chiusi) delle ultime 4 settimane complete ÷ 4. Positivo: il backlog cresce.',
+        'Piano: caricato ÷ capacità della settimana corrente (ferie e festività comprese), contando solo chi ha giornate nel piano delle prossime 5 settimane; chi ha solo le festività non abbassa la media.',
+        'Task: i tuoi in ritardo e in scadenza (come la campanella). Direzione: punti aperti e, per l’Admin, la prossima riunione.',
+      ],
+    },
+    {
+      title: 'Intuizioni e "il punto di oggi"',
+      items: [
+        'Segnali incrociati: backlog che cresce o cala, la persona il cui backlog cresce di più (2 o più a settimana), ticket nuovi senza risposta, scadenze vicine, persone oltre il 100%, persone senza giornate nel piano, la settimana più libera (sotto l’80%), task in ritardo, punti scaduti.',
+        'Prima gli urgenti, al massimo 2 per area e 5 in tutto. "Il punto di oggi" riassume le prime tre.',
+      ],
+    },
     {
       title: 'Navigazione',
       items: [

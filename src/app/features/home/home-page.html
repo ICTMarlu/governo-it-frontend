@@ -1,0 +1,199 @@
+<header class="hero">
+  <div>
+    <p class="hero__date">{{ today | date: 'EEEE d MMMM' }} · settimana {{ week }}</p>
+    <h1 class="hero__title">{{ hello }}, {{ firstName() }}</h1>
+    @if (home(); as data) {
+      <p class="hero__headline"><strong>Il punto di oggi:</strong> {{ headline() }}</p>
+    }
+  </div>
+  <div class="hero__side">
+    @if (home(); as data) {
+      <span class="scope">
+        <mat-icon aria-hidden="true">{{ data.scope === 'TEAM' ? 'groups' : 'person' }}</mat-icon>
+        {{ data.scope === 'TEAM' ? 'Vista del team' : 'La tua vista' }}
+      </span>
+    }
+    <gov-help-button [help]="help" />
+  </div>
+</header>
+
+@if (error(); as message) {
+  <p class="state" role="alert">Non riesco a leggere il punto di oggi: {{ message }}</p>
+} @else if (!home()) {
+  <p class="state" role="status">
+    <mat-progress-spinner diameter="24" mode="indeterminate" aria-hidden="true" /> Preparo il punto
+    di oggi…
+  </p>
+} @else {
+  @let data = home()!;
+  @let team = data.scope === 'TEAM';
+
+  <!-- Numeri flash: uno per area, ognuno apre la sua pagina -->
+  <ul class="flash" aria-label="Numeri di oggi">
+    <li>
+      <a class="flash__card" routerLink="/tickets">
+        <span class="flash__label"
+          ><mat-icon aria-hidden="true">support_agent</mat-icon>
+          {{ team ? 'Ticket AMS' : 'I tuoi ticket' }}</span
+        >
+        @if (data.tickets.configured) {
+          <span class="flash__value">{{ data.tickets.open }} aperti</span>
+          <span
+            class="flash__meta"
+            [class.flash__meta--bad]="data.tickets.backlogPerWeek >= 0.5"
+            [class.flash__meta--good]="data.tickets.backlogPerWeek <= -0.5"
+          >
+            <mat-icon aria-hidden="true">{{
+              data.tickets.backlogPerWeek >= 0.5
+                ? 'trending_up'
+                : data.tickets.backlogPerWeek <= -0.5
+                  ? 'trending_down'
+                  : 'trending_flat'
+            }}</mat-icon>
+            {{ signed(data.tickets.backlogPerWeek) }} a settimana
+          </span>
+        } @else {
+          <span class="flash__value">—</span>
+          <span class="flash__meta">Jira non è collegato</span>
+        }
+      </a>
+    </li>
+    <li>
+      <a class="flash__card" routerLink="/plan">
+        <span class="flash__label"
+          ><mat-icon aria-hidden="true">view_week</mat-icon>
+          {{ team ? 'Piano, questa settimana' : 'Il tuo piano' }}</span
+        >
+        <span class="flash__value">{{
+          data.plan.saturationPct === null ? '—' : data.plan.saturationPct + '%'
+        }}</span>
+        <span class="flash__meta" [class.flash__meta--bad]="data.plan.overloaded.length > 0">
+          @if (data.plan.overloaded.length > 0) {
+            {{ team ? data.plan.overloaded.length + ' oltre il 100%' : 'oltre la tua capacità' }}
+          } @else if (team) {
+            {{ data.plan.plannedPeople }} di {{ data.plan.activePeople }} persone pianificate
+          } @else {
+            caricato ÷ capacità
+          }
+        </span>
+      </a>
+    </li>
+    <li>
+      <a class="flash__card" routerLink="/tasks">
+        <span class="flash__label"
+          ><mat-icon aria-hidden="true">task_alt</mat-icon> I tuoi task</span
+        >
+        <span class="flash__value">{{ data.tasks.overdue + data.tasks.dueSoon }}</span>
+        <span class="flash__meta" [class.flash__meta--bad]="data.tasks.overdue > 0">
+          {{ data.tasks.overdue }} in ritardo · {{ data.tasks.dueSoon }} in scadenza
+        </span>
+      </a>
+    </li>
+    <li>
+      <a class="flash__card" routerLink="/management">
+        <span class="flash__label"
+          ><mat-icon aria-hidden="true">record_voice_over</mat-icon> Direzione</span
+        >
+        <span class="flash__value">{{ data.management.open }} punti</span>
+        <span class="flash__meta" [class.flash__meta--bad]="data.management.overdue > 0">
+          @if (data.management.nextMeeting; as next) {
+            prossima riunione {{ next | date: 'EEEE d MMMM' }}
+          } @else if (data.management.overdue > 0) {
+            {{ data.management.overdue }} scaduti
+          } @else {
+            {{ team ? 'aperti' : 'di cui sei owner' }}
+          }
+        </span>
+      </a>
+    </li>
+  </ul>
+
+  <!-- Intuizioni: segnali incrociati dalle diverse aree -->
+  <section class="card" aria-labelledby="insights-title">
+    <h2 id="insights-title" class="card__title">
+      <mat-icon aria-hidden="true">lightbulb</mat-icon> Intuizioni
+    </h2>
+    @if (data.insights.length === 0) {
+      <p class="muted">Nessun segnale da anticipare: tutto sotto controllo.</p>
+    } @else {
+      <ul class="insights">
+        @for (insight of data.insights; track insight.kind) {
+          <li class="insight insight--{{ insight.severity }}">
+            <mat-icon class="insight__icon" aria-hidden="true">{{
+              severities[insight.severity].icon
+            }}</mat-icon>
+            <span>
+              <span class="insight__tag">{{ severities[insight.severity].label }}</span>
+              {{ insight.text }}
+              <a [routerLink]="insight.link">{{ insight.linkLabel }}</a>
+            </span>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <div class="columns">
+    <section class="card" aria-labelledby="mine-title">
+      <h2 id="mine-title" class="card__title">
+        <mat-icon aria-hidden="true">checklist</mat-icon> Le tue cose
+      </h2>
+      @if (data.myItems.length === 0) {
+        <p class="muted">
+          Niente in scadenza: i task assegnati a te e i punti per la direzione di cui sei owner
+          compaiono qui.
+        </p>
+      } @else {
+        <ul class="items">
+          @for (item of data.myItems; track item.kind + item.id) {
+            <li class="item">
+              <span class="item__when" [class.item__when--late]="item.overdue">
+                @if (item.overdue) {
+                  In ritardo
+                } @else if (item.dueDate) {
+                  {{ item.dueDate | date: 'EEE d MMM' }}
+                } @else {
+                  {{ item.kind === 'TASK' ? 'Task' : 'Direzione' }}
+                }
+              </span>
+              <a [routerLink]="item.link">{{ item.title }}</a>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="card" aria-labelledby="tour-title">
+      <h2 id="tour-title" class="card__title">
+        <mat-icon aria-hidden="true">explore</mat-icon> Come funziona Governo IT
+      </h2>
+      <ol class="steps">
+        @for (step of steps; track step.link; let i = $index) {
+          <li>
+            <a class="step" [routerLink]="step.link">
+              <mat-icon aria-hidden="true">{{ step.icon }}</mat-icon>
+              <strong>{{ i + 1 }}. {{ step.label }}</strong>
+              <span class="muted">{{ step.hint }}</span>
+            </a>
+          </li>
+        }
+      </ol>
+      <p class="shortcuts">
+        Anche:
+        @for (link of shortcuts; track link.link) {
+          <a [routerLink]="link.link"
+            ><mat-icon aria-hidden="true">{{ link.icon }}</mat-icon> {{ link.label }}</a
+          >
+        }
+      </p>
+    </section>
+  </div>
+
+  <p class="note">
+    {{
+      team
+        ? 'Numeri del team. Saturazione sulle persone con giornate nel piano; saldo ticket = (entrati − chiusi) delle ultime 4 settimane complete ÷ 4.'
+        : 'Numeri tuoi: ticket assegnati a te, il tuo piano, i tuoi task e i punti di cui sei owner.'
+    }}
+  </p>
+}
