@@ -69,7 +69,10 @@ interface CreatedMcpToken {
           <h3 id="fresh-title">Token creato: copialo adesso</h3>
           <p>Non sarà più visibile dopo la chiusura di questo riquadro.</p>
           <code class="value">{{ fresh.token }}</code>
-          <p>Comando da eseguire nel terminale del PC su cui usi Claude Code:</p>
+          <p>
+            Comando da incollare in PowerShell sul PC su cui usi Claude (serve Node.js); poi apri
+            una nuova sessione di Claude:
+          </p>
           <code class="value">{{ command(fresh.token) }}</code>
           <div class="fresh-actions">
             <button mat-stroked-button type="button" (click)="copy(fresh.token, 'Token copiato')">
@@ -300,10 +303,13 @@ export class McpTokensDialog implements OnInit {
     this.load();
   }
 
-  /** Comando di Claude Code per registrare il server MCP con il token. */
+  /**
+   * Comando che registra il server MCP con il token. Usa npx.cmd: funziona anche senza la CLI di
+   * Claude installata (basta Node.js) e in PowerShell, dove npx.ps1 è bloccato dai criteri di esecuzione.
+   */
   protected command(token: string): string {
     const url = `${location.protocol}//${location.hostname}:${BACKEND_PORT}/mcp`;
-    return `claude mcp add --transport http --scope user governo-it ${url} --header "Authorization: Bearer ${token}"`;
+    return `npx.cmd -y @anthropic-ai/claude-code mcp add --transport http --scope user governo-it ${url} --header "Authorization: Bearer ${token}"`;
   }
 
   protected create(formDirective: FormGroupDirective): void {
