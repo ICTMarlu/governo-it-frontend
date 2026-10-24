@@ -18,7 +18,7 @@ const CLOCK_EVERY_MS = 30_000;
  * Aggiornamento da Jira condiviso da tutte le pagine dei ticket (Operativa e BI). "Aggiorna"
  * chiede a Jira i ticket cambiati e, finito, fa ricaricare tutte le pagine ({@code version}).
  * Mentre si è nella sezione, ogni minuto si controlla anche l'aggiornamento automatico del
- * backend (ogni 15 minuti): se è arrivato qualcosa di nuovo le pagine si ricaricano da sole.
+ * backend (ogni 5 minuti): se è arrivato qualcosa di nuovo le pagine si ricaricano da sole.
  */
 @Injectable({ providedIn: 'root' })
 export class TicketSyncService {
