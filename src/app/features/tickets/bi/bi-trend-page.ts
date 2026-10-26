@@ -8,6 +8,7 @@ import { KpiDirective } from '../components/kpi.directive';
 import { BiFilters } from './bi-filters';
 import {
   BACKLOG_WEEKS,
+  resolvedPerDayYear,
   backlogDays,
   backlogPeriod,
   isOpen,
@@ -69,6 +70,17 @@ import { BiStore } from './bi-store.service';
               <span class="bi-kpi__label">chiusi al giorno (media)</span>
               <span class="period">ultime {{ weeksCount }} settimane: {{ closePeriod() }}</span>
             </li>
+            <li
+              class="bi-kpi bi-kpi--link"
+              role="link"
+              tabindex="0"
+              (click)="open('resolved-year')"
+              (keydown.enter)="open('resolved-year')"
+            >
+              <span class="bi-kpi__value">{{ closeRateYear() }}</span>
+              <span class="bi-kpi__label">chiusi al giorno (anno)</span>
+              <span class="period">dal 1/1 a ieri</span>
+            </li>
           </ul>
           <mat-slide-toggle
             [checked]="store.includePending()"
@@ -105,7 +117,7 @@ import { BiStore } from './bi-store.service';
       gap: 1rem;
 
       .bi-kpis {
-        flex: 0 1 33rem;
+        flex: 0 1 46rem;
       }
 
       .bi-kpi {
@@ -132,22 +144,24 @@ export class BiTrendPage {
 
   /** Dal 1° gennaio dell'anno scelto (o del primo mese scelto); senza anno le ultime 52 settimane. */
   private readonly from = computed(() => {
-    const year = this.store.year();
+    const years = this.store.years();
     const now = new Date();
-    if (year === null) {
+    if (years === null || years.length === 0) {
       return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7 * 51);
     }
+    const year = Math.min(...years);
     const months = this.store.months();
     return new Date(year, months && months.length > 0 ? Math.min(...months) - 1 : 0, 1);
   });
 
   /** Fino a oggi, oppure alla fine dell'anno (o dell'ultimo mese) scelto se è passato. */
   private readonly to = computed(() => {
-    const year = this.store.year();
+    const years = this.store.years();
     const now = new Date();
-    if (year === null) {
+    if (years === null || years.length === 0) {
       return now;
     }
+    const year = Math.max(...years);
     const months = this.store.months();
     const end = new Date(year, months && months.length > 0 ? Math.max(...months) : 12, 0);
     return end < now ? end : now;
@@ -161,6 +175,11 @@ export class BiTrendPage {
   );
   protected readonly closeRate = computed(() =>
     resolvedPerDay(this.store.scoped(), new Date()).toLocaleString('it-IT', {
+      maximumFractionDigits: 1,
+    }),
+  );
+  protected readonly closeRateYear = computed(() =>
+    resolvedPerDayYear(this.store.scoped(), new Date()).toLocaleString('it-IT', {
       maximumFractionDigits: 1,
     }),
   );

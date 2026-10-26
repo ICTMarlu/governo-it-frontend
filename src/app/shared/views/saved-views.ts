@@ -43,7 +43,7 @@ import { SavedView, SavedViewsService } from './saved-views.service';
       "
     >
       <mat-icon aria-hidden="true">bookmarks</mat-icon>
-      Vista: {{ label() }}
+      {{ compact() ? label() : 'Vista: ' + label() }}
       @if (changed()) {
         <span class="trigger__dot" aria-hidden="true">•</span>
       }
@@ -121,6 +121,8 @@ export class SavedViews {
 
   /** Pagina (es. "plan", "list.projects"): le viste sono per pagina e per utente. */
   readonly page = input.required<string>();
+  /** Solo il nome della vista, senza "Vista:" (barre strette). */
+  readonly compact = input(false);
   /** Stato attuale della pagina, salvato così com'è (JSON). */
   readonly state = input.required<unknown>();
   /** Stato da applicare; null = vista standard (filtri e colonne di partenza). */

@@ -134,6 +134,36 @@ body {
   }
 }
 
+// Fumetto delle note della casella: in basso a sinistra, il testo è nel tooltip
+.note-dot {
+  position: absolute;
+  bottom: 1px;
+  left: 1px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.875rem;
+  height: 0.875rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: light-dark(#b26a00, #e9b44c);
+  cursor: pointer;
+
+  mat-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    font-size: 0.875rem;
+  }
+}
+
+// Tooltip con il testo delle note: più note una sotto l'altra, a capo come scritte
+.note-tooltip {
+  white-space: pre-line;
+  max-width: 24rem;
+}
+
 td:hover > .task-dot--empty,
 td:focus-within > .task-dot--empty {
   opacity: 1;
@@ -242,6 +272,15 @@ td:focus-within > .task-dot--empty {
   padding-inline-start: 0.75rem;
   color: var(--mat-sys-on-surface);
   font-weight: 600;
+}
+
+// Subtotale del gruppo: in corsivo, più piccolo e con il Σ, per non confonderlo con le giornate delle righe
+.grid tr.section .subtotal {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.75rem;
+  font-style: italic;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .grid tr.section--closed > td.c-week {

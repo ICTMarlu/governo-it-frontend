@@ -32,7 +32,7 @@ export class BiStore {
 
   readonly areas = signal<readonly string[] | null>(null);
   readonly assignees = signal<readonly string[] | null>(null);
-  readonly year = signal<number | null>(new Date().getFullYear());
+  readonly years = signal<readonly number[] | null>([new Date().getFullYear()]);
   readonly months = signal<readonly number[] | null>(null);
   /** Trend: i Pending contano tra i lavorabili. */
   readonly includePending = signal(true);
@@ -40,7 +40,7 @@ export class BiStore {
   readonly filters = computed<BiFilters>(() => ({
     areas: this.areas(),
     assignees: this.assignees(),
-    year: this.year(),
+    years: this.years(),
     months: this.months(),
   }));
 
@@ -66,7 +66,7 @@ export class BiStore {
   readonly viewState = computed(() => ({
     areas: this.areas(),
     assignees: this.assignees(),
-    year: this.year(),
+    years: this.years(),
     months: this.months(),
     includePending: this.includePending(),
   }));
@@ -115,13 +115,23 @@ export class BiStore {
     const view = (state ?? {}) as Partial<{
       areas: readonly string[] | null;
       assignees: readonly string[] | null;
+      years: readonly number[] | null;
       year: number | null;
       months: readonly number[] | null;
       includePending: boolean;
     }>;
     this.areas.set(view.areas ?? null);
     this.assignees.set(view.assignees ?? null);
-    this.year.set(view.year === undefined ? new Date().getFullYear() : view.year);
+    // Le viste salvate prima della scelta multipla hanno un solo anno
+    const years =
+      view.years !== undefined
+        ? view.years
+        : view.year === undefined
+          ? [new Date().getFullYear()]
+          : view.year === null
+            ? null
+            : [view.year];
+    this.years.set(years);
     this.months.set(view.months ?? null);
     this.includePending.set(view.includePending ?? true);
   }

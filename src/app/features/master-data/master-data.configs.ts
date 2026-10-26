@@ -60,6 +60,7 @@ function lookupConfig(definition: LookupDefinition): EntityConfig {
     endpoint: `/lookups/${definition.slug}`,
     writeRoles: [ROLES.admin],
     canCreate: !definition.fixed,
+    canDelete: !definition.fixed,
     searchKeys: ['label', 'code'],
     sort: bySortOrder,
     help: lookupHelp(definition.title, definition.subtitle, LOOKUP_RULES[definition.slug]),
@@ -102,6 +103,15 @@ function lookupConfig(definition: LookupDefinition): EntityConfig {
   };
 }
 
+/** Comportamenti di sistema degli stati della direzione. */
+const BEHAVIOR_OPTIONS = [
+  { value: 'TO_DISCUSS', label: 'Da discutere' },
+  { value: 'IN_FOLLOW_UP', label: 'Discusso, in corso' },
+  { value: 'POSTPONED', label: 'Posticipato (con data)' },
+  { value: 'CLOSED', label: 'Chiuso' },
+  { value: 'CANCELLED', label: 'Annullato' },
+];
+
 /** Liste valori configurabili, nell'ordine in cui compaiono nella pagina "Anagrafiche e liste". */
 const LOOKUP_DEFINITIONS: readonly LookupDefinition[] = [
   {
@@ -133,14 +143,15 @@ const LOOKUP_DEFINITIONS: readonly LookupDefinition[] = [
     slug: 'project-statuses',
     title: 'Stati progetto',
     singular: 'Stato',
-    subtitle: 'Ciclo di vita dei progetti. Gli stati finali sono esclusi dal carico futuro.',
+    subtitle:
+      'Ciclo di vita dei progetti. Ogni stato è Aperto o Chiuso (come in Jira): i chiusi sono esclusi dal carico futuro e dal filtro Aperti.',
     extraFields: [
       {
         key: 'terminal',
-        label: 'Stato finale',
+        label: 'Stato chiuso',
         type: 'checkbox',
         attribute: true,
-        hint: 'Es. Completed, Rejected, Aborted',
+        hint: 'Spuntato = categoria Chiuso (es. Completed, Rejected, Aborted); altrimenti Aperto. Decide il filtro rapido Aperti / Chiusi',
       },
       {
         key: 'countsForProgress',
@@ -151,7 +162,11 @@ const LOOKUP_DEFINITIONS: readonly LookupDefinition[] = [
       },
     ],
     extraColumns: [
-      { key: 'attributes.terminal', label: 'Stato finale', type: 'boolean' },
+      {
+        key: 'attributes.terminal',
+        label: 'Categoria',
+        format: (value) => (value === true ? 'Chiuso' : 'Aperto'),
+      },
       { key: 'attributes.countsForProgress', label: 'Conta per avanzamento', type: 'boolean' },
     ],
   },
@@ -229,6 +244,30 @@ const LOOKUP_DEFINITIONS: readonly LookupDefinition[] = [
     ],
     extraColumns: [{ key: 'attributes.done', label: 'Stato finale', type: 'boolean' }],
   },
+  {
+    slug: 'management-states',
+    title: 'Stati della direzione',
+    singular: 'Stato',
+    subtitle: 'Colonne della kanban dei punti per la direzione: aggiungi, rinomina, riordina.',
+    extraFields: [
+      {
+        key: 'behavior',
+        label: 'Come si comporta',
+        type: 'select',
+        required: true,
+        attribute: true,
+        options: { static: BEHAVIOR_OPTIONS },
+        hint: 'Decide agenda e chiusura: i punti "da discutere" e "in corso" entrano in agenda, i posticipati dalla data scelta, i chiusi e annullati ne escono',
+      },
+    ],
+    extraColumns: [
+      {
+        key: 'attributes.behavior',
+        label: 'Come si comporta',
+        format: (value) => BEHAVIOR_OPTIONS.find((option) => option.value === value)?.label ?? '',
+      },
+    ],
+  },
 ];
 
 /** Liste valori pronte per pagine e rotte. */
@@ -240,6 +279,7 @@ export const LEGAL_ENTITIES_CONFIG: EntityConfig = {
   singular: 'Società',
   subtitle: 'Per i progetti di tutto il gruppo usa il flag "Tutto il gruppo" sul progetto.',
   endpoint: '/legal-entities',
+  canDelete: true,
   help: LEGAL_ENTITIES_HELP,
   writeRoles: [ROLES.admin],
   searchKeys: ['name', 'code'],
@@ -269,6 +309,7 @@ export const VENDORS_CONFIG: EntityConfig = {
   singular: 'Fornitore',
   subtitle: 'Fornitori e società di consulenza; "Marlu IT" è il fornitore interno.',
   endpoint: '/vendors',
+  canDelete: true,
   help: VENDORS_HELP,
   writeRoles: [ROLES.admin],
   searchKeys: ['name', 'email', 'vatNumber'],
@@ -295,6 +336,7 @@ export const SITES_CONFIG: EntityConfig = {
   singular: 'Sede',
   subtitle: 'Sedi di lavoro delle risorse, con il calendario festività di riferimento.',
   endpoint: '/sites',
+  canDelete: true,
   help: SITES_HELP,
   writeRoles: [ROLES.admin],
   searchKeys: ['name', 'code'],
@@ -339,6 +381,7 @@ export const REQUESTERS_CONFIG: EntityConfig = {
   singular: 'Richiedente',
   subtitle: 'Persone del business che chiedono i progetti, con dipartimento, azienda e ruolo.',
   endpoint: '/requesters',
+  canDelete: true,
   help: REQUESTERS_HELP,
   writeRoles: [ROLES.admin, ROLES.pm, ROLES.editor],
   searchKeys: ['fullName', 'email', 'businessAreaLabel', 'legalEntityName', 'jobTitle'],
@@ -405,6 +448,7 @@ export const HOLIDAY_CALENDARS_CONFIG: EntityConfig = {
   subtitle:
     'Le festività riempiono in automatico la riga "Festività" del piano e riducono la capacità delle risorse della sede.',
   endpoint: '/holiday-calendars',
+  canDelete: true,
   help: HOLIDAY_CALENDARS_HELP,
   readOnly: true,
   searchKeys: [],

@@ -50,3 +50,43 @@
   margin: 0 0 1rem;
   color: var(--mat-sys-on-surface-variant);
 }
+
+.view-toggle {
+  margin-bottom: 0.75rem;
+}
+
+// Ticket in approvazione: due riquadri stretti accanto ai pulsanti della riunione
+.toolbar {
+  align-items: center;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding: 0 0.875rem;
+  border: 2px solid var(--chip-color, var(--mat-sys-outline-variant));
+  border-radius: 0.75rem;
+  background: none;
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-label-large);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--mat-sys-surface-container);
+  }
+
+  &__value {
+    font: var(--mat-sys-title-large);
+  }
+
+  &--warn {
+    --chip-color: light-dark(#b26a00, #e9b44c);
+  }
+
+  &--good {
+    --chip-color: light-dark(#2e7d32, #7cc683);
+  }
+}

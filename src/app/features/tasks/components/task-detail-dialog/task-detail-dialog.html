@@ -5,7 +5,7 @@
       <small class="head__meta">
         creato da {{ current.createdByName ?? '—' }} il {{ current.createdAt | date: 'dd/MM/yyyy' }}
         @if (current.weekStart) {
-          · casella della settimana del {{ current.weekStart | date: 'dd/MM' }}
+          · segnato nel piano, settimana {{ current.weekStart | date: 'dd/MM' }}
         }
       </small>
     }

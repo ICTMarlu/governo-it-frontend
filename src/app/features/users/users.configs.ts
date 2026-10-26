@@ -10,6 +10,7 @@ export const USERS_CONFIG: EntityConfig = {
   subtitle:
     'Accessi all’applicazione: profilo, permesso sui costi e collegamento alla risorsa del team. Cosa vede e modifica ognuno si imposta nelle schede Permessi e Profili. In fase 2 il login passerà a Microsoft.',
   endpoint: '/users',
+  canDelete: true,
   help: USERS_HELP,
   writeRoles: [ROLES.admin],
   searchKeys: ['displayName', 'username', 'email', 'resourceName'],

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,11 +10,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
+import { TopicsBoard } from './components/topics-board/topics-board';
 import { Router } from '@angular/router';
 import { filter, finalize, switchMap } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
-import { canEdit } from '../../core/auth/permissions';
+import { canEdit, canView } from '../../core/auth/permissions';
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { CrudApiService, errorMessage } from '../../shared/crud/crud-api.service';
 import { CrudSection } from '../../shared/crud/crud-section/crud-section';
@@ -33,6 +34,8 @@ import {
   TOPIC_TYPE_OPTIONS,
 } from './management.configs';
 import { ExportTopic, agendaText, formatDay } from './models/management-export';
+import { isAuthorized, isAwaitingApproval, isOpen } from '../tickets/bi/bi.model';
+import { BiStore } from '../tickets/bi/bi-store.service';
 
 /**
  * Direzione (D-17): la lista viva dei punti da portare alla direzione, con inserimento
@@ -51,6 +54,7 @@ import { ExportTopic, agendaText, formatDay } from './models/management-export';
     MatInputModule,
     MatSelectModule,
     MatTabsModule,
+    TopicsBoard,
   ],
   templateUrl: './management-page.html',
   styleUrl: './management-page.scss',
@@ -61,6 +65,7 @@ export class ManagementPage {
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   private readonly currentUser = inject(AuthService).currentUser;
+  private readonly tickets = inject(BiStore);
 
   protected readonly help = MANAGEMENT_HELP;
   protected readonly topics = TOPICS_CONFIG;
@@ -77,6 +82,44 @@ export class ManagementPage {
     const role = this.currentUser()?.role;
     return role !== undefined && MEETING_ROLES.includes(role);
   });
+  /** Punti: elenco oppure kanban per stato. */
+  protected readonly view = signal<'list' | 'board'>(
+    localStorage.getItem('gov.management.view') === 'board' ? 'board' : 'list',
+  );
+
+  protected setView(view: 'list' | 'board'): void {
+    this.view.set(view);
+    try {
+      localStorage.setItem('gov.management.view', view);
+    } catch {
+      // Preferenza solo comoda: se il browser non salva, resta per questa sessione
+    }
+  }
+
+  /** Ticket Jira in attesa di approvazione della direzione o già autorizzati (solo con accesso ai Ticket). */
+  protected readonly seesTickets = computed(() =>
+    canView(this.currentUser()?.permissions, 'TICKETS'),
+  );
+  protected readonly awaitingApproval = computed(
+    () => this.tickets.tickets().filter((t) => isOpen(t) && isAwaitingApproval(t)).length,
+  );
+  protected readonly authorized = computed(
+    () => this.tickets.tickets().filter((t) => isOpen(t) && isAuthorized(t)).length,
+  );
+
+  protected openTickets(scope: 'awaiting-approval' | 'authorized'): void {
+    void this.router.navigate(['/tickets/dettaglio'], { queryParams: { scope } });
+  }
+
+  constructor() {
+    // I ticket servono solo per i due riquadri: si caricano per chi ha accesso ai Ticket
+    effect(() => {
+      if (this.seesTickets()) {
+        untracked(() => this.tickets.load());
+      }
+    });
+  }
+
   protected readonly linked = computed(() => this.currentUser()?.resourceId != null);
 
   /** Inserimento veloce: titolo e tipo, il resto si completa dopo. */

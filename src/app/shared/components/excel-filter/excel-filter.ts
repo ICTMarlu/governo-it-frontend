@@ -40,7 +40,7 @@ export type ExcelSortDirection = 'asc' | 'desc';
       [class.trigger--compact]="compact()"
       [matMenuTriggerFor]="menu"
       [attr.aria-label]="'Filtro ' + label() + ': ' + summary()"
-      [matTooltip]="compact() ? 'Filtro ' + label() + ': ' + summary() : ''"
+      [matTooltip]="'Filtro ' + label() + ': ' + summary()"
       (menuOpened)="onOpen(searchBox)"
     >
       @if (!compact()) {
@@ -116,6 +116,7 @@ export type ExcelSortDirection = 'asc' | 'desc';
   styles: `
     :host {
       display: inline-flex;
+      min-width: 0;
     }
 
     .trigger {
@@ -123,6 +124,7 @@ export type ExcelSortDirection = 'asc' | 'desc';
       align-items: center;
       gap: 0.25rem;
       height: 2rem;
+      min-width: 0;
       max-width: 16rem;
       padding: 0 0.5rem;
       border: 1px solid var(--mat-sys-outline);
@@ -167,11 +169,15 @@ export type ExcelSortDirection = 'asc' | 'desc';
       color: var(--mat-sys-on-primary-container);
     }
 
+    // L'etichetta non va mai a capo: se il valore è lungo si tronca lui, non cambia l'altezza
     .trigger__label {
+      flex-shrink: 0;
       color: var(--mat-sys-on-surface-variant);
+      white-space: nowrap;
     }
 
     .trigger__value {
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;

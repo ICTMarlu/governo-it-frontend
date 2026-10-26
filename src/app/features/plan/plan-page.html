@@ -27,11 +27,12 @@
 <ng-template #holidayRowTpl let-calendar let-lead="lead">
   <tr class="holiday">
     <td class="c-menu sticky"></td>
-    <td class="c-code sticky"></td>
-    <th scope="row" class="c-project sticky">
+    <td class="c-code sticky">
       @if (lead) {
-        <strong class="lead">{{ lead }}</strong> <span class="muted">·</span>
+        <strong class="lead lead--code" [title]="lead">{{ lead }}</strong>
       }
+    </td>
+    <th scope="row" class="c-project sticky">
       {{ lead ? '' : 'Festività · ' }}{{ calendar.name }}
     </th>
     @if (infoColumns().length > 0) {
@@ -91,7 +92,14 @@
         </mat-menu>
       }
     </td>
-    <td class="c-code sticky code">{{ gridRow.row.projectCode }}</td>
+    <td class="c-code sticky code">
+      @if (lead) {
+        <!-- Sistema con una sola riga: sta nella colonna del codice, alla stessa altezza dell'intestazione dei gruppi -->
+        <strong class="lead lead--code" [title]="lead">{{ lead }}</strong>
+      } @else {
+        {{ gridRow.row.projectCode }}
+      }
+    </td>
     <th
       scope="row"
       class="c-project sticky"
@@ -99,8 +107,8 @@
         (lead ? lead + ' · ' : '') + (gridRow.row.vacation ? 'Ferie' : gridRow.row.projectName)
       "
     >
-      @if (lead) {
-        <strong class="lead">{{ lead }}</strong> <span class="muted">·</span>
+      @if (lead && gridRow.row.projectCode) {
+        <span class="code muted">{{ gridRow.row.projectCode }}</span>
       }
       @if (gridRow.row.vacation) {
         @if (grouping() === 'system' && groups().length > 1) {
@@ -239,8 +247,8 @@
           <button
             type="button"
             class="task-dot"
-            [class.task-dot--empty]="!tasks"
-            [class.task-dot--closed]="tasks && tasks.open === 0"
+            [class.task-dot--empty]="!tasks || tasks.total === 0"
+            [class.task-dot--closed]="tasks && tasks.total > 0 && tasks.open === 0"
             [attr.tabindex]="tasks ? 0 : -1"
             [attr.aria-label]="
               taskCountLabel(tasks) + ' · ' + rowLabel(gridRow.row) + ', settimana ' + week.isoWeek
@@ -248,7 +256,7 @@
             [matTooltip]="taskCountLabel(tasks)"
             (click)="openTasks(group, gridRow, week.weekStart)"
           >
-            @if (!tasks) {
+            @if (!tasks || tasks.total === 0) {
               +
             } @else if (tasks.open > 0) {
               {{ tasks.open }}
@@ -256,6 +264,22 @@
               ✓
             }
           </button>
+          @if (tasks && tasks.notes.length > 0) {
+            <!-- Note della casella: il testo compare al passaggio del mouse -->
+            <button
+              type="button"
+              class="note-dot"
+              matTooltipClass="note-tooltip"
+              [matTooltip]="tasks.notes.join('\n\n')"
+              [attr.aria-label]="
+                (tasks.notes.length === 1 ? 'Nota: ' : tasks.notes.length + ' note: ') +
+                tasks.notes.join('. ')
+              "
+              (click)="openTasks(group, gridRow, week.weekStart)"
+            >
+              <mat-icon aria-hidden="true">sticky_note_2</mat-icon>
+            </button>
+          }
         }
       </td>
     }
@@ -290,10 +314,23 @@
     @if (infoColumns().length > 0) {
       <td class="sticky info-span" [attr.colspan]="infoColumns().length"></td>
     }
-    <td class="c-total sticky">{{ format(section.total) }}</td>
+    <td class="c-total sticky">
+      @if (collapsedSections().has(section.key)) {
+        <span class="subtotal" title="Subtotale del gruppo: somma delle righe nascoste">
+          Σ {{ format(section.total) }}
+        </span>
+      }
+    </td>
     @for (week of weeks(); track week.weekStart) {
       <td class="c-week" [class.current]="week.current">
-        {{ format(section.weekTotals[week.weekStart]) }}
+        <!-- Subtotale solo a gruppo chiuso: da aperto le giornate sono quelle delle righe sotto -->
+        @if (collapsedSections().has(section.key)) {
+          @if (format(section.weekTotals[week.weekStart]); as total) {
+            <span class="subtotal" title="Subtotale del gruppo: somma delle righe nascoste">
+              Σ {{ total }}
+            </span>
+          }
+        }
       </td>
     }
   </tr>
@@ -385,24 +422,25 @@
   />
   @if (hasFilters() || viewChanged()) {
     <button
-      mat-button
+      mat-icon-button
       type="button"
-      matTooltip="Torna alla vista di partenza: niente ricerca e filtri (stato: solo aperti), ordinamento, colonne e raggruppamento standard, gruppi aperti e settimana corrente"
+      aria-label="Togli filtri"
+      matTooltip="Togli filtri: torna alla vista di partenza: niente ricerca e filtri (stato: solo aperti), ordinamento, colonne e raggruppamento standard, gruppi aperti e settimana corrente"
       (click)="clearFilters()"
     >
       <mat-icon aria-hidden="true">filter_alt_off</mat-icon>
-      Togli filtri
     </button>
   }
 
   <button
     mat-button
     type="button"
-    matTooltip="Raggruppa le righe per persona, per persona e sistema, o per sistema"
+    matTooltip="Raggruppa le righe: per persona, per persona e sistema, o per sistema"
+    [attr.aria-label]="'Raggruppa: ' + groupingLabels[grouping()]"
     [matMenuTriggerFor]="groupingMenu"
   >
     <mat-icon aria-hidden="true">account_tree</mat-icon>
-    Raggruppa: {{ groupingLabels[grouping()] }}
+    {{ groupingLabels[grouping()] }}
   </button>
   <mat-menu #groupingMenu="matMenu">
     @for (option of groupingOptions; track option) {
@@ -419,13 +457,13 @@
     }
   </mat-menu>
   <button
-    mat-button
+    mat-icon-button
     type="button"
-    matTooltip="Scegli le colonne e il loro ordine"
+    aria-label="Colonne"
+    matTooltip="Colonne: scegli quali mostrare e in che ordine"
     (click)="openColumnChooser()"
   >
     <mat-icon aria-hidden="true">view_column</mat-icon>
-    Colonne
   </button>
   @if (sortLevels().length > 0) {
     <button
@@ -438,10 +476,21 @@
       Togli ordinamento
     </button>
   }
-  <gov-saved-views page="plan" [state]="viewState()" (apply)="applyView($event)" />
+  <gov-saved-views page="plan" [compact]="true" [state]="viewState()" (apply)="applyView($event)" />
   <mat-checkbox [ngModel]="showArchived()" (ngModelChange)="showArchived.set($event)"
     >Archiviate</mat-checkbox
   >
+  @if (nonPlannableCount() > 0 || showNonPlannable()) {
+    <mat-checkbox
+      [ngModel]="showNonPlannable()"
+      (ngModelChange)="showNonPlannable.set($event)"
+      matTooltip="Persone che non si pianificano sui progetti (es. solo ticketing)"
+      >Non pianificabili
+      @if (!showNonPlannable()) {
+        ({{ nonPlannableCount() }})
+      }
+    </mat-checkbox>
+  }
 
   <span class="toolbar__spacer"></span>
   @if (pending() > 0) {
@@ -451,8 +500,8 @@
     </span>
   }
   <span class="legend" tabindex="0" [matTooltip]="legendText">
-    <span class="sat-pill sat-pill--free">&lt;90%</span>
-    <span class="sat-pill sat-pill--full">90–100%</span>
+    <span class="sat-pill sat-pill--free">&lt;90</span>
+    <span class="sat-pill sat-pill--full">90–100</span>
     <span class="sat-pill sat-pill--over">&gt;100%</span>
   </span>
   @if (canWrite()) {
@@ -461,7 +510,7 @@
       Riga
     </button>
   }
-  <gov-help-button [help]="help" />
+  <gov-help-button [help]="help" [compact]="true" />
 </div>
 
 @switch (state()) {
@@ -644,53 +693,6 @@
             </tr>
           </thead>
           @if (grouping() === 'system') {
-            <!-- In alto la saturazione di ogni persona mostrata, come nella vista per persona -->
-            <tbody>
-              @for (group of groups(); track group.resource.resourceId) {
-                <tr class="person">
-                  <td class="c-menu sticky"></td>
-                  <th scope="row" class="c-code c-person sticky" colspan="2">
-                    <a
-                      class="person__name link"
-                      [routerLink]="['/resources', group.resource.resourceId]"
-                      >{{ group.resource.name }}</a
-                    >
-                    @if (infoColumns().length === 0) {
-                      <span class="sat-label"> · Saturazione</span>
-                    }
-                  </th>
-                  @if (infoColumns().length > 0) {
-                    <td class="sticky info-span" [attr.colspan]="infoColumns().length">
-                      <span class="sat-label">
-                        <strong>Saturazione</strong> · caricato ÷ capacità della settimana
-                      </span>
-                    </td>
-                  }
-                  <td
-                    class="c-total sticky"
-                    [title]="'Giornate dell’anno ' + currentYear + ', tutte le righe'"
-                  >
-                    {{ format(group.yearAllocated) }}
-                  </td>
-                  @for (total of group.totals; track total.weekStart) {
-                    <td class="c-week" [class.current]="weekIsCurrent(total.weekStart)">
-                      <span
-                        class="sat-pill sat-pill--{{ total.level }}"
-                        [matTooltip]="
-                          'Caricato ' +
-                          (format(total.allocated) || '0') +
-                          ' su ' +
-                          (format(total.capacity) || '0') +
-                          ' giornate di capacità'
-                        "
-                      >
-                        {{ total.percent === null ? '—' : total.percent + '%' }}
-                      </span>
-                    </td>
-                  }
-                </tr>
-              }
-            </tbody>
             @for (section of systemSections(); track section.key) {
               <tbody>
                 @if (section.entries.length === 1) {
@@ -775,9 +777,148 @@
                 }
               </tbody>
             }
+            <!-- In fondo la saturazione di ogni persona mostrata: l'intestazione resta pulita -->
+            <tbody>
+              @for (group of groups(); track group.resource.resourceId) {
+                <tr class="person">
+                  <td class="c-menu sticky"></td>
+                  <th scope="row" class="c-code c-person sticky" colspan="2">
+                    <a
+                      class="person__name link"
+                      [routerLink]="['/resources', group.resource.resourceId]"
+                      >{{ group.resource.name }}</a
+                    >
+                    @if (infoColumns().length === 0) {
+                      <span class="sat-label"> · Saturazione</span>
+                    }
+                  </th>
+                  @if (infoColumns().length > 0) {
+                    <td class="sticky info-span" [attr.colspan]="infoColumns().length">
+                      <span class="sat-label">
+                        <strong>Saturazione</strong> · caricato ÷ capacità della settimana
+                      </span>
+                    </td>
+                  }
+                  <td
+                    class="c-total sticky"
+                    [title]="'Giornate dell’anno ' + currentYear + ', tutte le righe'"
+                  >
+                    {{ format(group.yearAllocated) }}
+                  </td>
+                  @for (total of group.totals; track total.weekStart) {
+                    <td class="c-week" [class.current]="weekIsCurrent(total.weekStart)">
+                      <span
+                        class="sat-pill sat-pill--{{ total.level }}"
+                        [matTooltip]="
+                          'Caricato ' +
+                          (format(total.allocated) || '0') +
+                          ' su ' +
+                          (format(total.capacity) || '0') +
+                          ' giornate di capacità'
+                        "
+                      >
+                        {{ total.percent === null ? '—' : total.percent + '%' }}
+                      </span>
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
           } @else {
             @for (group of groups(); track group.resource.resourceId) {
               <tbody>
+                @if (!collapsed().has(group.resource.resourceId)) {
+                  @if (grouping() === 'personSystem') {
+                    @for (
+                      section of personSections().get(group.resource.resourceId) ?? [];
+                      track section.key
+                    ) {
+                      @if (section.entries.length === 1) {
+                        <!-- Una sola riga: niente intestazione, il sistema sta sulla riga -->
+                        <ng-container
+                          *ngTemplateOutlet="
+                            rowTpl;
+                            context: {
+                              group: section.entries[0].group,
+                              gridRow: section.entries[0].gridRow,
+                              lead: section.label,
+                            }
+                          "
+                        />
+                      } @else {
+                        <ng-container
+                          *ngTemplateOutlet="sectionTpl; context: { $implicit: section }"
+                        />
+                        @if (!collapsedSections().has(section.key)) {
+                          @for (entry of section.entries; track rowKey(entry.gridRow)) {
+                            <ng-container
+                              *ngTemplateOutlet="
+                                rowTpl;
+                                context: { group: entry.group, gridRow: entry.gridRow }
+                              "
+                            />
+                          }
+                        }
+                      }
+                    }
+                    @for (gridRow of vacationRows(group); track rowKey(gridRow)) {
+                      <ng-container
+                        *ngTemplateOutlet="rowTpl; context: { group: group, gridRow: gridRow }"
+                      />
+                    }
+                  } @else {
+                    @for (gridRow of group.rows; track rowKey(gridRow)) {
+                      <ng-container
+                        *ngTemplateOutlet="rowTpl; context: { group: group, gridRow: gridRow }"
+                      />
+                    }
+                  }
+                  @if (canWrite()) {
+                    <!-- Aggiunta veloce: scrivi codice o nome, scegli con Invio, la riga nasce subito -->
+                    <tr class="quick-add">
+                      <td class="c-menu sticky">
+                        <mat-icon class="quick-add__icon" aria-hidden="true">add</mat-icon>
+                      </td>
+                      <td class="c-code c-person sticky" colspan="2">
+                        <input
+                          class="quick-add__input"
+                          autocomplete="off"
+                          placeholder="Aggiungi progetto a {{ group.resource.name }}…"
+                          [attr.aria-label]="'Aggiungi un progetto a ' + group.resource.name"
+                          [matAutocomplete]="quickAuto"
+                          [value]="quickText()[group.resource.resourceId] ?? ''"
+                          (input)="
+                            setQuickText(group.resource.resourceId, $any($event.target).value)
+                          "
+                        />
+                        <mat-autocomplete
+                          #quickAuto="matAutocomplete"
+                          [autoActiveFirstOption]="true"
+                          (optionSelected)="quickAdd(group.resource, $event.option.value)"
+                        >
+                          @for (
+                            project of quickMatches(group.resource.resourceId);
+                            track project.id
+                          ) {
+                            <mat-option [value]="project.id">
+                              {{ project.label }} <small class="muted">· {{ project.meta }}</small>
+                            </mat-option>
+                          }
+                        </mat-autocomplete>
+                      </td>
+                      @if (infoColumns().length > 0) {
+                        <td class="sticky info-span" [attr.colspan]="infoColumns().length"></td>
+                      }
+                      <td class="c-total sticky"></td>
+                      @for (week of weeks(); track week.weekStart) {
+                        <td class="c-week" [class.current]="week.current"></td>
+                      }
+                    </tr>
+                  }
+                  <ng-container *ngTemplateOutlet="holidayTpl; context: { $implicit: group }" />
+                }
+
+                <!-- In fondo nome, totale e saturazione, come in tutte le viste -->
                 <tr class="person">
                   <th scope="rowgroup" class="c-menu sticky">
                     <button
@@ -859,83 +1000,6 @@
                     </td>
                   }
                 </tr>
-
-                @if (!collapsed().has(group.resource.resourceId)) {
-                  @if (grouping() === 'personSystem') {
-                    @for (
-                      section of personSections().get(group.resource.resourceId) ?? [];
-                      track section.key
-                    ) {
-                      <ng-container
-                        *ngTemplateOutlet="sectionTpl; context: { $implicit: section }"
-                      />
-                      @if (!collapsedSections().has(section.key)) {
-                        @for (entry of section.entries; track rowKey(entry.gridRow)) {
-                          <ng-container
-                            *ngTemplateOutlet="
-                              rowTpl;
-                              context: { group: entry.group, gridRow: entry.gridRow }
-                            "
-                          />
-                        }
-                      }
-                    }
-                    @for (gridRow of vacationRows(group); track rowKey(gridRow)) {
-                      <ng-container
-                        *ngTemplateOutlet="rowTpl; context: { group: group, gridRow: gridRow }"
-                      />
-                    }
-                  } @else {
-                    @for (gridRow of group.rows; track rowKey(gridRow)) {
-                      <ng-container
-                        *ngTemplateOutlet="rowTpl; context: { group: group, gridRow: gridRow }"
-                      />
-                    }
-                  }
-                  @if (canWrite()) {
-                    <!-- Aggiunta veloce: scrivi codice o nome, scegli con Invio, la riga nasce subito -->
-                    <tr class="quick-add">
-                      <td class="c-menu sticky">
-                        <mat-icon class="quick-add__icon" aria-hidden="true">add</mat-icon>
-                      </td>
-                      <td class="c-code c-person sticky" colspan="2">
-                        <input
-                          class="quick-add__input"
-                          autocomplete="off"
-                          placeholder="Aggiungi progetto a {{ group.resource.name }}…"
-                          [attr.aria-label]="'Aggiungi un progetto a ' + group.resource.name"
-                          [matAutocomplete]="quickAuto"
-                          [value]="quickText()[group.resource.resourceId] ?? ''"
-                          (input)="
-                            setQuickText(group.resource.resourceId, $any($event.target).value)
-                          "
-                        />
-                        <mat-autocomplete
-                          #quickAuto="matAutocomplete"
-                          [autoActiveFirstOption]="true"
-                          (optionSelected)="quickAdd(group.resource, $event.option.value)"
-                        >
-                          @for (
-                            project of quickMatches(group.resource.resourceId);
-                            track project.id
-                          ) {
-                            <mat-option [value]="project.id">
-                              {{ project.label }} <small class="muted">· {{ project.meta }}</small>
-                            </mat-option>
-                          }
-                        </mat-autocomplete>
-                      </td>
-                      @if (infoColumns().length > 0) {
-                        <td class="sticky info-span" [attr.colspan]="infoColumns().length"></td>
-                      }
-                      <td class="c-total sticky"></td>
-                      @for (week of weeks(); track week.weekStart) {
-                        <td class="c-week" [class.current]="week.current"></td>
-                      }
-                    </tr>
-                  }
-                  <ng-container *ngTemplateOutlet="holidayTpl; context: { $implicit: group }" />
-                }
               </tbody>
             }
           }

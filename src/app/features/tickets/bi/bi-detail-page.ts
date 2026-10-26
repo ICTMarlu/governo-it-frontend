@@ -15,7 +15,10 @@ import {
   ageDays,
   areaOf,
   assigneeOf,
+  isAuthorized,
+  isAwaitingApproval,
   isOpen,
+  resolvedThisYear,
   matchesDimension,
 } from './bi.model';
 import { CONFIRM_IDLE_DAYS, isConfirmStatus } from '../models/ticket.model';
@@ -36,12 +39,17 @@ type Scope =
   | 'resolved4w'
   | 'unassigned'
   | 'confirm-idle'
+  | 'overdue'
+  | 'stale'
+  | 'resolved-year'
   | 'prio-high'
   | 'prio-highest'
   | 'prio-high-only'
   | 'impact-high'
   | 'impact-extensive'
-  | 'impact-significant';
+  | 'impact-significant'
+  | 'awaiting-approval'
+  | 'authorized';
 type SortKey = 'key' | 'priority' | 'due' | 'created' | 'age' | 'updated';
 
 const SCOPE_LABELS: Readonly<Record<Scope, string>> = {
@@ -54,9 +62,15 @@ const SCOPE_LABELS: Readonly<Record<Scope, string>> = {
   'created-pending': 'ticket creati nel periodo, in Pending',
   'created-resolved': 'ticket creati nel periodo, risolti',
   resolved3w: `ticket risolti nelle ultime ${BACKLOG_WEEKS} settimane complete`,
-  created4w: `ticket entrati negli ultimi ${PERSON_TREND_DAYS} giorni`,
-  resolved4w: `ticket chiusi negli ultimi ${PERSON_TREND_DAYS} giorni`,
+
+  // Entrati e chiusi: l'etichetta dipende dal periodo scelto (vedi scopeLabel)
+  created4w: '',
+  resolved4w: '',
   unassigned: 'ticket aperti senza assegnatario',
+  overdue: 'ticket aperti con la scadenza passata',
+  stale:
+    'ticket aperti fermi: nessun aggiornamento oltre la soglia (esclusi quelli in attesa del cliente)',
+  'resolved-year': 'ticket risolti nell’anno solare in corso',
   'confirm-idle': `ticket in attesa del cliente o in UAT da oltre ${CONFIRM_IDLE_DAYS} giorni`,
   'prio-high': 'ticket aperti con priorità Highest o High',
   'prio-highest': 'ticket aperti con priorità Highest',
@@ -64,6 +78,8 @@ const SCOPE_LABELS: Readonly<Record<Scope, string>> = {
   'impact-high': 'ticket aperti con impatto Extensive o Significant',
   'impact-extensive': 'ticket aperti con impatto Extensive / Widespread',
   'impact-significant': 'ticket aperti con impatto Significant / Large',
+  'awaiting-approval': 'ticket in attesa di approvazione (Awaiting approval)',
+  authorized: 'ticket autorizzati (Authorize)',
 };
 const PRIORITY_RANK = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
 
@@ -89,6 +105,9 @@ const PRIORITY_RANK = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
             {{ dimLabel() }}: <strong>{{ value() }}</strong>
           }
           <span class="muted">{{ title() || dim() ? '· ' : '' }}{{ scopeLabel() }}</span>
+          @if (aging()) {
+            <span class="muted">· anzianità {{ aging() }}</span>
+          }
         </h1>
       </div>
       @if (store.error(); as error) {
@@ -274,6 +293,12 @@ export class BiDetailPage {
   readonly value = input('');
   /** Titolo libero (es. il nome della persona o del numero cliccato). */
   readonly title = input('');
+  /** Fascia di anzianità scelta nella pagina di partenza (es. "8–30 giorni"): restringe l'elenco. */
+  readonly aging = input('');
+  /** Soglia in giorni dei ticket fermi (la stessa della pagina operativa). */
+  readonly days = input('9');
+  /** Periodo in giorni scelto nella pagina Persone (entrati e chiusi). */
+  readonly period = input('30');
 
   protected readonly search = signal('');
   protected readonly sort = signal<{ key: SortKey; desc: boolean }>({ key: 'age', desc: true });
@@ -282,7 +307,21 @@ export class BiDetailPage {
     const dim = this.dim();
     return dim ? DRILL_LABELS[dim] : '';
   });
-  protected readonly scopeLabel = computed(() => SCOPE_LABELS[this.scope()] ?? '');
+  protected readonly scopeLabel = computed(() => {
+    const scope = this.scope();
+    if (scope === 'created4w') {
+      return `ticket entrati negli ultimi ${this.periodDays()} giorni`;
+    }
+    if (scope === 'resolved4w') {
+      return `ticket chiusi negli ultimi ${this.periodDays()} giorni`;
+    }
+    return SCOPE_LABELS[scope] ?? '';
+  });
+  /** Giorni del periodo scelto nella pagina Persone (entrati e chiusi). */
+  protected readonly periodDays = computed(() => {
+    const days = Number(this.period());
+    return days > 0 ? days : PERSON_TREND_DAYS;
+  });
 
   protected readonly jiraUrl = computed(() => {
     const base = this.store.data()?.sync.jiraBaseUrl;
@@ -296,6 +335,7 @@ export class BiDetailPage {
     const dim = this.dim();
     return this.base(now)
       .filter((t) => !dim || matchesDimension(t, dim, this.value(), now))
+      .filter((t) => !this.aging() || matchesDimension(t, 'aging', this.aging(), now))
       .filter((t) =>
         matchesTerms(terms, [
           t.key,
@@ -318,7 +358,7 @@ export class BiDetailPage {
   }
 
   private openWhere(test: (ticket: BiTicket) => boolean): readonly BiTicket[] {
-    return this.store.tickets().filter((t) => isOpen(t) && test(t));
+    return this.store.tickets().filter((t) => isOpen(t) && !t.pending && test(t));
   }
 
   /** Ticket di partenza, secondo la pagina e il numero o la barra da cui si arriva. */
@@ -345,9 +385,9 @@ export class BiDetailPage {
       case 'resolved3w':
         return scoped.filter((t) => inWeeks(t.resolved, now, BACKLOG_WEEKS));
       case 'created4w':
-        return scoped.filter((t) => sinceStart(t.created, now));
+        return scoped.filter((t) => sinceStart(t.created, now, this.periodDays()));
       case 'resolved4w':
-        return scoped.filter((t) => sinceStart(t.resolved, now));
+        return scoped.filter((t) => sinceStart(t.resolved, now, this.periodDays()));
       // Numeri della pagina operativa: tutti gli aperti, senza i filtri della BI
       case 'prio-high':
         return this.openWhere((t) => ['highest', 'high'].includes(priorityOf(t)));
@@ -361,6 +401,10 @@ export class BiDetailPage {
         return this.openWhere((t) => impactHas(t, 'extensive'));
       case 'impact-significant':
         return this.openWhere((t) => impactHas(t, 'significant'));
+      case 'awaiting-approval':
+        return this.openWhere(isAwaitingApproval);
+      case 'authorized':
+        return this.openWhere(isAuthorized);
       case 'confirm-idle':
         // Come il numero della pagina operativa: giorni nello stato dal cambio di stato
         return this.openWhere(
@@ -369,9 +413,19 @@ export class BiDetailPage {
             (now.getTime() - new Date(t.statusChanged ?? t.updated).getTime()) / 86_400_000 >
               CONFIRM_IDLE_DAYS,
         );
+      case 'overdue':
+        return this.openWhere((t) => t.due !== null && new Date(t.due) < startOfToday());
+      case 'stale':
+        return this.openWhere(
+          (t) =>
+            !t.waitingCustomer &&
+            now.getTime() - new Date(t.updated).getTime() > Number(this.days()) * 86_400_000,
+        );
+      case 'resolved-year':
+        return resolvedThisYear(this.store.scoped(), now);
       case 'unassigned':
         // Come il numero della pagina operativa: tutti gli aperti, senza i filtri della BI
-        return this.store.tickets().filter((t) => isOpen(t) && t.assignee === null);
+        return this.store.tickets().filter((t) => isOpen(t) && !t.pending && t.assignee === null);
     }
   }
 
@@ -415,13 +469,13 @@ function impactHas(ticket: BiTicket, keyword: string): boolean {
   return (ticket.impact ?? '').toLowerCase().includes(keyword);
 }
 
-/** Data negli ultimi 30 giorni, oggi compreso. */
-function sinceStart(iso: string | null, now: Date): boolean {
+/** Data negli ultimi {@code days} giorni, oggi compreso. */
+function sinceStart(iso: string | null, now: Date, days: number): boolean {
   if (iso === null) {
     return false;
   }
   const time = new Date(iso).getTime();
-  return time >= personTrendPeriod(now).start.getTime() && time <= now.getTime();
+  return time >= personTrendPeriod(now, days).start.getTime() && time <= now.getTime();
 }
 
 function startOfToday(): Date {

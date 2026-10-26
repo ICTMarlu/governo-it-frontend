@@ -1,7 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import {
@@ -19,14 +18,7 @@ import { TicketSyncService } from '../services/ticket-sync.service';
  */
 @Component({
   selector: 'gov-bi-filters',
-  imports: [
-    ExcelFilter,
-    MatButtonModule,
-    MatIconModule,
-    MatSelectModule,
-    MatTooltipModule,
-    SavedViews,
-  ],
+  imports: [ExcelFilter, MatButtonModule, MatIconModule, MatTooltipModule, SavedViews],
   template: `
     <div class="filters" role="search" aria-label="Filtri dei ticket">
       <gov-excel-filter
@@ -41,17 +33,12 @@ import { TicketSyncService } from '../services/ticket-sync.service';
         [selected]="store.assignees()"
         (selectedChange)="store.assignees.set($event)"
       />
-      <mat-select
-        class="filters__year"
-        aria-label="Anno di creazione"
-        [value]="store.year()"
-        (valueChange)="store.year.set($event)"
-      >
-        <mat-option [value]="null">Tutti gli anni</mat-option>
-        @for (year of store.yearOptions(); track year) {
-          <mat-option [value]="year">{{ year }}</mat-option>
-        }
-      </mat-select>
+      <gov-excel-filter
+        label="Anno"
+        [options]="yearOptions()"
+        [selected]="selectedYears()"
+        (selectedChange)="setYears($event)"
+      />
       <gov-excel-filter
         label="Mese"
         [options]="monthOptions"
@@ -96,32 +83,55 @@ import { TicketSyncService } from '../services/ticket-sync.service';
     </div>
   `,
   styles: `
+    // Barra su una sola riga, sempre alta uguale: i testi lunghi si troncano invece di andare a capo
     .filters {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
       gap: 0.5rem;
+      min-height: 3rem;
+      box-sizing: border-box;
       padding: 0.5rem 0.75rem;
       border-radius: 0.75rem;
       background: var(--mat-sys-surface-container);
-
-      &__year {
-        box-sizing: border-box;
-        width: 9rem;
-        height: 2rem;
-        padding: 0.25rem 0.5rem;
-        border: 1px solid var(--mat-sys-outline);
-        border-radius: 0.5rem;
-        background: var(--mat-sys-surface);
-      }
 
       &__spacer {
         flex: 1;
       }
 
       &__sync {
+        min-width: 0;
+        overflow: hidden;
         color: var(--mat-sys-on-surface-variant);
         font: var(--mat-sys-body-small);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      > button,
+      > gov-saved-views {
+        flex-shrink: 0;
+      }
+    }
+
+    // Interruttori e pulsanti messi dalle pagine (contenuto proiettato): non vanno a capo né si stringono
+    :host ::ng-deep .filters > * {
+      flex-shrink: 0;
+    }
+
+    :host ::ng-deep .filters > gov-excel-filter {
+      flex-shrink: 1;
+      min-width: 0;
+    }
+
+    :host ::ng-deep .filters > .filters__sync {
+      flex-shrink: 1;
+    }
+
+    // Su schermi stretti si torna a capo, come prima
+    @media (max-width: 1099.98px) {
+      .filters {
+        flex-wrap: wrap;
       }
     }
 
@@ -152,6 +162,10 @@ export class BiFilters {
   protected readonly assigneeOptions = computed(() =>
     this.store.assigneeOptions().map((value) => ({ value, label: value })),
   );
+  protected readonly yearOptions = computed(() =>
+    this.store.yearOptions().map((year) => ({ value: String(year), label: String(year) })),
+  );
+  protected readonly selectedYears = computed(() => this.store.years()?.map(String) ?? null);
   protected readonly selectedMonths = computed(() => this.store.months()?.map(String) ?? null);
 
   protected readonly filtered = computed(
@@ -159,8 +173,17 @@ export class BiFilters {
       this.store.areas() !== null ||
       this.store.assignees() !== null ||
       this.store.months() !== null ||
-      this.store.year() !== new Date().getFullYear(),
+      !this.isCurrentYearOnly(),
   );
+
+  private isCurrentYearOnly(): boolean {
+    const years = this.store.years();
+    return years?.length === 1 && years[0] === new Date().getFullYear();
+  }
+
+  protected setYears(values: readonly string[] | null): void {
+    this.store.years.set(values === null ? null : values.map(Number));
+  }
 
   protected setMonths(values: readonly string[] | null): void {
     this.store.months.set(values === null ? null : values.map(Number));

@@ -150,7 +150,7 @@ export class BiOverviewPage {
 
   protected readonly numbers = computed(() => overview(this.store.createdInPeriod()));
   protected readonly months = computed(() =>
-    monthly(this.store.scoped(), this.store.year(), new Date()),
+    monthly(this.store.scoped(), this.store.years(), new Date()),
   );
   protected readonly byArea = computed(() => countBy(this.store.createdInPeriod(), areaOf));
   protected readonly byAssignee = computed(() => countBy(this.store.createdInPeriod(), assigneeOf));

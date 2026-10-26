@@ -1,16 +1,19 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { PeriodChart } from '../../../shared/charts/period-chart';
+import { CrudApiService } from '../../../shared/crud/crud-api.service';
 import { HelpButton } from '../../../shared/help/help-button';
 import { PEOPLE_TREND_HELP } from '../../../shared/help/help-content';
 import { KpiDirective } from '../components/kpi.directive';
 import { BiFilters } from './bi-filters';
 import {
   PERSON_TREND_DAYS,
+  PERSON_TREND_PERIODS,
   PersonTrend,
   assigneeOf,
   personTrendPeriod,
@@ -42,6 +45,7 @@ const DIRECTIONS: Readonly<
     BiFilters,
     HelpButton,
     KpiDirective,
+    MatButtonToggleModule,
     MatIconModule,
     MatProgressSpinnerModule,
     MatSlideToggleModule,
@@ -56,6 +60,14 @@ const DIRECTIONS: Readonly<
         >
           Includi i Pending negli aperti
         </mat-slide-toggle>
+        @if (inactiveCount() > 0 || showInactive()) {
+          <mat-slide-toggle [checked]="showInactive()" (change)="showInactive.set($event.checked)">
+            Mostra agenti non attivi
+            @if (!showInactive()) {
+              ({{ inactiveCount() }})
+            }
+          </mat-slide-toggle>
+        }
         <gov-help-button [help]="help" [compact]="true" label="Come si leggono i KPI per persona" />
       </gov-bi-filters>
       @if (store.error(); as error) {
@@ -70,11 +82,23 @@ const DIRECTIONS: Readonly<
           <section *govKpi="'people.table'" class="bi-card" aria-labelledby="people-title">
             <header class="card-head">
               <h2 id="people-title" class="title">Backlog per persona</h2>
+              <mat-button-toggle-group
+                class="period"
+                aria-label="Periodo della tabella, in giorni"
+                hideSingleSelectionIndicator
+                [value]="days()"
+                (change)="days.set($event.value)"
+              >
+                @for (option of periods; track option) {
+                  <mat-button-toggle [value]="option">{{ option }} gg</mat-button-toggle>
+                }
+              </mat-button-toggle-group>
               <p class="note">
-                <strong>Periodo: ultimi {{ days }} giorni</strong> (dal {{ since() }} a oggi, oggi
-                compreso). Saldo = entrati − chiusi nel periodo: di quanti ticket cresce o cala il
-                backlog di ognuno. Tra parentesi la media a settimana (saldo ÷ {{ elapsedWeeks() }}
-                settimane). Gli anni e i mesi del filtro qui non contano.
+                <strong>Dal {{ since() }} a oggi</strong> ({{ days() }} giorni, oggi compreso).
+                Saldo = entrati − chiusi: di quanti ticket cresce (+) o cala (−) il backlog; tra
+                parentesi la media a settimana (saldo ÷ {{ elapsedWeeks() }} settimane). Il periodo
+                vale per la tabella: il grafico mostra sempre le ultime 8 settimane. Anni e mesi del
+                filtro qui non contano; le persone non attive sono nascoste.
               </p>
             </header>
             @if (trends().length === 0) {
@@ -223,6 +247,10 @@ const DIRECTIONS: Readonly<
       }
     }
 
+    .period {
+      flex: 0 0 auto;
+    }
+
     .note {
       flex: 1 1 12rem;
       margin: 0;
@@ -345,13 +373,15 @@ const DIRECTIONS: Readonly<
 export class BiPeoplePage {
   protected readonly store = inject(BiStore);
   protected readonly help = PEOPLE_TREND_HELP;
-  protected readonly days = PERSON_TREND_DAYS;
-  private readonly period = computed(() => personTrendPeriod(new Date()));
-  /** Primo giorno del periodo (30 giorni, oggi compreso), gg/mm. */
+  /** Giorni del periodo della tabella, a scelta (15–120). */
+  protected readonly days = signal(PERSON_TREND_DAYS);
+  protected readonly periods = PERSON_TREND_PERIODS;
+  private readonly period = computed(() => personTrendPeriod(new Date(), this.days()));
+  /** Primo giorno del periodo scelto (oggi compreso), gg/mm. */
   protected readonly since = computed(() =>
     this.period().start.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }),
   );
-  /** Settimane del periodo (30 giorni = 4,3), per cui si divide il saldo. */
+  /** Settimane del periodo (es. 30 giorni = 4,3), per cui si divide il saldo. */
   protected readonly elapsedWeeks = computed(() =>
     this.period().weeks.toLocaleString('it-IT', { maximumFractionDigits: 1 }),
   );
@@ -379,8 +409,26 @@ export class BiPeoplePage {
     };
   });
 
+  private readonly allTrends = computed(() =>
+    personTrends(this.store.scoped(), new Date(), this.store.includePending(), this.days()),
+  );
+
+  /** Risorse disattivate nell'anagrafica (id): le loro righe si nascondono, salvo "Mostra agenti non attivi". */
+  private readonly inactiveResources = signal<ReadonlySet<number>>(new Set());
+  protected readonly showInactive = signal(false);
+
+  private isInactive(row: PersonTrend): boolean {
+    return row.resourceId !== null && this.inactiveResources().has(row.resourceId);
+  }
+
+  protected readonly inactiveCount = computed(
+    () => this.allTrends().filter((row) => this.isInactive(row)).length,
+  );
+
   protected readonly trends = computed(() =>
-    personTrends(this.store.scoped(), new Date(), this.store.includePending()),
+    this.showInactive()
+      ? this.allTrends()
+      : this.allTrends().filter((row) => !this.isInactive(row)),
   );
 
   /** Persona scelta (filtro in alto o clic nella tabella); di partenza quella con il saldo peggiore. */
@@ -407,11 +455,20 @@ export class BiPeoplePage {
   /** Clic su un numero della persona: i suoi ticket (aperti, entrati o chiusi). */
   protected open(name: string, scope: string): void {
     void this.router.navigate(['/tickets/dettaglio'], {
-      queryParams: { scope, dim: 'assignee', value: name },
+      queryParams: { scope, dim: 'assignee', value: name, period: this.days() },
     });
   }
 
+  private readonly api = inject(CrudApiService);
+
   constructor() {
+    this.api.list('/resources').subscribe({
+      next: (resources) =>
+        this.inactiveResources.set(
+          new Set(resources.filter((r) => r['active'] === false).map((r) => Number(r.id))),
+        ),
+      error: () => undefined,
+    });
     // Il filtro "Assegnatario" in alto con una sola persona la sceglie; poi vale il clic sulle righe
     effect(() => {
       const filtered = this.store.assignees();

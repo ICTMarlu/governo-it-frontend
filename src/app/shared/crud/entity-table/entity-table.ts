@@ -57,6 +57,12 @@ export class EntityTable {
   readonly rowLink = input<(row: EntityRow) => readonly (string | number)[]>();
   /** Il titolo della riga apre la modifica (oltre alla matita). */
   readonly titleOpensEdit = input(false);
+  /** Centra etichette e valori di tutte le colonne tranne il titolo. */
+  readonly centerValues = input(false);
+
+  protected isCentered(column: ColumnConfig): boolean {
+    return this.centerValues() && column !== this.primaryColumn();
+  }
 
   /** Colonna con le caselle per selezionare più righe (azioni massive). */
   readonly selectable = input(false);

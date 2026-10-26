@@ -198,11 +198,11 @@
         }
       }
     </div>
-
-    @if (errorMessage(); as message) {
-      <p class="error" role="alert">{{ message }}</p>
-    }
   </mat-dialog-content>
+
+  @if (errorMessage(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
 
   <mat-dialog-actions align="end">
     <button mat-button type="button" mat-dialog-close>Annulla</button>

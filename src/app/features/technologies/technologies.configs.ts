@@ -7,24 +7,31 @@ const DATE = new Intl.DateTimeFormat('it-IT', {
   year: 'numeric',
 });
 
-const CATEGORIES = [
+export const CATEGORIES = [
   { value: 'OPERATING_SYSTEM', label: 'Sistema operativo' },
   { value: 'DATABASE', label: 'Database' },
   { value: 'RUNTIME', label: 'Runtime / linguaggio' },
   { value: 'FRAMEWORK', label: 'Framework / libreria' },
   { value: 'APPLICATION', label: 'Applicativo' },
+  { value: 'WEBSITE', label: 'Sito web / e-commerce' },
   { value: 'MIDDLEWARE', label: 'Middleware / server web' },
   { value: 'NETWORK', label: 'Rete / sicurezza' },
   { value: 'HARDWARE', label: 'Hardware / firmware' },
   { value: 'CLOUD', label: 'Servizio cloud' },
+  { value: 'CERTIFICATE', label: 'Certificato / dominio' },
   { value: 'OTHER', label: 'Altro' },
 ];
 
-const CRITICALITIES = [
+export const CRITICALITIES = [
   { value: 'CRITICAL', label: 'Critica' },
   { value: 'HIGH', label: 'Alta' },
   { value: 'MEDIUM', label: 'Media' },
   { value: 'LOW', label: 'Bassa' },
+];
+
+export const EXPOSURES = [
+  { value: 'INTERNAL', label: 'Interna' },
+  { value: 'INTERNET', label: 'Esposta a internet' },
 ];
 
 const SEVERITIES = [
@@ -64,6 +71,7 @@ export const TECHNOLOGIES_CONFIG: EntityConfig = {
   singular: 'Tecnologia',
   subtitle: 'Cosa si usa, in che versione e fino a quando è supportato.',
   endpoint: '/technologies',
+  canDelete: true,
   help: TECHNOLOGIES_HELP,
   searchKeys: [
     'name',
@@ -76,6 +84,7 @@ export const TECHNOLOGIES_CONFIG: EntityConfig = {
   ],
   quickFilters: [
     { key: 'priorityLabel', label: 'Priorità', orderKey: 'priorityRank' },
+    { key: 'exposureLabel', label: 'Esposizione' },
     { key: 'systemNames', label: 'Sistema' },
     { key: 'categoryLabel', label: 'Categoria' },
     { key: 'supportStatusLabel', label: 'Supporto' },
@@ -127,6 +136,15 @@ export const TECHNOLOGIES_CONFIG: EntityConfig = {
       fullWidth: true,
     },
     {
+      key: 'exposure',
+      label: 'Esposizione',
+      type: 'select',
+      required: true,
+      defaultValue: 'INTERNAL',
+      options: { static: EXPOSURES },
+      hint: 'Esposta a internet: siti, e-commerce, servizi pubblici. Pesa di più',
+    },
+    {
       key: 'businessCriticality',
       label: 'Criticità per il business',
       type: 'select',
@@ -137,9 +155,9 @@ export const TECHNOLOGIES_CONFIG: EntityConfig = {
     },
     {
       key: 'supportEndDate',
-      label: 'Fine supporto del produttore',
+      label: 'Fine supporto o scadenza',
       type: 'date',
-      hint: 'Da qui in poi non ci sono più aggiornamenti di sicurezza',
+      hint: 'Fine degli aggiornamenti di sicurezza; per un certificato o un dominio, la scadenza',
     },
     { key: 'latestVersion', label: 'Ultima versione disponibile', type: 'text', maxLength: 50 },
     {
@@ -174,6 +192,7 @@ export const TECHNOLOGIES_CONFIG: EntityConfig = {
   columns: [
     { key: 'name', label: 'Tecnologia', primary: true },
     { key: 'softwareVersion', label: 'Versione', width: 'narrow' },
+    { key: 'exposureLabel', label: 'Esposizione', width: 'narrow' },
     {
       key: 'priorityLabel',
       label: 'Priorità',
@@ -181,7 +200,7 @@ export const TECHNOLOGIES_CONFIG: EntityConfig = {
       colorKey: 'priorityColor',
       sortKey: 'priorityRank',
     },
-    { key: 'supportEndDate', label: 'Fine supporto', format: supportEnd },
+    { key: 'supportEndDate', label: 'Fine supporto / scadenza', format: supportEnd },
     { key: 'openVulnerabilities', label: 'Vuln. aperte', type: 'number', width: 'narrow' },
     { key: 'systemNames', label: 'Sistemi', type: 'list' },
     { key: 'categoryLabel', label: 'Categoria', hideOnMobile: true },
@@ -199,6 +218,7 @@ export const VULNERABILITIES_CONFIG: EntityConfig = {
   singular: 'Vulnerabilità',
   subtitle: 'CVE e bollettini che riguardano le tecnologie in uso.',
   endpoint: '/vulnerabilities',
+  canDelete: true,
   help: TECHNOLOGIES_HELP,
   searchKeys: ['reference', 'title', 'technologyName', 'fixVersion', 'notes'],
   quickFilters: [

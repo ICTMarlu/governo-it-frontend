@@ -9,15 +9,21 @@ export const priorityLabel = (row: EntityRow): string => {
 };
 
 /** Portafoglio progetti (MD-01, PRJ-01). Il codice (es. ICT26ERP001) è assegnato alla creazione. */
+/** Solo chi si pianifica su progetti; chi fa solo ticketing resta fuori dalle tendine. */
+const plannableOnly = (row: EntityRow): boolean => row['projectPlannable'] !== false;
+
 export const PROJECTS_CONFIG: EntityConfig = {
   title: 'Progetti',
   singular: 'Progetto',
   subtitle:
     'Portafoglio IT: Project, AMS, Continuous e Admin. Il codice viene assegnato al salvataggio se il sistema ha il codice breve.',
   endpoint: '/projects',
+  canDelete: true,
   help: PROJECTS_HELP,
   writeRoles: [ROLES.admin, ROLES.pm, ROLES.editor],
   rowLink: (row) => ['/projects', row.id!],
+  // Aperti o chiusi secondo la categoria dello stato (Anagrafiche › Stati progetto)
+  closedWhen: (row) => row['statusTerminal'] === true,
   searchKeys: ['code', 'name', 'ownerNames', 'requesterNames', 'mainSystemLabel', 'description'],
   quickFilters: [
     { key: 'workTypeLabel', label: 'Tipo', orderKey: 'workTypeSortOrder' },
@@ -76,13 +82,13 @@ export const PROJECTS_CONFIG: EntityConfig = {
       label: 'Owner',
       type: 'multiselect',
       hint: 'Obbligatorio per i Project; Admin, Continuous e AMS possono non averlo',
-      options: { endpoint: '/resources', labelKey: 'fullName' },
+      options: { endpoint: '/resources', labelKey: 'fullName', filter: plannableOnly },
     },
     {
       key: 'primaryOwnerId',
       label: 'Owner principale',
       type: 'select',
-      options: { endpoint: '/resources', labelKey: 'fullName' },
+      options: { endpoint: '/resources', labelKey: 'fullName', filter: plannableOnly },
       hint: 'Facoltativo, deve essere tra gli owner',
     },
     {
@@ -153,7 +159,7 @@ export const PROJECTS_CONFIG: EntityConfig = {
       label: 'Ranking',
       type: 'number',
       min: 1,
-      hint: 'Posizione unica nel portafoglio',
+      hint: 'Più piccolo = più importante. I numeri possono ripetersi: a parità vale l’ordine alfabetico. Senza ranking va in fondo',
     },
     { key: 'actualCompletionDate', label: 'Data di completamento effettiva', type: 'date' },
     { key: 'active', label: 'Attivo', type: 'checkbox', defaultValue: true },

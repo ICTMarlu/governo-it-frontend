@@ -25,7 +25,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
-import { filter, map, switchMap } from 'rxjs';
+import { catchError, filter, map, of, switchMap } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { canEdit } from '../../core/auth/permissions';
@@ -218,6 +218,29 @@ export class PlanPage {
   private extending = false;
   private scrollFrame = 0;
   protected readonly showArchived = signal(false);
+  /** Risorse non pianificabili sui progetti (dall'anagrafica): nascoste di partenza, anche se hanno righe. */
+  private readonly nonPlannableIds = toSignal(
+    inject(CrudApiService)
+      .list('/resources')
+      .pipe(
+        map(
+          (resources) =>
+            new Set(
+              resources.filter((r) => r['projectPlannable'] === false).map((r) => String(r.id)),
+            ),
+        ),
+        catchError(() => of(new Set<string>())),
+      ),
+    { initialValue: new Set<string>() },
+  );
+  protected readonly showNonPlannable = signal(false);
+  /** Quante persone del piano sono non pianificabili (per il conteggio sull'interruttore). */
+  protected readonly nonPlannableCount = computed(
+    () =>
+      (this.plan()?.resources ?? []).filter(
+        (resource) => resource.active && this.nonPlannableIds().has(String(resource.resourceId)),
+      ).length,
+  );
   protected readonly search = signal('');
   /** Stati progetto mostrati; null = default (solo aperti). Salvati per l'utente. */
   protected readonly statusFilter = signal<readonly string[] | null>(null);
@@ -231,11 +254,13 @@ export class PlanPage {
   protected readonly sortLevels = signal<readonly SortLevel[]>([]);
   /** Colonne a scelta: quali e in che ordine (null = predefinite). */
   protected readonly columnLayout = signal<ColumnLayout | null>(null);
-  protected readonly infoColumns = computed(() =>
-    orderedColumns(PLAN_INFO_COLUMNS, this.columnLayout())
-      .filter((item) => item.visible)
-      .map((item) => item.column.id!),
-  );
+  protected readonly infoColumns = computed(() => {
+    // Con le righe divise per sistema il sistema è già nell'intestazione del gruppo: niente colonna
+    const showSystem = this.grouping() === 'person';
+    return orderedColumns(PLAN_INFO_COLUMNS, this.columnLayout())
+      .filter((item) => item.visible && (showSystem || item.column.id !== 'system'))
+      .map((item) => item.column.id!);
+  });
   protected readonly sortLabels = PLAN_SORT_LABELS;
   protected readonly sortHint =
     "Clic: ordina (poi decrescente, poi togli). Su un'altra colonna diventa il secondo livello";
@@ -313,17 +338,33 @@ export class PlanPage {
   /** Persone nel filtro; le disattivate in fondo, da scegliere apposta per vederle. */
   protected readonly resourceFilterOptions = computed<readonly ExcelFilterOption[]>(() =>
     [...(this.plan()?.resources ?? [])]
-      .sort((a, b) => Number(b.active) - Number(a.active))
+      .sort((a, b) => this.rank(a.active, a.resourceId) - this.rank(b.active, b.resourceId))
       .map((resource) => ({
         value: String(resource.resourceId),
-        label: resource.active ? resource.name : `${resource.name} (disattivata)`,
+        label: !resource.active
+          ? `${resource.name} (disattivata)`
+          : this.nonPlannableIds().has(String(resource.resourceId))
+            ? `${resource.name} (non pianificabile)`
+            : resource.name,
       })),
   );
 
-  /** Persone attive: la vista di partenza (senza filtro le disattivate non si vedono). */
+  /** Ordine nel filtro Persone: prima le pianificabili, poi le non pianificabili, in fondo le disattivate. */
+  private rank(active: boolean, resourceId: number): number {
+    return !active ? 2 : this.nonPlannableIds().has(String(resourceId)) ? 1 : 0;
+  }
+
+  /**
+   * Persone mostrate di partenza: attive e pianificabili (le non pianificabili solo con l'interruttore,
+   * le disattivate si scelgono nel filtro Persone).
+   */
   private readonly activeResourceIds = computed(() =>
     (this.plan()?.resources ?? [])
-      .filter((resource) => resource.active)
+      .filter(
+        (resource) =>
+          resource.active &&
+          (this.showNonPlannable() || !this.nonPlannableIds().has(String(resource.resourceId))),
+      )
       .map((resource) => String(resource.resourceId)),
   );
 
@@ -337,9 +378,10 @@ export class PlanPage {
     if (this.resourceFilter() !== null) {
       return null;
     }
-    return this.activeResourceIds().length < (this.plan()?.resources.length ?? 0)
-      ? 'Attive'
-      : 'Tutte';
+    if (this.activeResourceIds().length >= (this.plan()?.resources.length ?? 0)) {
+      return 'Tutte';
+    }
+    return this.nonPlannableCount() > 0 && !this.showNonPlannable() ? 'Pianificabili' : 'Attive';
   });
 
   /** Stato salvato nelle viste (D-26): filtri, ricerca, ordinamento, colonne, raggruppamento. */
@@ -353,6 +395,7 @@ export class PlanPage {
     columns: this.columnLayout(),
     grouping: this.grouping(),
     archived: this.showArchived(),
+    nonPlannable: this.showNonPlannable(),
   }));
   /** Una vista è stata applicata: le preferenze salvate in precedenza non la sovrascrivono. */
   private viewApplied = false;
@@ -660,6 +703,7 @@ export class PlanPage {
       this.columnLayout() !== null ||
       this.grouping() !== 'person' ||
       this.showArchived() ||
+      this.showNonPlannable() ||
       this.collapsed().size > 0 ||
       this.collapsedSections().size > 0,
   );
@@ -1028,6 +1072,7 @@ export class PlanPage {
       columns: ColumnLayout | null;
       grouping: PlanGrouping;
       archived: boolean;
+      nonPlannable: boolean;
     }>;
     this.statusFilter.set(view.statuses ?? null);
     this.resourceFilter.set(view.resources ?? null);
@@ -1038,6 +1083,7 @@ export class PlanPage {
     this.columnLayout.set(view.columns ?? null);
     this.grouping.set(view.grouping && view.grouping in GROUPING_LABELS ? view.grouping : 'person');
     this.showArchived.set(view.archived ?? false);
+    this.showNonPlannable.set(view.nonPlannable ?? false);
     this.savePreferences();
   }
 
@@ -1221,8 +1267,11 @@ export class PlanPage {
 
   /** Descrizione del pallino della casella per i lettori di schermo e il tooltip. */
   protected taskCountLabel(count: CellTaskCount | undefined): string {
-    if (!count) {
+    if (!count || (count.total === 0 && count.notes.length === 0)) {
       return 'Aggiungi task o nota (Alt+T)';
+    }
+    if (count.total === 0) {
+      return 'Solo note · apri (Alt+T)';
     }
     return count.open > 0
       ? `${count.open} task aperti su ${count.total} · apri (Alt+T)`

@@ -13,6 +13,21 @@
     </mat-form-field>
   }
 
+  @if (config().closedWhen) {
+    <!-- Aperti / Chiusi / Tutti: scorciatoia sulla categoria di ogni stato (aperto o finale) -->
+    <mat-button-toggle-group
+      class="toolbar__open"
+      aria-label="Mostra aperti o chiusi"
+      hideSingleSelectionIndicator
+      [value]="openState()"
+      (change)="openState.set($event.value)"
+    >
+      <mat-button-toggle value="open">Aperti ({{ openCounts().open }})</mat-button-toggle>
+      <mat-button-toggle value="closed">Chiusi ({{ openCounts().closed }})</mat-button-toggle>
+      <mat-button-toggle value="all">Tutti</mat-button-toggle>
+    </mat-button-toggle-group>
+  }
+
   @for (quickFilter of filterOptions(); track quickFilter.key) {
     <mat-form-field
       appearance="outline"
@@ -124,6 +139,7 @@
       [canDelete]="canWrite() && config().canDelete === true"
       [rowLink]="config().rowLink"
       [titleOpensEdit]="config().titleOpensForm === true"
+      [centerValues]="config().centerValues === true"
       [selectable]="selectable()"
       [(selection)]="selection"
       [(sort)]="sort"

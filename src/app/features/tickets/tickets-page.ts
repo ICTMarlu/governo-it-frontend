@@ -281,6 +281,11 @@ export class TicketsPage {
     void this.router.navigate(['/tickets/dettaglio'], { queryParams: { scope } });
   }
 
+  /** Clic su "fermi": ticket senza aggiornamenti oltre la soglia. */
+  protected openStale(days: number): void {
+    this.openDetail({ scope: 'stale', days: String(days) });
+  }
+
   /** Clic su "senza assegnatario": elenco di dettaglio dei ticket aperti non assegnati. */
   protected openUnassigned(): void {
     this.openDetail({ scope: 'unassigned' });
@@ -349,5 +354,7 @@ export class TicketsPage {
 
 /** In attesa del cliente / UAT da oltre la soglia di giorni nello stato. */
 function isConfirmIdle(ticket: Ticket): boolean {
-  return isConfirmStatus(ticket.statusName) && ticket.statusDays > CONFIRM_IDLE_DAYS;
+  return (
+    !ticket.pending && isConfirmStatus(ticket.statusName) && ticket.statusDays > CONFIRM_IDLE_DAYS
+  );
 }

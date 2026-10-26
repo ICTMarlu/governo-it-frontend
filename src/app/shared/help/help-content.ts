@@ -128,6 +128,13 @@ export const RESOURCES_HELP: HelpContent = {
   sections: [
     LIST_SECTION,
     {
+      title: 'Pianificabile',
+      items: [
+        'Spunta "Pianificabile su progetti e piano settimanale" per chi lavora anche sui progetti.',
+        'Toglila per chi fa solo ticketing: non entra nel piano settimanale né nei progetti.',
+      ],
+    },
+    {
       title: 'Chi può modificare',
       items: ['Admin e Project Manager.'],
     },
@@ -374,6 +381,15 @@ export const USERS_HELP: HelpContent = {
   sections: [
     LIST_SECTION,
     {
+      title: 'Registro attività',
+      items: [
+        'La scheda "Attività" elenca, dal più recente, gli accessi (anche quelli falliti) e ogni creazione o eliminazione di record fatta nell’applicazione, con chi l’ha fatta.',
+        'Di norma vedi gli ultimi 7 giorni (24 ore o 30 a scelta; il registro conserva 30 giorni). Filtra per tipo, utente o cerca per testo.',
+        'Un accesso è registrato quando l’utente apre l’applicazione dopo almeno mezz’ora di pausa. "Sistema" indica le operazioni automatiche, come la sincronizzazione da Jira.',
+        'Non sono registrate le modifiche ai campi, i ticket sincronizzati da Jira e le caselle del piano settimanale; i cambi di permessi sono nella scheda "Storico".',
+      ],
+    },
+    {
       title: 'Livelli per modulo',
       items: [
         'Ogni voce del menu è un modulo: Progetti, Piano settimanale, Task, Ticket AMS, Direzione, Risorse, Richiedenti, Liste e tabelle, Utenti.',
@@ -409,6 +425,15 @@ export const MANAGEMENT_HELP: HelpContent = {
   intro:
     'La lista viva di quello che devi portare alla direzione: la riempi quando ti viene in mente e la usi durante l’incontro.',
   sections: [
+    {
+      title: 'Kanban',
+      items: [
+        'Nei Punti, il pulsante "Kanban" mostra una colonna per ogni stato: trascina un punto da una colonna all’altra per cambiarne lo stato; il titolo apre il punto.',
+        'Le colonne si configurano in Anagrafiche › Stati della direzione (solo Admin): aggiungi, rinomina, cambia colore e ordine, disattiva. Non si elimina uno stato già usato da dei punti: si disattiva.',
+        '"Come si comporta" collega ogni stato alle regole di sistema: da discutere e in corso entrano in agenda, posticipato rientra dalla data scelta (te la chiede quando trascini), chiuso e annullato escono dalla lista viva.',
+        'Chiusi e annullati restano nella kanban per 30 giorni; l’elenco li mostra sempre.',
+      ],
+    },
     {
       title: 'Inserimento veloce',
       items: [
@@ -642,7 +667,7 @@ export const TICKETS_HELP: HelpContent = {
     {
       title: 'Da dove arrivano i dati',
       items: [
-        'Il backend legge Jira con il token API scritto in config/local.yml e si aggiorna da solo ogni 15 minuti (i ticket cambiati); una volta al giorno rilegge tutto. "Aggiorna ora" (Admin e PM) lo fa subito.',
+        'Il backend legge Jira con il token API scritto in config/local.yml e si aggiorna da solo ogni 5 minuti (i ticket cambiati); una volta al giorno rilegge tutto. "Aggiorna ora" (Admin e PM) lo fa subito.',
         'Si leggono gli aperti e i chiusi degli ultimi 180 giorni (parametro JIRA_HISTORY_DAYS); i progetti Jira sono nel parametro JIRA_PROJECT_KEYS (oggi MRLIT).',
         'La persona è l’assegnatario del ticket: si collega alla risorsa da sola quando il nome è uguale, altrimenti scrivi l’account Jira nella scheda della risorsa.',
         'Il progetto si aggancia con un’etichetta Jira uguale al codice del progetto (es. ICT26ERP127). L’area è il campo "Progetto Marlù" del service desk.',
@@ -664,8 +689,8 @@ export const TICKETS_HELP: HelpContent = {
       title: 'Come si legge il carico',
       items: [
         'In Jira non ci sono ore registrate: il carico si misura con i conteggi (aperti, da fare, in corso, in attesa del cliente) e con i flussi (entrati e chiusi per settimana).',
-        '"Chiusi a settimana" è la media delle ultime 4 settimane complete: dice quanti ticket la persona riesce a chiudere. Se entrano più ticket di quanti ne escono per 3 settimane il backlog è "in crescita".',
-        '"Ultimi 7 gg" conta entrati e chiusi negli ultimi 7 giorni di calendario (da oggi indietro); "Ultime 4 sett." nelle ultime 4 settimane complete, da lunedì a domenica, esclusa quella in corso.',
+        '"Chiusi a settimana" sono i chiusi degli ultimi 30 giorni ÷ 4,3 settimane (finestra mobile, oggi compreso, come nella pagina Persone): dice quanti ticket la persona riesce a chiudere. Se negli ultimi 30 giorni il saldo entrati − chiusi è di almeno mezzo ticket a settimana e i lavorabili sono aumentati il backlog è "in crescita".',
+        '"Ultimi 7 gg" conta entrati e chiusi negli ultimi 7 giorni di calendario (da oggi indietro); "Ultimi 30 gg" negli ultimi 30 giorni, oggi compreso. In attesa, scaduti, fermi e più vecchio non contano i ticket in Pending (hanno la loro vista).',
         '"AMS pianificate" sono le giornate della settimana corrente sulle righe AMS del piano settimanale: confrontale con il numero di ticket aperti e con quanti ne arrivano.',
         'Il grafico mostra entrati e chiusi per settimana (barre) e gli aperti a fine settimana (linea); passandoci sopra vedi i numeri, "Dati" apre la tabella.',
       ],
@@ -715,7 +740,7 @@ export const PERSON_LOAD_HELP: HelpContent = {
       title: 'AMS pianificate e tendenza',
       items: [
         'AMS pianificate: giornate della settimana corrente sulle righe AMS del piano settimanale della persona.',
-        '"In crescita": nelle ultime 3 settimane complete sono entrati più ticket di quanti ne sono stati chiusi e gli aperti sono aumentati.',
+        '"In crescita": negli ultimi 30 giorni il saldo entrati − chiusi è di almeno mezzo ticket a settimana e i lavorabili (senza Pending) sono aumentati.',
       ],
     },
   ],
@@ -771,7 +796,7 @@ export const PEOPLE_TREND_HELP: HelpContent = {
     {
       title: 'Saldo del periodo',
       items: [
-        'Entrati − chiusi negli ultimi 30 giorni, oggi compreso (finestra mobile: si sposta ogni giorno). Tra parentesi la media a settimana, cioè il saldo diviso 4,3 settimane. Le colonne Entrati e Chiusi usano lo stesso periodo (la data di inizio è nell\u2019intestazione).',
+        'Entrati − chiusi negli ultimi giorni, oggi compreso (finestra mobile: si sposta ogni giorno). Il periodo si sceglie sopra la tabella: 15, 30, 60, 90 o 120 giorni (di partenza 30). Tra parentesi la media a settimana, cioè il saldo diviso le settimane del periodo (30 giorni = 4,3). Le colonne Aperti, Entrati e Chiusi usano lo stesso periodo (la data di inizio è nell\u2019intestazione).',
         'Positivo (freccia in su, "cresce"): entrano più ticket di quanti ne chiude, il backlog sale. Negativo ("cala"): sta smaltendo. Stabile: la media a settimana è tra −0,5 e +0,5.',
         'Aperti al (data di inizio) e Aperti ad oggi mostrano lo stesso andamento in numeri assoluti. I ticket Declined contano come chiusi.',
       ],
@@ -779,7 +804,7 @@ export const PEOPLE_TREND_HELP: HelpContent = {
     {
       title: 'Grafico della persona',
       items: [
-        'Clic sul nome: entrati e chiusi per settimana nelle ultime 8 settimane, con la linea degli aperti a fine settimana. L\u2019ultima barra è la settimana in corso: è parziale e si riconosce dall\u2019asterisco e dal colore più chiaro.',
+        'Il grafico non cambia con il periodo della tabella. Clic sul nome: entrati e chiusi per settimana nelle ultime 8 settimane, con la linea degli aperti a fine settimana. L\u2019ultima barra è la settimana in corso: è parziale e si riconosce dall\u2019asterisco e dal colore più chiaro.',
         'L’interruttore dei Pending decide se contare negli aperti i ticket che oggi sono in Pending.',
       ],
     },
@@ -795,8 +820,11 @@ export const TECHNOLOGIES_HELP: HelpContent = {
     {
       title: 'Come si usa',
       items: [
+        'Aggiungi dal catalogo: cerchi il prodotto (es. PHP, Windows Server, WordPress), scegli la versione e la fine supporto si compila da sola dal catalogo pubblico endoflife.date; al catalogo arriva solo il nome del prodotto.',
+        'Controlla fine supporto: riallinea le date delle tecnologie aggiunte dal catalogo; lo fa anche da solo ogni giorno alle 6:20.',
         'Inventario: una riga per ogni prodotto e versione (es. Windows Server 2016, SQL Server 2017, PHP 8.1), legato a uno o più sistemi.',
-        'Indica la fine del supporto del produttore e la criticità per il business: servono alle regole di priorità.',
+        'Indica la fine del supporto del produttore (o la scadenza, per certificati e domini), la criticità per il business e se è esposta a internet: servono alle regole di priorità.',
+        'Siti e e-commerce: registra la piattaforma (categoria “Sito web / e-commerce”) e le parti che la compongono (CMS, plugin, PHP, server web, certificato) come tecnologie separate, tutte segnate “Esposta a internet”.',
         'Vulnerabilità: registra le CVE o i bollettini che riguardano una tecnologia, con gravità, stato e scadenza.',
         '"Identificativo endoflife.date" e "Nome CPE" sono facoltativi: serviranno ai controlli automatici in rete.',
       ],
@@ -807,6 +835,7 @@ export const TECHNOLOGIES_HELP: HelpContent = {
         'Urgente: vulnerabilità sfruttata attivamente o critica non risolta; vulnerabilità con scadenza superata; vulnerabilità alta su sistema di criticità alta o critica; fuori supporto su sistema di criticità alta o critica; fine supporto entro 90 giorni su sistema critico.',
         'Da pianificare: fuori supporto su sistema di criticità media o bassa; fine supporto entro 180 giorni; vulnerabilità alta non risolta.',
         'Da tenere d’occhio: fine supporto entro un anno; vulnerabilità media, bassa o solo mitigata; versione più recente disponibile; fine supporto non indicata.',
+        'Esposizione: ciò che è raggiungibile da internet conta con la criticità di un livello più alta, e una vulnerabilità media non risolta va pianificata.',
         'Ok: nessuno dei casi sopra. Le tecnologie dismesse (non attive) non contano.',
         'Una vulnerabilità pesa finché è aperta, pianificata o mitigata; risolta o accettata no.',
       ],

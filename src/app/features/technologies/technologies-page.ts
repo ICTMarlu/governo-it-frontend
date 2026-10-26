@@ -1,14 +1,16 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { canEdit } from '../../core/auth/permissions';
 import { BackLink } from '../../shared/components/back-link/back-link';
 import { PageHeader } from '../../shared/components/page-header/page-header';
-import { CrudApiService } from '../../shared/crud/crud-api.service';
+import { CrudApiService, errorMessage } from '../../shared/crud/crud-api.service';
 import { CrudSection } from '../../shared/crud/crud-section/crud-section';
 import { EntityRow } from '../../shared/crud/crud.model';
 import {
@@ -17,6 +19,8 @@ import {
 } from '../../shared/crud/entity-form-dialog/entity-form-dialog';
 import { TECHNOLOGIES_HELP } from '../../shared/help/help-content';
 import { TECHNOLOGIES_CONFIG, VULNERABILITIES_CONFIG } from './technologies.configs';
+import { TechnologyCatalogDialog } from './technology-catalog-dialog';
+import { TechnologyCatalogService } from './technology-catalog.service';
 import { TechnologyPriorityList } from './technology-priority-list';
 
 /**
@@ -28,8 +32,10 @@ import { TechnologyPriorityList } from './technology-priority-list';
   imports: [
     BackLink,
     CrudSection,
+    MatButtonModule,
     MatIconModule,
     MatTabsModule,
+    MatTooltipModule,
     PageHeader,
     TechnologyPriorityList,
   ],
@@ -40,6 +46,29 @@ import { TechnologyPriorityList } from './technology-priority-list';
       subtitle="Cosa si usa, in che versione, fino a quando è supportato e quali vulnerabilità ha."
       [help]="help"
     />
+
+    @if (editable()) {
+      <div class="actions">
+        <button mat-flat-button type="button" (click)="addFromCatalog()">
+          <mat-icon aria-hidden="true">travel_explore</mat-icon>
+          Aggiungi dal catalogo
+        </button>
+        <button mat-stroked-button type="button" (click)="edit()">
+          <mat-icon aria-hidden="true">add</mat-icon>
+          Nuova tecnologia (a mano)
+        </button>
+        <button mat-stroked-button type="button" [disabled]="checking()" (click)="check()">
+          <mat-icon aria-hidden="true">sync</mat-icon>
+          {{ checking() ? 'Controllo in corso…' : 'Controlla fine supporto' }}
+        </button>
+        @if (items().length === 0) {
+          <span class="hint">
+            L’inventario è vuoto: cerca nel catalogo ciò che usate (Windows Server, PHP,
+            WordPress…).
+          </span>
+        }
+      </div>
+    }
 
     <ul class="kpis" aria-label="Riepilogo">
       <li class="kpi kpi--urgent">
@@ -53,6 +82,13 @@ import { TechnologyPriorityList } from './technology-priority-list';
       <li class="kpi kpi--watch">
         <span class="kpi__value">{{ summary().watch }}</span>
         <span class="kpi__label">da tenere d'occhio</span>
+      </li>
+      <li
+        class="kpi kpi--urgent"
+        matTooltip="Siti, e-commerce e servizi raggiungibili da internet con priorità urgente"
+      >
+        <span class="kpi__value">{{ summary().exposedUrgent }}</span>
+        <span class="kpi__label">esposte a internet e urgenti</span>
       </li>
       <li class="kpi">
         <span class="kpi__value">{{ summary().ended }}</span>
@@ -122,6 +158,18 @@ import { TechnologyPriorityList } from './technology-priority-list';
     </mat-tab-group>
   `,
   styles: `
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem 1rem;
+      margin-block-end: 1rem;
+    }
+
+    .hint {
+      color: var(--mat-sys-on-surface-variant);
+    }
+
     .kpis {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
@@ -212,6 +260,9 @@ export class TechnologiesPage {
   protected readonly technologies = TECHNOLOGIES_CONFIG;
   protected readonly vulnerabilities = VULNERABILITIES_CONFIG;
 
+  private readonly catalogService = inject(TechnologyCatalogService);
+  protected readonly checking = signal(false);
+
   protected readonly items = signal<readonly EntityRow[]>([]);
   protected readonly editable = computed(() => canEdit(this.user()?.permissions, 'TECHNOLOGY'));
 
@@ -230,6 +281,9 @@ export class TechnologiesPage {
       urgent: count('URGENT'),
       plan: count('PLAN'),
       watch: count('WATCH'),
+      exposedUrgent: active.filter(
+        (item) => item['exposure'] === 'INTERNET' && item['priority'] === 'URGENT',
+      ).length,
       ended: active.filter((item) => item['supportStatus'] === 'ENDED').length,
       unknown: active.filter((item) => item['supportStatus'] === 'UNKNOWN').length,
       vulnerabilities: active.reduce(
@@ -249,6 +303,7 @@ export class TechnologiesPage {
         'Vulnerabilità alta su un sistema di criticità alta o critica.',
         'Fuori supporto su un sistema di criticità alta o critica.',
         'Fine supporto entro 90 giorni su un sistema critico.',
+        'Ciò che è esposto a internet conta con la criticità di un livello più alta: un sito o un e-commerce fuori supporto, o con una vulnerabilità alta, diventa urgente anche se la criticità dichiarata è media.',
       ],
     },
     {
@@ -258,6 +313,7 @@ export class TechnologiesPage {
         'Fuori supporto su un sistema di criticità media o bassa.',
         'Fine supporto entro 180 giorni.',
         'Vulnerabilità alta non risolta.',
+        'Vulnerabilità media non risolta su ciò che è esposto a internet.',
       ],
     },
     {
@@ -288,8 +344,55 @@ export class TechnologiesPage {
     });
   }
 
-  /** Apre la scheda di una tecnologia dall'elenco di priorità. */
-  protected edit(row: EntityRow): void {
+  /** Aggiunta guidata: cerca nel catalogo, sceglie la versione e compila le date. */
+  protected addFromCatalog(): void {
+    this.dialog
+      .open<TechnologyCatalogDialog, void, EntityRow>(TechnologyCatalogDialog, {
+        width: '720px',
+        maxWidth: '100vw',
+        autoFocus: 'first-tabbable',
+      })
+      .afterClosed()
+      .subscribe((created) => {
+        if (created) {
+          this.snackBar.open('Tecnologia aggiunta', 'OK', { duration: 3000 });
+          this.load();
+        }
+      });
+  }
+
+  /** Controlla ora la fine supporto delle tecnologie che hanno l'identificativo del prodotto. */
+  protected check(): void {
+    this.checking.set(true);
+    this.catalogService.check().subscribe({
+      next: (result) => {
+        this.checking.set(false);
+        const detail = [
+          `${result.checked} controllate`,
+          `${result.updated} aggiornate`,
+          result.notFound > 0 ? `${result.notFound} con versione non nel catalogo` : null,
+          result.failed > 0 ? `${result.failed} in errore` : null,
+        ]
+          .filter(Boolean)
+          .join(' · ');
+        this.snackBar.open(
+          result.checked === 0
+            ? 'Nessuna tecnologia da controllare: servono quelle aggiunte dal catalogo'
+            : `Controllo completato: ${detail}`,
+          'OK',
+          { duration: 8000 },
+        );
+        this.load();
+      },
+      error: (failure: unknown) => {
+        this.checking.set(false);
+        this.snackBar.open(errorMessage(failure), 'Chiudi');
+      },
+    });
+  }
+
+  /** Apre la scheda di una tecnologia; senza riga, una nuova. */
+  protected edit(row?: EntityRow): void {
     const data: EntityFormDialogData = { config: TECHNOLOGIES_CONFIG, row };
     this.dialog
       .open<EntityFormDialog, EntityFormDialogData, EntityRow>(EntityFormDialog, {
@@ -301,7 +404,9 @@ export class TechnologiesPage {
       .afterClosed()
       .subscribe((saved) => {
         if (saved) {
-          this.snackBar.open('Tecnologia salvata', 'OK', { duration: 3000 });
+          this.snackBar.open(row ? 'Tecnologia salvata' : 'Tecnologia aggiunta', 'OK', {
+            duration: 3000,
+          });
           this.load();
         }
       });

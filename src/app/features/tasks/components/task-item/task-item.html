@@ -36,6 +36,11 @@
       @if (showProject() && item.projectCode) {
         <span class="meta" [title]="item.projectName ?? ''">{{ item.projectCode }}</span>
       }
+      @if (showProject() && item.weekStart) {
+        <span class="meta" title="Settimana in cui è stato segnato nel piano">
+          <mat-icon aria-hidden="true">date_range</mat-icon>{{ week(item.weekStart) }}
+        </span>
+      }
       @if (showAssignee() && item.assigneeName) {
         <span class="meta">
           <mat-icon aria-hidden="true">person</mat-icon>{{ item.assigneeName }}

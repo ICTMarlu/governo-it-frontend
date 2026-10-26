@@ -38,8 +38,8 @@ export interface BiData {
 export interface BiFilters {
   readonly areas: readonly string[] | null;
   readonly assignees: readonly string[] | null;
-  /** Anno della data di creazione; null = tutti gli anni. */
-  readonly year: number | null;
+  /** Anni della data di creazione; null = tutti gli anni. */
+  readonly years: readonly number[] | null;
   /** Mesi (1-12) della data di creazione; null = tutti. */
   readonly months: readonly number[] | null;
 }
@@ -100,6 +100,16 @@ export function assigneeOf(ticket: BiTicket): string {
   return ticket.assignee ?? UNASSIGNED;
 }
 
+/** Stato Jira "Awaiting approval": si aspetta l'approvazione, o va chiesta alla direzione. */
+export function isAwaitingApproval(ticket: BiTicket): boolean {
+  return ticket.status.trim().toLowerCase() === 'awaiting approval';
+}
+
+/** Stato Jira "Authorize": il ticket è stato autorizzato. */
+export function isAuthorized(ticket: BiTicket): boolean {
+  return ticket.status.trim().toLowerCase() === 'authorize';
+}
+
 export function isOpen(ticket: BiTicket): boolean {
   return ticket.category !== 'DONE';
 }
@@ -119,7 +129,7 @@ export function inPeriod(iso: string | null, filters: BiFilters): boolean {
   }
   const date = new Date(iso);
   return (
-    (filters.year === null || date.getFullYear() === filters.year) &&
+    (filters.years === null || filters.years.includes(date.getFullYear())) &&
     (filters.months === null || filters.months.includes(date.getMonth() + 1))
   );
 }
@@ -254,24 +264,26 @@ export function percentsSummingTo100(values: readonly number[]): number[] {
 }
 
 /**
- * Creati e chiusi per mese dell'anno (i chiusi per mese di chiusura); fino al mese corrente
- * se l'anno è quello in corso. Senza anno: gli ultimi 12 mesi.
+ * Creati e chiusi per mese degli anni scelti (i chiusi per mese di chiusura); fino al mese corrente
+ * per l'anno in corso. Senza anni: gli ultimi 12 mesi.
  */
 export function monthly(
   tickets: readonly BiTicket[],
-  year: number | null,
+  years: readonly number[] | null,
   now: Date,
 ): PeriodPoint[] {
   const months: { year: number; month: number }[] = [];
-  if (year === null) {
+  if (years === null || years.length === 0) {
     for (let i = 11; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push({ year: date.getFullYear(), month: date.getMonth() });
     }
   } else {
-    const last = year === now.getFullYear() ? now.getMonth() : 11;
-    for (let month = 0; month <= last; month++) {
-      months.push({ year, month });
+    for (const year of [...years].sort((a, b) => a - b)) {
+      const last = year === now.getFullYear() ? now.getMonth() : 11;
+      for (let month = 0; month <= last; month++) {
+        months.push({ year, month });
+      }
     }
   }
   return months.map(({ year: y, month }) => {
@@ -368,6 +380,30 @@ export function resolvedPerDay(tickets: readonly BiTicket[], now: Date): number 
   return resolved / BACKLOG_WEEKS / WORKING_DAYS;
 }
 
+/** Lunedì–venerdì tra l'1/1 dell'anno di {@code now} e ieri (oggi non è ancora finito), almeno 1. */
+export function workingDaysThisYear(now: Date): number {
+  let days = 0;
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  for (let d = new Date(now.getFullYear(), 0, 1); d < end; d.setDate(d.getDate() + 1)) {
+    if (d.getDay() !== 0 && d.getDay() !== 6) {
+      days++;
+    }
+  }
+  return Math.max(days, 1);
+}
+
+/** Ticket risolti nell'anno solare di {@code now}. */
+export function resolvedThisYear(tickets: readonly BiTicket[], now: Date): BiTicket[] {
+  return tickets.filter(
+    (t) => t.resolved !== null && new Date(t.resolved).getFullYear() === now.getFullYear(),
+  );
+}
+
+/** Media di ticket risolti per giorno lavorativo nell'anno solare in corso. */
+export function resolvedPerDayYear(tickets: readonly BiTicket[], now: Date): number {
+  return resolvedThisYear(tickets, now).length / workingDaysThisYear(now);
+}
+
 /** Anni presenti nei dati (per il filtro), dal più recente. */
 export function yearsOf(tickets: readonly BiTicket[]): number[] {
   return [...new Set(tickets.map((t) => new Date(t.created).getFullYear()))].sort((a, b) => b - a);
@@ -402,15 +438,17 @@ export const PERSON_TREND_DAYS = 30;
  * Periodo del saldo per persona: gli ultimi {@code PERSON_TREND_DAYS} giorni, oggi compreso.
  * {@code weeks}: quante settimane sono (30 giorni = 4,3), per cui si divide il saldo.
  */
-export function personTrendPeriod(now: Date): { start: Date; weeks: number } {
-  const start = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() - (PERSON_TREND_DAYS - 1),
-  );
-  const weeks = Math.round((PERSON_TREND_DAYS / 7) * 10) / 10;
+export function personTrendPeriod(
+  now: Date,
+  days: number = PERSON_TREND_DAYS,
+): { start: Date; weeks: number } {
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (days - 1));
+  const weeks = Math.round((days / 7) * 10) / 10;
   return { start, weeks };
 }
+
+/** Periodi tra cui scegliere nella pagina Persone (giorni). */
+export const PERSON_TREND_PERIODS: readonly number[] = [15, 30, 60, 90, 120];
 
 /** Andamento del backlog di una persona (KPI per risorsa). */
 export interface PersonTrend {
@@ -428,15 +466,17 @@ export interface PersonTrend {
 }
 
 /**
- * Saldo del backlog per persona negli ultimi 30 giorni (finestra mobile), dal peggiore. La persona è l'assegnatario di oggi: Jira non dà lo storico
+ * Saldo del backlog per persona negli ultimi 30 giorni (finestra mobile), dal peggiore. Chi ha
+ * portato a zero gli aperti resta in elenco finché ha movimenti nel periodo. La persona è l'assegnatario di oggi: Jira non dà lo storico
  * delle assegnazioni in questa copia. Sotto mezzo ticket a settimana il saldo è "stabile".
  */
 export function personTrends(
   tickets: readonly BiTicket[],
   now: Date,
   includePending: boolean,
+  days: number = PERSON_TREND_DAYS,
 ): PersonTrend[] {
-  const { start, weeks } = personTrendPeriod(now);
+  const { start, weeks } = personTrendPeriod(now, days);
   const end = now.getTime() + 1;
   const byPerson = new Map<string, BiTicket[]>();
   for (const ticket of tickets) {

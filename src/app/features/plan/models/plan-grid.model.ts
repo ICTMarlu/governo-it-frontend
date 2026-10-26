@@ -118,9 +118,8 @@ function rankOf(entry: GridEntry): number {
 
 /**
  * Righe (già ordinate per sistema) divise per sistema, con i totali per settimana. L'ordine lo
- * decide il Ranking dei progetti: dentro ogni sistema prima i progetti con ranking più basso e i
- * sistemi seguono il loro progetto migliore; i ricorrenti (AMS) restano sempre in cima e, a
- * parità o senza ranking, vale l'ordine ricevuto.
+ * decide l'ordine ricevuto (ordinamento scelto, poi Ranking, poi alfabetico): i sistemi seguono il
+ * loro progetto migliore (ranking più basso) e i ricorrenti (AMS) restano sempre in cima.
  */
 export function buildSections(entries: readonly GridEntry[], keyPrefix: string): GridSection[] {
   const sections = new Map<string, GridEntry[]>();
@@ -130,9 +129,8 @@ export function buildSections(entries: readonly GridEntry[], keyPrefix: string):
   }
   return [...sections.entries()]
     .map(([label, items], position) => {
-      // Sort stabile: a parità di ranking resta l'ordine di arrivo (colonne scelte dall'utente)
-      const ordered = [...items].sort((a, b) => rankOf(a) - rankOf(b) || 0);
-      return { label, ordered, position, best: Math.min(...ordered.map(rankOf)) };
+      // L'ordine di arrivo vale già: ordinamento scelto, poi ranking, poi alfabetico
+      return { label, ordered: items, position, best: Math.min(...items.map(rankOf)) };
     })
     .sort(
       (a, b) =>

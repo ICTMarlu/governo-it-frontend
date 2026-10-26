@@ -3,6 +3,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { CrudSection } from '../../shared/crud/crud-section/crud-section';
+import { ActivityTab } from './activity-tab';
 import { AuditTab } from './audit-tab';
 import { PermissionsTab } from './permissions-tab';
 import { ProfilesTab } from './profiles-tab';
@@ -15,7 +16,15 @@ import { USERS_HELP } from '../../shared/help/help-content';
  */
 @Component({
   selector: 'gov-users-page',
-  imports: [AuditTab, CrudSection, MatTabsModule, PageHeader, PermissionsTab, ProfilesTab],
+  imports: [
+    ActivityTab,
+    AuditTab,
+    CrudSection,
+    MatTabsModule,
+    PageHeader,
+    PermissionsTab,
+    ProfilesTab,
+  ],
   template: `
     <gov-page-header
       title="Utenti e permessi"
@@ -36,6 +45,9 @@ import { USERS_HELP } from '../../shared/help/help-content';
       </mat-tab>
       <mat-tab label="Storico">
         <ng-template matTabContent><gov-audit-tab /></ng-template>
+      </mat-tab>
+      <mat-tab label="Attività">
+        <ng-template matTabContent><gov-activity-tab /></ng-template>
       </mat-tab>
     </mat-tab-group>
   `,

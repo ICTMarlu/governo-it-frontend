@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
@@ -10,7 +11,16 @@ import { API_BASE_URL } from '../../core/config/api.config';
 import { errorMessage } from '../../shared/crud/crud-api.service';
 import { HelpButton } from '../../shared/help/help-button';
 import { HOME_HELP } from '../../shared/help/help-content';
-import { Home, SEVERITIES, greeting, headline, isoWeek } from './home.model';
+import {
+  Home,
+  ProjectsOverview,
+  SEVERITIES,
+  WorkGrouping,
+  greeting,
+  groupWork,
+  headline,
+  isoWeek,
+} from './home.model';
 
 /** Come funziona Governo IT: il giro dell'app in quattro passi (guida iniziale). */
 const STEPS = [
@@ -32,7 +42,14 @@ const SHORTCUTS = [
  */
 @Component({
   selector: 'gov-home-page',
-  imports: [DatePipe, HelpButton, MatIconModule, MatProgressSpinnerModule, RouterLink],
+  imports: [
+    DatePipe,
+    HelpButton,
+    MatButtonToggleModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    RouterLink,
+  ],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
 })
@@ -57,11 +74,66 @@ export class HomePage {
   protected readonly error = signal<string | null>(null);
   protected readonly headline = computed(() => headline(this.home()?.insights ?? []));
 
+  /** Progetti di tipo Project pianificati (settimana scorsa, in corso e tre successive). */
+  protected readonly overview = signal<ProjectsOverview | null>(null);
+  protected readonly overviewError = signal<string | null>(null);
+  protected readonly grouping = signal<WorkGrouping>('person');
+  /** Gruppi aperti: da aperti le giornate sono quelle delle righe, senza subtotale sul gruppo. */
+  protected readonly opened = signal<ReadonlySet<string>>(new Set());
+  protected readonly groups = computed(() => {
+    const data = this.overview();
+    return data ? groupWork(data.rows, data.weeks, this.grouping()) : [];
+  });
+  protected readonly weekTotals = computed(() => {
+    const data = this.overview();
+    return data
+      ? groupWork(data.rows, data.weeks, 'project').reduce(
+          (acc, group) =>
+            acc.map((value, index) => Math.round((value + group.perWeek[index]) * 100) / 100),
+          data.weeks.map(() => 0),
+        )
+      : [];
+  });
+  protected readonly currentWeek = computed(() => {
+    const monday = new Date(this.today);
+    monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+    const pad = (value: number): string => String(value).padStart(2, '0');
+    return `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`;
+  });
+
   constructor() {
     this.http.get<Home>(this.url).subscribe({
       next: (home) => this.home.set(home),
       error: (e) => this.error.set(errorMessage(e)),
     });
+    this.http.get<ProjectsOverview>(`${this.url}/projects`).subscribe({
+      next: (overview) => this.overview.set(overview),
+      error: (e) => this.overviewError.set(errorMessage(e)),
+    });
+  }
+
+  protected toggleGroup(key: string): void {
+    this.opened.update((current) => {
+      const next = new Set(current);
+      if (!next.delete(key)) {
+        next.add(key);
+      }
+      return next;
+    });
+  }
+
+  protected setGrouping(grouping: WorkGrouping): void {
+    this.grouping.set(grouping);
+    this.opened.set(new Set());
+  }
+
+  protected weekLabel(weekStart: string): string {
+    const date = new Date(`${weekStart}T00:00:00`);
+    return `W${isoWeek(date)} ${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  protected days(value: number): string {
+    return value === 0 ? '' : value.toLocaleString('it-IT', { maximumFractionDigits: 2 });
   }
 
   protected signed(value: number): string {

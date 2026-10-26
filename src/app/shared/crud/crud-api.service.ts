@@ -44,7 +44,9 @@ export class CrudApiService {
     return this.list(source.endpoint!).pipe(
       map((rows) =>
         rows
-          .filter((row) => !source.filter || source.filter(row))
+          .filter(
+            (row) => !source.filter || source.filter(row) || keepValues.includes(row[valueKey]),
+          )
           .filter(
             (row) =>
               source.activeOnly === false ||

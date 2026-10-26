@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 
 import { toIsoDate } from '../../../../shared/dates/italian-date-adapter';
-import { Task, TaskStatusOption, dueLabel } from '../../models/task.model';
+import { Task, TaskStatusOption, dueLabel, weekLabel } from '../../models/task.model';
 
 /**
  * Riga di un task nelle liste (pannello della casella, pagina Task, campanella): spunta "fatto",
@@ -23,6 +23,10 @@ export class TaskItem {
   readonly showProject = input(true);
   readonly showAssignee = input(true);
   readonly busy = input(false);
+
+  protected week(iso: string): string {
+    return weekLabel(iso);
+  }
 
   readonly opened = output<void>();
   readonly toggleDone = output<void>();

@@ -4,18 +4,42 @@
   [help]="help"
 />
 
-@if (seesAll()) {
+@if (seesAll() || seesTickets()) {
   <div class="toolbar">
-    <button mat-flat-button type="button" (click)="startMeeting()">
-      <mat-icon aria-hidden="true">play_arrow</mat-icon>
-      Inizia riunione
-    </button>
-    <button mat-stroked-button type="button" (click)="showAgenda()">
-      <mat-icon aria-hidden="true">list_alt</mat-icon>
-      Agenda
-    </button>
+    @if (seesAll()) {
+      <button mat-flat-button type="button" (click)="startMeeting()">
+        <mat-icon aria-hidden="true">play_arrow</mat-icon>
+        Inizia riunione
+      </button>
+      <button mat-stroked-button type="button" (click)="showAgenda()">
+        <mat-icon aria-hidden="true">list_alt</mat-icon>
+        Agenda
+      </button>
+    }
+    @if (seesTickets()) {
+      <!-- Ticket sulla scrivania della direzione: accanto ai pulsanti, per non occupare una riga -->
+      <button
+        type="button"
+        class="chip chip--warn"
+        title="Ticket nello stato Awaiting approval: aspetti l’approvazione o devi chiederla alla direzione"
+        (click)="openTickets('awaiting-approval')"
+      >
+        <strong class="chip__value">{{ awaitingApproval() }}</strong>
+        <span>Awaiting approval</span>
+      </button>
+      <button
+        type="button"
+        class="chip chip--good"
+        title="Ticket nello stato Authorize: già autorizzati"
+        (click)="openTickets('authorized')"
+      >
+        <strong class="chip__value">{{ authorized() }}</strong>
+        <span>Authorize</span>
+      </button>
+    }
   </div>
-} @else {
+}
+@if (!seesAll()) {
   <p class="scope-note" role="note">
     <mat-icon aria-hidden="true">visibility</mat-icon>
     @if (linked()) {
@@ -79,7 +103,29 @@
       Restano qui finché non li chiudi o annulli. Apri la matita per aggiungere owner, priorità,
       progetto, note o per posticiparli a una data.
     </p>
-    <gov-crud-section [config]="topics" [refresh]="topicsRefresh()" />
+    <mat-button-toggle-group
+      class="view-toggle"
+      aria-label="Vista dei punti"
+      hideSingleSelectionIndicator
+      [value]="view()"
+      (change)="setView($event.value)"
+    >
+      <mat-button-toggle value="list">
+        <mat-icon aria-hidden="true">table_rows</mat-icon> Elenco
+      </mat-button-toggle>
+      <mat-button-toggle value="board">
+        <mat-icon aria-hidden="true">view_kanban</mat-icon> Kanban
+      </mat-button-toggle>
+    </mat-button-toggle-group>
+    @if (view() === 'board') {
+      <gov-topics-board
+        [refresh]="topicsRefresh()"
+        [canWrite]="canWrite()"
+        [canConfigure]="seesAll()"
+      />
+    } @else {
+      <gov-crud-section [config]="topics" [refresh]="topicsRefresh()" />
+    }
   </mat-tab>
   <mat-tab label="Azioni">
     <p class="tab-intro">

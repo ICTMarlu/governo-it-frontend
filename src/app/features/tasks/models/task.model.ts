@@ -54,6 +54,8 @@ export interface CellTaskCount {
   readonly weekStart: string;
   readonly open: number;
   readonly total: number;
+  /** Testo delle note della casella (fumetto al passaggio del mouse). */
+  readonly notes: readonly string[];
 }
 
 export interface ReminderSummary {
@@ -153,6 +155,18 @@ export function dueLabel(task: Pick<Task, 'dueDate' | 'done' | 'overdue'>, today
 }
 
 /** "2026-10-21" → "21/10". */
+/** Settimana di riferimento di un task nato da una casella del piano: "W44 · 26/10". */
+export function weekLabel(weekStart: string): string {
+  const [year, month, day] = weekStart.split('-').map(Number);
+  // Numero della settimana ISO 8601 (si calcola sul giovedì della settimana)
+  const date = new Date(Date.UTC(year, month - 1, day));
+  const weekday = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - weekday);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((date.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
+  return `W${week} · ${formatShortDate(weekStart)}`;
+}
+
 export function formatShortDate(iso: string): string {
   const [, month, day] = iso.split('-');
   return `${day}/${month}`;

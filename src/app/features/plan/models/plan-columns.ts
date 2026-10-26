@@ -148,5 +148,11 @@ export function compareByLevels(
       return level.direction === 'asc' ? result : -result;
     }
   }
-  return 0;
+  // Dopo l'ordine scelto: ranking del progetto (il più piccolo è il più importante), poi alfabetico
+  const rankA = a.row.ranking;
+  const rankB = b.row.ranking;
+  if (rankA !== rankB) {
+    return rankA === null ? 1 : rankB === null ? -1 : rankA - rankB;
+  }
+  return a.row.projectName.localeCompare(b.row.projectName, 'it', { sensitivity: 'base' });
 }

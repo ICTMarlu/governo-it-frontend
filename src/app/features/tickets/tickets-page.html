@@ -24,7 +24,7 @@
       <span>
         <strong>Jira non collegato.</strong> Scrivi indirizzo, utente e token API di Jira in
         <code>config/local.yml</code> (vedi <code>config/local.example.yml</code>) e riavvia il
-        backend: i ticket arrivano da soli ogni 15 minuti.
+        backend: i ticket arrivano da soli ogni 5 minuti.
       </span>
     } @else {
       <mat-icon
@@ -171,7 +171,16 @@
         </button>
       </span>
     </li>
-    <li *govKpi="'ops.overdue'" class="kpi" [class.kpi--alert]="data.kpis.overdue > 0">
+    <li
+      *govKpi="'ops.overdue'"
+      class="kpi kpi--link"
+      [class.kpi--alert]="data.kpis.overdue > 0"
+      role="link"
+      tabindex="0"
+      title="Vedi i ticket con la scadenza passata"
+      (click)="openPriority('overdue')"
+      (keydown.enter)="openPriority('overdue')"
+    >
       <span class="kpi__value">{{ data.kpis.overdue }}</span>
       <span class="kpi__label">con la scadenza passata</span>
     </li>
@@ -187,7 +196,15 @@
         {{ confirmIdleCount() }} in conferma/UAT da oltre {{ confirmIdleDays }} gg
       </button>
     </li>
-    <li *govKpi="'ops.stale'" class="kpi">
+    <li
+      *govKpi="'ops.stale'"
+      class="kpi kpi--link"
+      role="link"
+      tabindex="0"
+      title="Vedi i ticket fermi"
+      (click)="openStale(data.kpis.staleDays)"
+      (keydown.enter)="openStale(data.kpis.staleDays)"
+    >
       <span class="kpi__value">{{ data.kpis.stale }}</span>
       <span class="kpi__label"
         >fermi: nessun aggiornamento da oltre {{ data.kpis.staleDays }} giorni</span
@@ -336,11 +353,11 @@
             </th>
             <th
               scope="col"
-              title="Entrati / chiusi nelle ultime 4 settimane complete (da lunedì a domenica)"
+              title="Entrati / chiusi negli ultimi 30 giorni, oggi compreso (come nella pagina Persone)"
             >
-              Ultime 4 sett.<br />entrati / chiusi
+              Ultimi 30 gg<br />entrati / chiusi
             </th>
-            <th scope="col" title="Media dei chiusi nelle ultime 4 settimane complete">
+            <th scope="col" title="Chiusi negli ultimi 30 giorni ÷ 4,3 settimane">
               Chiusi<br />a settimana
             </th>
             <th scope="col" title="Giornate della settimana corrente sulle righe AMS del piano">
@@ -363,7 +380,7 @@
                 @if (person.backlogGrowing) {
                   <span
                     class="badge"
-                    matTooltip="Da 3 settimane entrano più ticket di quanti ne escono"
+                    matTooltip="Negli ultimi 30 giorni entrano almeno mezzo ticket a settimana in più di quanti ne escono e i lavorabili sono aumentati"
                   >
                     <mat-icon aria-hidden="true">trending_up</mat-icon> in crescita
                   </span>

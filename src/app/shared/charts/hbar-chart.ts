@@ -44,16 +44,14 @@ export interface HBarItem {
             }
             <span
               class="bars__track"
-              [class.bars__track--link]="drillable()"
-              [attr.aria-hidden]="drillable() ? null : true"
-              [attr.role]="drillable() ? 'button' : null"
-              [attr.tabindex]="drillable() ? 0 : null"
-              [attr.aria-label]="
-                drillable() ? 'Vedi i ' + item.value + ' ticket: ' + item.label : null
-              "
-              [title]="drillable() ? 'Clic per vedere i ' + item.value + ' ticket' : ''"
-              (click)="drillable() && drill.emit(item.label)"
-              (keydown.enter)="drillable() && drill.emit(item.label)"
+              [class.bars__track--link]="clickable()"
+              [attr.aria-hidden]="clickable() ? null : true"
+              [attr.role]="clickable() ? 'button' : null"
+              [attr.tabindex]="clickable() ? 0 : null"
+              [attr.aria-label]="clickable() ? barHint(item) : null"
+              [title]="clickable() ? barHint(item) : ''"
+              (click)="clickable() && act(item.label)"
+              (keydown.enter)="clickable() && act(item.label)"
             >
               <span
                 class="bars__bar"
@@ -62,12 +60,12 @@ export interface HBarItem {
                 [style.width.%]="(item.value / max()) * 100"
               ></span>
             </span>
-            @if (drillable()) {
+            @if (clickable()) {
               <button
                 type="button"
                 class="bars__value bars__value--link"
-                [title]="'Vedi i ' + item.value + ' ticket'"
-                (click)="drill.emit(item.label)"
+                [title]="barHint(item)"
+                (click)="act(item.label)"
               >
                 {{ item.value }}
               </button>
@@ -203,6 +201,27 @@ export class HBarChart {
 
   /** Barre cliccabili (anche sul valore) per arrivare all'elenco dei ticket. */
   readonly drillable = input(false);
+  /** Con {@code selectable}: anche il clic sulla barra o sul valore filtra (come l'etichetta). */
+  readonly pickOnBar = input(false);
+
+  protected readonly clickable = computed(
+    () => this.drillable() || (this.selectable() && this.pickOnBar()),
+  );
+
+  protected barHint(item: HBarItem): string {
+    return this.drillable()
+      ? `Vedi i ${item.value} ticket: ${item.label}`
+      : `Filtra gli altri grafici su: ${item.label}`;
+  }
+
+  /** Clic su barra o valore: apre l'elenco (drill) oppure filtra (pick). */
+  protected act(label: string): void {
+    if (this.drillable()) {
+      this.drill.emit(label);
+    } else {
+      this.pick.emit(label);
+    }
+  }
 
   readonly pick = output<string>();
   readonly drill = output<string>();

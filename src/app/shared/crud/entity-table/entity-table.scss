@@ -189,6 +189,15 @@
     white-space: nowrap;
   }
 
+  // Etichetta e valori centrati (config.centerValues), trattino compreso
+  .col--center {
+    text-align: center;
+  }
+
+  th.col--center .sort-button {
+    justify-content: center;
+  }
+
   // Testi lunghi (es. nome del progetto): più spazio, così vanno meno a capo
   .col--wide {
     min-width: 18rem;

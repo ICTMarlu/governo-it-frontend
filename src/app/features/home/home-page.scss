@@ -64,11 +64,18 @@
   padding: 0;
   list-style: none;
 
+  // Ogni riquadro riempie la sua cella senza uscirne (prima 100% di un'altezza non definita lo allungava)
+  > li {
+    display: flex;
+    min-width: 0;
+  }
+
   &__card {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 0.25rem;
-    height: 100%;
+    min-width: 0;
     padding: 1rem;
     border-radius: 0.75rem;
     background: var(--mat-sys-surface-container);
@@ -220,5 +227,94 @@
 @media (min-width: 1024px) {
   .columns {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+// Progetti in lavorazione: tabella per progetto, persona o area, con i gruppi chiusi o aperti
+.work {
+  margin-block-start: 1.25rem;
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__note {
+    margin: 0.25rem 0 0.75rem;
+  }
+
+  &__scroll {
+    overflow-x: auto;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 0.375rem 0.625rem;
+      border-bottom: 1px solid var(--mat-sys-outline-variant);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    thead th {
+      color: var(--mat-sys-on-surface-variant);
+      font: var(--mat-sys-label-large);
+    }
+  }
+
+  th.work__name,
+  td.work__name {
+    min-width: 16rem;
+    text-align: start;
+    white-space: normal;
+  }
+
+  &__name--child {
+    padding-inline-start: 2.5rem;
+    font-weight: 400;
+  }
+
+  &__group > th {
+    background: var(--mat-sys-surface-container-low);
+  }
+
+  &__group > td {
+    background: var(--mat-sys-surface-container-low);
+  }
+
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    margin-inline-end: 0.25rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    vertical-align: middle;
+    cursor: pointer;
+  }
+
+  &__current {
+    background: color-mix(in srgb, var(--mat-sys-primary) 8%, transparent);
+  }
+
+  // Subtotale: in corsivo e con il Σ, così non si confonde con le giornate delle righe
+  &__sum {
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 0.8125rem;
+    font-style: italic;
+  }
+
+  &__foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    margin: 0.75rem 0 0;
   }
 }

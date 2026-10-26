@@ -144,6 +144,13 @@ export interface EntityConfig {
   readonly rowLink?: (row: EntityRow) => readonly (string | number)[];
   /** Clic sul titolo della riga = apre la scheda di modifica (per chi può modificare). */
   readonly titleOpensForm?: boolean;
+  /**
+   * Riga chiusa (es. progetto in uno stato finale): abilita il filtro rapido Aperti / Chiusi / Tutti
+   * nella barra, come le categorie di stato di Jira.
+   */
+  readonly closedWhen?: (row: EntityRow) => boolean;
+  /** Etichette e valori centrati in tutte le colonne tranne il titolo (anche il trattino dei vuoti). */
+  readonly centerValues?: boolean;
   /** Ordinamento iniziale dell'elenco. */
   readonly sort?: (a: EntityRow, b: EntityRow) => number;
   /** Guida della pagina (pulsante Guida). */

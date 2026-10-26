@@ -3,6 +3,7 @@ import { Component, computed, effect, inject, input, signal, untracked } from '@
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,6 +43,7 @@ type LoadState = 'loading' | 'ready' | 'error';
     EntityTable,
     SavedViews,
     MatButtonModule,
+    MatButtonToggleModule,
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
@@ -75,6 +77,8 @@ export class CrudSection {
   protected readonly rows = signal<EntityRow[]>([]);
   protected readonly search = signal('');
   protected readonly showInactive = signal(false);
+  /** Filtro rapido sugli stati: aperti, chiusi o tutti (se la configurazione sa dire cosa è chiuso). */
+  protected readonly openState = signal<'all' | 'open' | 'closed'>('all');
   /** Filtri rapidi a scelta multipla: valori in alternativa nello stesso filtro, filtri diversi in AND. */
   protected readonly filters = signal<Record<string, readonly string[]>>({});
   /** Colonne scelte dall'utente (null = predefinite), salvate sul server per utente. */
@@ -95,6 +99,7 @@ export class CrudSection {
       Object.entries(this.filters()).filter(([, values]) => values.length > 0),
     ),
     showInactive: this.showInactive(),
+    openState: this.openState(),
     columns: this.layout(),
     sort: this.sort(),
   }));
@@ -102,9 +107,19 @@ export class CrudSection {
   /** Pagina delle viste salvate: una per elenco, come la chiave delle colonne. */
   protected readonly viewPage = computed(() => `list.${this.layoutKey().slice('columns.'.length)}`);
 
-  protected readonly hasActiveFilters = computed(() =>
-    Object.values(this.filters()).some((values) => values.length > 0),
+  protected readonly hasActiveFilters = computed(
+    () =>
+      Object.values(this.filters()).some((values) => values.length > 0) ||
+      this.openState() !== 'all',
   );
+
+  /** Quanti aperti e chiusi ci sono (per i numeri sul filtro), con la ricerca e i filtri esclusi. */
+  protected readonly openCounts = computed(() => {
+    const closedWhen = this.config().closedWhen;
+    const rows = this.rows().filter((row) => row['active'] !== false || this.showInactive());
+    const closed = closedWhen ? rows.filter((row) => closedWhen(row)).length : 0;
+    return { open: rows.length - closed, closed, all: rows.length };
+  });
 
   protected readonly canWrite = computed(() => {
     if (this.config().readOnly) {
@@ -146,9 +161,12 @@ export class CrudSection {
     const config = this.config();
     const text = this.search().trim().toLowerCase();
     const activeFilters = Object.entries(this.filters()).filter(([, values]) => values.length > 0);
+    const closedWhen = config.closedWhen;
+    const openState = closedWhen ? this.openState() : 'all';
     const rows = this.rows().filter(
       (row) =>
         (this.showInactive() || row['active'] !== false) &&
+        (openState === 'all' || closedWhen!(row) === (openState === 'closed')) &&
         (!text ||
           config.searchKeys.some((key) =>
             valuesOf(readPath(row, key)).some((value) => value.toLowerCase().includes(text)),
@@ -204,6 +222,7 @@ export class CrudSection {
   }
 
   protected clearFilters(): void {
+    this.openState.set('all');
     this.filters.set({});
     this.search.set('');
   }
@@ -224,12 +243,14 @@ export class CrudSection {
       search: string;
       filters: Record<string, readonly string[]>;
       showInactive: boolean;
+      openState: 'all' | 'open' | 'closed';
       columns: ColumnLayout | null;
       sort: SortState | null;
     }>;
     this.search.set(view.search ?? '');
     this.filters.set(view.filters ?? {});
     this.showInactive.set(view.showInactive ?? false);
+    this.openState.set(view.openState ?? 'all');
     this.sort.set(view.sort ?? null);
     const columns = view.columns ?? null;
     this.layout.set(columns);
@@ -369,7 +390,7 @@ export class CrudSection {
   protected confirmDelete(row: EntityRow): void {
     const data: ConfirmDialogData = {
       title: `Eliminare ${this.config().singular.toLowerCase()}?`,
-      message: "L'operazione non si può annullare.",
+      message: `Stai per eliminare definitivamente "${this.rowName(row)}". L'operazione non si può annullare. Sei sicuro?`,
       confirmLabel: 'Elimina',
     };
     this.dialog
@@ -386,6 +407,13 @@ export class CrudSection {
         },
         error: (error: unknown) => this.snackBar.open(errorMessage(error), 'Chiudi'),
       });
+  }
+
+  private rowName(row: EntityRow): string {
+    const primary =
+      this.config().columns.find((column) => column.primary) ?? this.config().columns[0];
+    const value = primary ? row[primary.key] : undefined;
+    return value == null || value === '' ? `n. ${row.id}` : String(value);
   }
 
   /** Chiave della preferenza: una per elenco (gli id nel percorso non contano). */

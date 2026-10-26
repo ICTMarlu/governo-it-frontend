@@ -24,11 +24,6 @@
   flex: 1;
 }
 
-.quick {
-  display: block;
-  max-width: 48rem;
-}
-
 .summary {
   margin: 0.75rem 0;
   color: var(--mat-sys-on-surface-variant);
@@ -132,4 +127,203 @@
   align-items: center;
   margin: 0 0 0.75rem;
   color: var(--mat-sys-on-surface-variant);
+}
+
+// Inserimento veloce, filtri e tabella come nella pagina Direzione
+// Da 1100px in su l'inserimento sta su una sola riga (il titolo prende lo spazio che resta);
+// sotto va a capo: titolo a tutta larghezza, il resto sotto.
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-block-end: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 0.75rem;
+  background: var(--mat-sys-surface-container-low);
+
+  &__field {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  &__types {
+    flex: 0 0 auto;
+  }
+
+  &__assignee {
+    flex: 1 1 12rem;
+    min-width: 0;
+    max-width: 18rem;
+  }
+
+  &__due {
+    flex: 0 1 11rem;
+    min-width: 9rem;
+  }
+
+  button[type='submit'] {
+    flex: 0 0 auto;
+  }
+}
+
+@media (min-width: 1100px) {
+  .quick {
+    flex-wrap: nowrap;
+
+    &__field {
+      flex: 1 1 14rem;
+    }
+
+    &__assignee {
+      flex: 0 1 14rem;
+    }
+  }
+}
+
+.view-toggle {
+  margin-bottom: 0.75rem;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+
+  &__field {
+    width: 11rem;
+  }
+}
+
+// Telefono: i filtri a due per riga
+@media (max-width: 599.98px) {
+  .filters__field {
+    flex: 1 1 calc(50% - 0.5rem);
+    width: auto;
+    min-width: 8rem;
+  }
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 0.5rem 0.625rem;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    text-align: start;
+    vertical-align: middle;
+  }
+
+  thead th {
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-label-large);
+    white-space: nowrap;
+  }
+
+  &__check {
+    width: 2.5rem;
+    white-space: nowrap;
+  }
+
+  // Etichetta e valori centrati (anche il trattino dei valori vuoti); solo il titolo resta a sinistra
+  th:not(:nth-child(3)),
+  td:not(:nth-child(3)) {
+    text-align: center;
+  }
+
+  th:not(:nth-child(3)) .sort {
+    justify-content: center;
+  }
+
+  &__done td {
+    color: var(--mat-sys-on-surface-variant);
+
+    .link {
+      text-decoration: line-through;
+    }
+  }
+
+  .note,
+  .inline {
+    width: 1rem;
+    height: 1rem;
+    font-size: 1rem;
+    vertical-align: middle;
+  }
+}
+
+.sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  mat-icon {
+    width: 1rem;
+    height: 1rem;
+    font-size: 1rem;
+    opacity: 0.6;
+  }
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--mat-sys-primary);
+  font: var(--mat-sys-label-large);
+  text-align: start;
+  cursor: pointer;
+}
+
+a.link {
+  text-decoration: none;
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.status {
+  display: inline-block;
+  padding: 0 0.5rem;
+  border: 1px solid var(--status-color, var(--mat-sys-outline));
+  border-radius: 1rem;
+  font: var(--mat-sys-label-small);
+  white-space: nowrap;
+}
+
+.bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-block-end: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--mat-sys-secondary-container);
+
+  &__count {
+    margin-inline-end: auto;
+    font: var(--mat-sys-label-large);
+  }
+
+  &__delete {
+    color: var(--mat-sys-error);
+  }
 }

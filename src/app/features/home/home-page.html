@@ -189,6 +189,152 @@
     </section>
   </div>
 
+  <!-- Progetti di tipo Project in lavorazione: giornate pianificate dalla settimana scorsa alla terza successiva -->
+  <section class="card work" aria-labelledby="work-title">
+    <header class="work__head">
+      <h2 id="work-title" class="card__title">
+        <mat-icon aria-hidden="true">work</mat-icon> Progetti in lavorazione
+      </h2>
+      <mat-button-toggle-group
+        aria-label="Raggruppa per"
+        hideSingleSelectionIndicator
+        [value]="grouping()"
+        (change)="setGrouping($event.value)"
+      >
+        <mat-button-toggle value="project">Per progetto</mat-button-toggle>
+        <mat-button-toggle value="person">Per persona</mat-button-toggle>
+        <mat-button-toggle value="area">Per area</mat-button-toggle>
+      </mat-button-toggle-group>
+    </header>
+    <p class="muted work__note">
+      Solo progetti di tipo Project (non AMS, Continuous o Admin) con giornate nel piano della
+      settimana scorsa, di quella in corso e delle tre successive. Area = sistema del progetto. Apri
+      un gruppo per il dettaglio.
+    </p>
+    @if (overviewError(); as message) {
+      <p class="state" role="alert">Non riesco a leggere i progetti: {{ message }}</p>
+    } @else if (!overview()) {
+      <p class="state" role="status">
+        <mat-progress-spinner diameter="20" mode="indeterminate" aria-hidden="true" /> Carico…
+      </p>
+    } @else if (groups().length === 0) {
+      <p class="muted">Nessun progetto pianificato in queste settimane.</p>
+    } @else {
+      @let weeks = overview()!.weeks;
+      <div class="work__scroll">
+        <table class="work__table">
+          <thead>
+            <tr>
+              <th scope="col" class="work__name">
+                {{
+                  grouping() === 'project'
+                    ? 'Progetto'
+                    : grouping() === 'person'
+                      ? 'Persona'
+                      : 'Area (sistema)'
+                }}
+              </th>
+              @for (week of weeks; track week) {
+                <th scope="col" [class.work__current]="week === currentWeek()">
+                  {{ weekLabel(week) }}
+                  @if (week === currentWeek()) {
+                    <span class="muted">· ora</span>
+                  }
+                </th>
+              }
+              <th scope="col">Totale</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (group of groups(); track group.key) {
+              @let open = opened().has(group.key);
+              <tr class="work__group">
+                <th scope="row" class="work__name">
+                  <button
+                    type="button"
+                    class="work__toggle"
+                    [attr.aria-expanded]="open"
+                    [attr.aria-label]="(open ? 'Chiudi ' : 'Apri ') + group.label"
+                    (click)="toggleGroup(group.key)"
+                  >
+                    <mat-icon aria-hidden="true">{{
+                      open ? 'expand_more' : 'chevron_right'
+                    }}</mat-icon>
+                  </button>
+                  @if (group.link) {
+                    <a [routerLink]="group.link">{{ group.label }}</a>
+                  } @else {
+                    <strong>{{ group.label }}</strong>
+                  }
+                  @if (group.hint) {
+                    <span class="muted"> · {{ group.hint }}</span>
+                  }
+                  <span class="muted">
+                    · {{ group.children.length }}
+                    {{
+                      group.children.length === 1
+                        ? grouping() === 'project'
+                          ? 'persona'
+                          : 'progetto'
+                        : grouping() === 'project'
+                          ? 'persone'
+                          : 'progetti'
+                    }}</span
+                  >
+                </th>
+                @for (value of group.perWeek; track $index) {
+                  <td [class.work__current]="weeks[$index] === currentWeek()">
+                    @if (!open && value > 0) {
+                      <span
+                        class="work__sum"
+                        title="Subtotale del gruppo: somma delle righe nascoste"
+                        >Σ {{ days(value) }}</span
+                      >
+                    }
+                  </td>
+                }
+                <td>
+                  @if (!open) {
+                    <span class="work__sum" title="Subtotale del gruppo: somma delle righe nascoste"
+                      >Σ {{ days(group.total) }}</span
+                    >
+                  }
+                </td>
+              </tr>
+              @if (open) {
+                @for (row of group.children; track row.key) {
+                  <tr class="work__row">
+                    <th scope="row" class="work__name work__name--child">
+                      @if (row.link) {
+                        <a [routerLink]="row.link">{{ row.label }}</a>
+                      } @else {
+                        {{ row.label }}
+                      }
+                    </th>
+                    @for (value of row.perWeek; track $index) {
+                      <td [class.work__current]="weeks[$index] === currentWeek()">
+                        {{ days(value) }}
+                      </td>
+                    }
+                    <td>{{ days(row.total) }}</td>
+                  </tr>
+                }
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="muted work__foot">
+        Giornate pianificate in totale, per settimana (tutti i progetti Project):
+        @for (value of weekTotals(); track $index) {
+          <span class="work__chip"
+            >{{ weekLabel(weeks[$index]) }}: <strong>{{ days(value) || '0' }}</strong></span
+          >
+        }
+      </p>
+    }
+  </section>
+
   <p class="note">
     {{
       team

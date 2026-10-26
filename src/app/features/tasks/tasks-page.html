@@ -11,19 +11,79 @@
   </p>
 }
 
-<div class="toolbar">
-  <mat-select
-    class="toolbar__person"
-    aria-label="Persona"
-    [value]="personId()"
-    (valueChange)="personId.set($event)"
+<form class="quick" (ngSubmit)="quickAdd()" aria-label="Aggiungi un task">
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="quick__field">
+    <mat-label>{{ quickKind() === 'TASK' ? 'Nuovo task' : 'Nuova nota' }}</mat-label>
+    <input
+      matInput
+      name="quickTitle"
+      maxlength="200"
+      autocomplete="off"
+      placeholder="Scrivi e premi Invio"
+      [ngModel]="quickTitle()"
+      (ngModelChange)="quickTitle.set($event)"
+    />
+    <mat-icon matIconPrefix aria-hidden="true">add</mat-icon>
+  </mat-form-field>
+  <mat-button-toggle-group
+    class="quick__types"
+    name="quickKind"
+    aria-label="Tipo del nuovo elemento"
+    hideSingleSelectionIndicator
+    [ngModel]="quickKind()"
+    (ngModelChange)="quickKind.set($event)"
   >
-    <mat-option [value]="ALL">Tutte le persone</mat-option>
-    @for (person of people(); track person.id) {
-      <mat-option [value]="person.id">{{ person.name }}</mat-option>
-    }
-  </mat-select>
+    <mat-button-toggle value="TASK">Task</mat-button-toggle>
+    <mat-button-toggle value="NOTE">Nota</mat-button-toggle>
+  </mat-button-toggle-group>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="quick__assignee">
+    <mat-label>Assegnato a</mat-label>
+    <mat-select
+      name="quickAssignee"
+      [ngModel]="quickAssignee()"
+      (ngModelChange)="quickAssignee.set($event)"
+    >
+      <mat-option [value]="null">Nessuno</mat-option>
+      @for (person of people(); track person.id) {
+        <mat-option [value]="person.id">{{ person.name }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="quick__due">
+    <mat-label>Scadenza</mat-label>
+    <input
+      matInput
+      name="quickDue"
+      placeholder="gg/mm/aaaa"
+      autocomplete="off"
+      [matDatepicker]="duePicker"
+      [ngModel]="quickDue()"
+      (ngModelChange)="quickDue.set($event)"
+    />
+    <mat-datepicker-toggle matIconSuffix [for]="duePicker" aria-label="Apri il calendario" />
+    <mat-datepicker #duePicker />
+  </mat-form-field>
+  <button mat-stroked-button type="submit" [disabled]="adding() || !quickTitle().trim()">
+    Aggiungi
+  </button>
+</form>
 
+<mat-button-toggle-group
+  class="view-toggle"
+  aria-label="Vista"
+  hideSingleSelectionIndicator
+  [value]="view()"
+  (change)="setView($event.value)"
+>
+  <mat-button-toggle value="list">
+    <mat-icon aria-hidden="true">table_rows</mat-icon> Elenco
+  </mat-button-toggle>
+  <mat-button-toggle value="board">
+    <mat-icon aria-hidden="true">view_kanban</mat-icon> Kanban
+  </mat-button-toggle>
+</mat-button-toggle-group>
+
+<div class="filters" role="search" aria-label="Filtri dei task">
   <label class="inline-search">
     <mat-icon aria-hidden="true">search</mat-icon>
     <input
@@ -35,42 +95,55 @@
       (input)="search.set($any($event.target).value)"
     />
   </label>
-
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filters__field">
+    <mat-label>Persona</mat-label>
+    <mat-select [value]="personId()" (valueChange)="personId.set($event)">
+      <mat-option [value]="ALL">Tutte</mat-option>
+      @for (person of people(); track person.id) {
+        <mat-option [value]="person.id">{{ person.name }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filters__field">
+    <mat-label>Stato</mat-label>
+    <mat-select [value]="statusFilter()" (valueChange)="statusFilter.set($event)">
+      <mat-option [value]="null">Tutti</mat-option>
+      @for (status of statuses(); track status.id) {
+        @if (status.active) {
+          <mat-option [value]="status.id">{{ status.label }}</mat-option>
+        }
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filters__field">
+    <mat-label>Priorità</mat-label>
+    <mat-select [value]="priorityFilter()" (valueChange)="priorityFilter.set($event)">
+      <mat-option [value]="null">Tutte</mat-option>
+      @for (level of priorityOptions(); track level) {
+        <mat-option [value]="level">P{{ level }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filters__field">
+    <mat-label>Progetto</mat-label>
+    <mat-select [value]="projectFilter()" (valueChange)="projectFilter.set($event)">
+      <mat-option [value]="null">Tutti</mat-option>
+      @for (project of projectOptions(); track project.id) {
+        <mat-option [value]="project.id">{{ project.label }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
   @if (view() === 'list') {
     <mat-slide-toggle [checked]="includeDone()" (change)="includeDone.set($event.checked)">
       Mostra chiusi
     </mat-slide-toggle>
   }
-
   <span class="spacer"></span>
-
   <gov-saved-views page="tasks" [state]="viewState()" (apply)="applyView($event)" />
-
-  <mat-button-toggle-group
-    aria-label="Vista"
-    hideSingleSelectionIndicator
-    [value]="view()"
-    (change)="setView($event.value)"
-  >
-    <mat-button-toggle value="list">
-      <mat-icon aria-hidden="true">view_list</mat-icon> Elenco
-    </mat-button-toggle>
-    <mat-button-toggle value="board">
-      <mat-icon aria-hidden="true">view_kanban</mat-icon> Kanban
-    </mat-button-toggle>
-  </mat-button-toggle-group>
 </div>
 
-<gov-task-quick-add
-  class="quick"
-  [defaults]="quickDefaults()"
-  [placeholder]="
-    personName() ? 'Nuovo task per ' + personName() + '… (Invio)' : 'Nuovo task… (Invio)'
-  "
-  (created)="onCreated($event)"
-/>
-
 <p class="summary" role="status">
+  {{ visible().length }} {{ visible().length === 1 ? 'elemento' : 'elementi' }} ·
   {{ openCount() }} aperti
   @if (overdueCount() > 0) {
     · <strong class="late">{{ overdueCount() }} in ritardo</strong>
@@ -88,37 +161,172 @@
     <button mat-button type="button" (click)="reload()">Riprova</button>
   </p>
 } @else if (view() === 'list') {
-  @if (groups().length === 0) {
+  @if (rows().length === 0) {
     <p class="state">
       Nessun task. Scrivine uno qui sopra o aggiungilo da una casella del piano settimanale (Alt+T).
     </p>
-  }
-  @for (group of groups(); track group.key) {
-    <section class="group" [attr.aria-labelledby]="'group-' + group.key">
-      <h2 class="group__title" [id]="'group-' + group.key">
-        @if (group.key !== 'none') {
-          <a [routerLink]="['/projects', group.key]">{{ group.label }}</a>
-        } @else {
-          {{ group.label }}
-        }
-        <span class="group__count">{{ group.open }} aperti</span>
-      </h2>
-      <ul class="list">
-        @for (task of group.tasks; track task.id) {
-          <li>
-            <gov-task-item
-              [task]="task"
-              [statuses]="statuses()"
-              [showProject]="false"
-              [showAssignee]="personId() === ALL || task.assigneeId !== personId()"
-              (opened)="open(task)"
-              (toggleDone)="toggleDone(task)"
-              (statusChange)="changeStatus(task, $event)"
-            />
-          </li>
-        }
-      </ul>
-    </section>
+  } @else {
+    @if (selectedTasks().length > 0) {
+      <div class="bulk" role="region" aria-label="Azioni sulla selezione">
+        <span class="bulk__count" aria-live="polite">
+          {{ selectedTasks().length }}
+          {{ selectedTasks().length === 1 ? 'selezionato' : 'selezionati' }}
+        </span>
+        <button
+          mat-stroked-button
+          type="button"
+          class="bulk__delete"
+          [disabled]="deleting()"
+          (click)="confirmDelete(selectedTasks())"
+        >
+          <mat-icon aria-hidden="true">delete</mat-icon>
+          Elimina
+        </button>
+        <button mat-button type="button" (click)="clearSelection()">Deseleziona</button>
+      </div>
+    }
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col" class="table__check">
+              <input
+                type="checkbox"
+                aria-label="Seleziona tutti"
+                [checked]="allSelected()"
+                [disabled]="selectable().length === 0"
+                (change)="toggleAll()"
+              />
+            </th>
+            <th scope="col" class="table__check">
+              <span title="Spunta per segnare il task come fatto">Fatto</span>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort" (click)="sortBy('title')">
+                Titolo <mat-icon aria-hidden="true">{{ sortMark('title') }}</mat-icon>
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort" (click)="sortBy('project')">
+                Progetto <mat-icon aria-hidden="true">{{ sortMark('project') }}</mat-icon>
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort" (click)="sortBy('week')">
+                Settimana <mat-icon aria-hidden="true">{{ sortMark('week') }}</mat-icon>
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort" (click)="sortBy('assignee')">
+                Assegnato a <mat-icon aria-hidden="true">{{ sortMark('assignee') }}</mat-icon>
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort" (click)="sortBy('status')">
+                Stato <mat-icon aria-hidden="true">{{ sortMark('status') }}</mat-icon>
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort" (click)="sortBy('priority')">
+                Priorità <mat-icon aria-hidden="true">{{ sortMark('priority') }}</mat-icon>
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort" (click)="sortBy('due')">
+                Scadenza <mat-icon aria-hidden="true">{{ sortMark('due') }}</mat-icon>
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort" (click)="sortBy('created')">
+                Creato il <mat-icon aria-hidden="true">{{ sortMark('created') }}</mat-icon>
+              </button>
+            </th>
+            <th scope="col" class="table__check"><span class="visually-hidden">Azioni</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (task of rows(); track task.id) {
+            <tr [class.table__done]="task.done">
+              <td class="table__check">
+                <input
+                  type="checkbox"
+                  [checked]="selection().has(task.id)"
+                  [disabled]="!task.canEdit"
+                  [attr.aria-label]="'Seleziona: ' + task.title"
+                  (change)="toggleSelect(task)"
+                />
+              </td>
+              <td class="table__check">
+                @if (task.kind === 'TASK') {
+                  <input
+                    type="checkbox"
+                    [checked]="task.done"
+                    [disabled]="!task.canEdit"
+                    [attr.aria-label]="(task.done ? 'Riapri: ' : 'Segna come fatto: ') + task.title"
+                    (change)="toggleDone(task)"
+                  />
+                } @else {
+                  <mat-icon class="note" aria-label="Nota" title="Nota">sticky_note_2</mat-icon>
+                }
+              </td>
+              <td>
+                <button type="button" class="link" (click)="open(task)">{{ task.title }}</button>
+                @if (task.commentCount > 0) {
+                  <span class="muted" title="Commenti">
+                    · <mat-icon class="inline">chat_bubble_outline</mat-icon>{{ task.commentCount }}
+                  </span>
+                }
+              </td>
+              <td>
+                @if (task.projectId !== null) {
+                  <a
+                    class="link"
+                    [routerLink]="['/projects', task.projectId]"
+                    [title]="task.projectName ?? ''"
+                    >{{ task.projectCode ?? task.projectName }}</a
+                  >
+                } @else {
+                  —
+                }
+              </td>
+              <td [title]="task.weekStart ? 'Settimana in cui è stato segnato nel piano' : ''">
+                {{ task.weekStart ? week(task.weekStart) : '—' }}
+              </td>
+              <td>{{ task.assigneeName ?? '—' }}</td>
+              <td>
+                @if (task.kind === 'TASK') {
+                  <span class="status" [style.--status-color]="task.statusColor">{{
+                    task.statusLabel
+                  }}</span>
+                } @else {
+                  —
+                }
+              </td>
+              <td>{{ task.priorityLevel === null ? '—' : 'P' + task.priorityLevel }}</td>
+              <td [class.late]="task.overdue">
+                {{ task.dueDate ? shortDate(task.dueDate) : '—'
+                }}{{ task.overdue ? ' · scaduto' : '' }}
+              </td>
+              <td>{{ shortDate(task.createdAt.substring(0, 10)) }}</td>
+              <td class="table__check">
+                @if (task.canEdit) {
+                  <button
+                    mat-icon-button
+                    type="button"
+                    [attr.aria-label]="'Elimina: ' + task.title"
+                    title="Elimina"
+                    [disabled]="deleting()"
+                    (click)="confirmDelete([task])"
+                  >
+                    <mat-icon aria-hidden="true">delete</mat-icon>
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 } @else {
   <p class="hint">

@@ -1,6 +1,7 @@
 import { Component, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -18,32 +19,44 @@ import { TasksService } from '../../services/tasks.service';
  */
 @Component({
   selector: 'gov-task-quick-add',
-  imports: [FormsModule, MatButtonModule, MatDatepickerModule, MatIconModule, MatTooltipModule],
+  imports: [
+    FormsModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatDatepickerModule,
+    MatIconModule,
+    MatTooltipModule,
+  ],
   template: `
     <form class="quick" (ngSubmit)="submit()">
-      <button
-        mat-icon-button
-        type="button"
+      <mat-button-toggle-group
         class="quick__kind"
-        [matTooltip]="
-          kind() === 'TASK' ? 'Task · clic per scrivere una nota' : 'Nota · clic per un task'
-        "
-        [attr.aria-label]="
-          kind() === 'TASK' ? 'Tipo: task. Passa a nota' : 'Tipo: nota. Passa a task'
-        "
-        (click)="kind.set(kind() === 'TASK' ? 'NOTE' : 'TASK')"
+        name="kind"
+        aria-label="Cosa vuoi aggiungere"
+        hideSingleSelectionIndicator
+        [value]="kind()"
+        (change)="kind.set($event.value)"
       >
-        <mat-icon aria-hidden="true">{{
-          kind() === 'TASK' ? 'task_alt' : 'sticky_note_2'
-        }}</mat-icon>
-      </button>
+        <mat-button-toggle
+          value="TASK"
+          matTooltip="Task: da fare, con stato, scadenza e promemoria"
+        >
+          <mat-icon aria-hidden="true">task_alt</mat-icon> Task
+        </mat-button-toggle>
+        <mat-button-toggle
+          value="NOTE"
+          matTooltip="Nota: un appunto sulla casella, si legge passando il mouse sul fumetto"
+        >
+          <mat-icon aria-hidden="true">sticky_note_2</mat-icon> Nota
+        </mat-button-toggle>
+      </mat-button-toggle-group>
       <input
         #titleInput
         class="quick__input"
         name="title"
         maxlength="200"
         autocomplete="off"
-        [placeholder]="kind() === 'TASK' ? placeholder() : 'Nuova nota… (Invio)'"
+        [placeholder]="kind() === 'TASK' ? placeholder() : 'Scrivi la nota… (Invio)'"
         [attr.aria-label]="kind() === 'TASK' ? 'Titolo del nuovo task' : 'Testo della nuova nota'"
         [(ngModel)]="title"
       />
@@ -74,6 +87,7 @@ import { TasksService } from '../../services/tasks.service';
       display: flex;
       align-items: center;
       gap: 0.25rem;
+      flex-wrap: wrap;
       padding: 0.25rem 0.25rem 0.25rem 0;
       border: 1px solid var(--mat-sys-outline-variant);
       border-radius: 0.75rem;
@@ -85,9 +99,15 @@ import { TasksService } from '../../services/tasks.service';
       }
     }
 
+    .quick__kind {
+      flex: 0 0 auto;
+      margin-inline-start: 0.25rem;
+    }
+
     .quick__input {
-      flex: 1;
+      flex: 1 1 8rem;
       min-width: 0;
+      padding-inline: 0.5rem;
       border: 0;
       outline: none;
       background: transparent;

@@ -73,16 +73,16 @@ describe('bi.model', () => {
 
   it('filtri: area e assegnatario, anno e mesi della data', () => {
     const t = ticket({ area: null, assignee: null });
-    expect(inScope(t, { areas: ['(senza area)'], assignees: null, year: null, months: null })).toBe(
-      true,
-    );
     expect(
-      inScope(t, { areas: null, assignees: ['Jonny Collari'], year: null, months: null }),
+      inScope(t, { areas: ['(senza area)'], assignees: null, years: null, months: null }),
+    ).toBe(true);
+    expect(
+      inScope(t, { areas: null, assignees: ['Jonny Collari'], years: null, months: null }),
     ).toBe(false);
-    expect(inPeriod(t.created, { areas: null, assignees: null, year: 2026, months: [10] })).toBe(
+    expect(inPeriod(t.created, { areas: null, assignees: null, years: [2026], months: [10] })).toBe(
       true,
     );
-    expect(inPeriod(t.created, { areas: null, assignees: null, year: 2026, months: [9] })).toBe(
+    expect(inPeriod(t.created, { areas: null, assignees: null, years: [2026], months: [9] })).toBe(
       false,
     );
   });
@@ -122,7 +122,7 @@ describe('bi.model', () => {
       }),
       resolved(new Date(2026, 9, 13), new Date(2026, 9, 20)),
     ];
-    const months = monthly(tickets, 2026, NOW);
+    const months = monthly(tickets, [2026], NOW);
     expect(months).toHaveLength(10);
     expect(months[9]).toMatchObject({ label: 'ott-26', created: 3, resolved: 1, open: 2 });
 
@@ -189,5 +189,19 @@ describe('personTrends', () => {
       ['Elia', -0.2, 'flat'],
     ]);
     expect(trends[1]).toMatchObject({ open: 2, openBefore: 3, created: 2, resolved: 3 });
+  });
+
+  it('chi ha portato a zero gli aperti resta in elenco finché ha movimenti nel periodo', () => {
+    const closed = ticket({
+      key: 'Z',
+      assignee: 'Alex',
+      resourceId: 9,
+      category: 'DONE',
+      created: new Date(2026, 8, 1).toISOString(),
+      resolved: new Date(2026, 9, 8, 10).toISOString(),
+    });
+    expect(personTrends([closed], NOW, true).map((t) => [t.name, t.open, t.resolved])).toEqual([
+      ['Alex', 0, 1],
+    ]);
   });
 });

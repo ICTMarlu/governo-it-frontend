@@ -26,6 +26,14 @@ import { EntityRow } from '../../shared/crud/crud.model';
                   <span class="item__version">{{ item['softwareVersion'] }}</span>
                 }
                 <span class="badge">{{ item['priorityLabel'] }}</span>
+                @if (item['exposure'] === 'INTERNET') {
+                  <span
+                    class="web"
+                    matTooltip="Raggiungibile da internet: conta con una criticità in più"
+                  >
+                    <mat-icon aria-hidden="true">public</mat-icon>internet
+                  </span>
+                }
                 <span class="item__crit" [matTooltip]="'Criticità per il business'">
                   criticità {{ lower(item['businessCriticalityLabel']) }}
                 </span>
@@ -127,6 +135,19 @@ import { EntityRow } from '../../shared/crud/crud.model';
       color: var(--prio-color);
       font: var(--mat-sys-label-medium);
       font-weight: 700;
+    }
+
+    .web {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.125rem;
+      font: var(--mat-sys-label-medium);
+
+      mat-icon {
+        width: 1rem;
+        height: 1rem;
+        font-size: 1rem;
+      }
     }
 
     .reasons {
