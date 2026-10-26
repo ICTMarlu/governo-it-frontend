@@ -66,8 +66,9 @@ export class HomePage {
   protected readonly today = new Date();
   protected readonly week = isoWeek(this.today);
   protected readonly hello = greeting(this.today);
+  /** Nome per il saluto: quello della persona collegata, altrimenti quello dell'utente. */
   protected readonly firstName = computed(
-    () => (this.currentUser()?.displayName ?? '').split(' ')[0] ?? '',
+    () => (this.home()?.resourceName ?? this.currentUser()?.displayName ?? '').split(' ')[0] ?? '',
   );
 
   protected readonly home = signal<Home | null>(null);

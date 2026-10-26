@@ -12,6 +12,7 @@ import {
   percentsSummingTo100,
   personTrends,
   overview,
+  waitingAsClosed,
   weekly,
 } from './bi.model';
 
@@ -203,5 +204,23 @@ describe('personTrends', () => {
     expect(personTrends([closed], NOW, true).map((t) => [t.name, t.open, t.resolved])).toEqual([
       ['Alex', 0, 1],
     ]);
+  });
+
+  it('i ticket in attesa del cliente contano come chiusi dal cambio di stato', () => {
+    const waiting = ticket({
+      waitingCustomer: true,
+      category: 'INDETERMINATE',
+      statusChanged: new Date(2026, 9, 10).toISOString(),
+    });
+    const open = ticket({ category: 'INDETERMINATE' });
+    // Spento: resta aperto; acceso: chiuso il 10/10, quindi nei chiusi del periodo e non negli aperti
+    const [closed] = waitingAsClosed([waiting]);
+    expect(closed.category).toBe('DONE');
+    expect(closed.resolved).toBe(new Date(2026, 9, 10).toISOString());
+    expect(waitingAsClosed([open])[0]).toBe(open);
+    const base = personTrends([waiting], NOW, true, 30);
+    const flagged = personTrends(waitingAsClosed([waiting]), NOW, true, 30);
+    expect([base[0].open, base[0].resolved]).toEqual([1, 0]);
+    expect([flagged[0].open, flagged[0].resolved]).toEqual([0, 1]);
   });
 });

@@ -36,6 +36,8 @@ export class BiStore {
   readonly months = signal<readonly number[] | null>(null);
   /** Trend: i Pending contano tra i lavorabili. */
   readonly includePending = signal(true);
+  /** Persone: i ticket in attesa di risposta del cliente contano come chiusi. */
+  readonly waitingAsClosed = signal(false);
 
   readonly filters = computed<BiFilters>(() => ({
     areas: this.areas(),
@@ -69,6 +71,7 @@ export class BiStore {
     years: this.years(),
     months: this.months(),
     includePending: this.includePending(),
+    waitingAsClosed: this.waitingAsClosed(),
   }));
 
   constructor() {
@@ -119,6 +122,7 @@ export class BiStore {
       year: number | null;
       months: readonly number[] | null;
       includePending: boolean;
+      waitingAsClosed: boolean;
     }>;
     this.areas.set(view.areas ?? null);
     this.assignees.set(view.assignees ?? null);
@@ -134,6 +138,7 @@ export class BiStore {
     this.years.set(years);
     this.months.set(view.months ?? null);
     this.includePending.set(view.includePending ?? true);
+    this.waitingAsClosed.set(view.waitingAsClosed ?? false);
   }
 
   clear(): void {

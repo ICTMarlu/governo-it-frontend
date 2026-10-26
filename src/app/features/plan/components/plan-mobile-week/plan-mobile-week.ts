@@ -9,7 +9,7 @@ import {
   formatDays,
   planRowLabel,
 } from '../../models/plan-grid.model';
-import { PlanWeek } from '../../models/plan.model';
+import { PlanUnit, PlanWeek } from '../../models/plan.model';
 import { CellTaskCount, cellKey } from '../../../tasks/models/task.model';
 
 /** Casella di cui aprire task e note. */
@@ -55,7 +55,8 @@ export interface CellTasksRequest {
             <span class="card__name">{{ group.resource.name }}</span>
             @if (group.totals[index()]; as total) {
               <span class="sat-pill sat-pill--{{ total.level }}">
-                {{ format(total.allocated) || '0' }}/{{ format(total.capacity) || '0' }} gg
+                {{ format(total.allocated) || '0' }}/{{ format(total.capacity) || '0' }}
+                {{ unitSuffix() }}
               </span>
             }
           </header>
@@ -72,7 +73,9 @@ export interface CellTasksRequest {
                   class="card__input"
                   inputmode="decimal"
                   autocomplete="off"
-                  [attr.aria-label]="label(gridRow.row) + ', giornate'"
+                  [attr.aria-label]="
+                    label(gridRow.row) + (unit() === 'hours' ? ', ore' : ', giornate')
+                  "
                   [value]="format(gridRow.cells[current.weekStart]?.days)"
                   (change)="
                     cellChanged.emit({
@@ -208,6 +211,8 @@ export class PlanMobileWeek {
   readonly groups = input.required<readonly GridGroup[]>();
   readonly weeks = input.required<readonly PlanWeek[]>();
   readonly canWrite = input(false);
+  /** Unità del piano: giornate o ore. */
+  readonly unit = input<PlanUnit>('days');
   /** Task e note per casella (chiave riga + settimana). */
   readonly cellTasks = input<ReadonlyMap<string, CellTaskCount>>(new Map());
   /** Settimana mostrata (indice tra quelle caricate). */
@@ -217,7 +222,11 @@ export class PlanMobileWeek {
   readonly tasksRequested = output<CellTasksRequest>();
 
   protected readonly week = computed(() => this.weeks()[this.index()]);
-  protected readonly format = formatDays;
+  protected format(days: number | undefined | null): string {
+    return formatDays(days, this.unit());
+  }
+
+  protected readonly unitSuffix = computed(() => (this.unit() === 'hours' ? 'h' : 'gg'));
   protected readonly day = formatDay;
   protected readonly label = planRowLabel;
   protected readonly key = cellKey;

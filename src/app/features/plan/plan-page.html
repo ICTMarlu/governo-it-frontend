@@ -477,6 +477,25 @@
     </button>
   }
   <gov-saved-views page="plan" [compact]="true" [state]="viewState()" (apply)="applyView($event)" />
+  <!-- Unità del piano: giornate (da 7,5 ore) o ore; vale per tutta la griglia e per come si scrive -->
+  <mat-button-toggle-group
+    class="unit-toggle"
+    aria-label="Unità del piano"
+    hideSingleSelectionIndicator
+    [value]="unit()"
+    (change)="setUnit($event.value)"
+  >
+    <mat-button-toggle
+      value="days"
+      matTooltip="Giornate: una giornata del piano vale 7,5 ore, per tutti"
+      >Giornate</mat-button-toggle
+    >
+    <mat-button-toggle
+      value="hours"
+      matTooltip="Ore: lo stesso piano in ore (1 giornata = 7,5 ore). La percentuale di saturazione non cambia"
+      >Ore</mat-button-toggle
+    >
+  </mat-button-toggle-group>
   <mat-checkbox [ngModel]="showArchived()" (ngModelChange)="showArchived.set($event)"
     >Archiviate</mat-checkbox
   >
@@ -675,7 +694,9 @@
                         ? 'Settimana corrente'
                         : isPastWeek(week.weekStart)
                           ? 'Settimana passata (scaduta)'
-                          : 'Settimana futura') + ' · clic per ordinare per giornate'
+                          : 'Settimana futura') +
+                      ' · clic per ordinare per ' +
+                      unitName()
                     "
                     (click)="toggleSort(weekSortPrefix + week.weekStart)"
                   >
@@ -801,7 +822,12 @@
                   }
                   <td
                     class="c-total sticky"
-                    [title]="'Giornate dell’anno ' + currentYear + ', tutte le righe'"
+                    [title]="
+                      (unit() === 'hours' ? 'Ore' : 'Giornate') +
+                      ' dell’anno ' +
+                      currentYear +
+                      ', tutte le righe'
+                    "
                   >
                     {{ format(group.yearAllocated) }}
                   </td>
@@ -814,7 +840,7 @@
                           (format(total.allocated) || '0') +
                           ' su ' +
                           (format(total.capacity) || '0') +
-                          ' giornate di capacità'
+                          (unit() === 'hours' ? ' ore di capacità' : ' giornate di capacità')
                         "
                       >
                         {{ total.percent === null ? '—' : total.percent + '%' }}
@@ -979,7 +1005,12 @@
                   }
                   <td
                     class="c-total sticky"
-                    [title]="'Giornate dell’anno ' + currentYear + ', tutte le righe'"
+                    [title]="
+                      (unit() === 'hours' ? 'Ore' : 'Giornate') +
+                      ' dell’anno ' +
+                      currentYear +
+                      ', tutte le righe'
+                    "
                   >
                     {{ format(group.yearAllocated) }}
                   </td>
@@ -992,7 +1023,7 @@
                           (format(total.allocated) || '0') +
                           ' su ' +
                           (format(total.capacity) || '0') +
-                          ' giornate di capacità'
+                          (unit() === 'hours' ? ' ore di capacità' : ' giornate di capacità')
                         "
                       >
                         {{ total.percent === null ? '—' : total.percent + '%' }}
@@ -1013,6 +1044,7 @@
         [canWrite]="canWrite()"
         [(index)]="mobileWeek"
         [cellTasks]="cellTasks()"
+        [unit]="unit()"
         (cellChanged)="commitChange($event)"
         (tasksRequested)="openTasks($event.group, $event.gridRow, $event.weekStart)"
       />

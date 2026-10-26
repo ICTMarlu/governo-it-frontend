@@ -101,7 +101,7 @@
           } @else if (data.management.overdue > 0) {
             {{ data.management.overdue }} scaduti
           } @else {
-            {{ team ? 'aperti' : 'di cui sei owner' }}
+            aperti
           }
         </span>
       </a>
@@ -208,8 +208,9 @@
     </header>
     <p class="muted work__note">
       Solo progetti di tipo Project (non AMS, Continuous o Admin) con giornate nel piano della
-      settimana scorsa, di quella in corso e delle tre successive. Area = sistema del progetto. Apri
-      un gruppo per il dettaglio.
+      settimana scorsa, di quella in corso e delle tre successive. Area = sistema del progetto. I
+      progetti chiusi (Completed, Rejected, Aborted) compaiono solo se hanno giornate la settimana
+      scorsa o in corso. Apri un gruppo per il dettaglio.
     </p>
     @if (overviewError(); as message) {
       <p class="state" role="alert">Non riesco a leggere i progetti: {{ message }}</p>
@@ -336,10 +337,7 @@
   </section>
 
   <p class="note">
-    {{
-      team
-        ? 'Numeri del team. Saturazione sulle persone con giornate nel piano; saldo ticket = (entrati − chiusi) delle ultime 4 settimane complete ÷ 4.'
-        : 'Numeri tuoi: ticket assegnati a te, il tuo piano, i tuoi task e i punti di cui sei owner.'
-    }}
+    Numeri tuoi: i ticket assegnati a te, il tuo piano, i tuoi task e i punti per la direzione. Il
+    team si guarda nelle pagine Ticket AMS e Piano settimanale.
   </p>
 }

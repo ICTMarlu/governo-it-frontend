@@ -16,6 +16,7 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDialog } from '@angular/material/dialog';
@@ -57,7 +58,10 @@ import {
   PlanWeek,
   ResourcePlan,
   isOpenStatus,
-  parseDays,
+  PlanUnit,
+  parseQuantity,
+  quantityHint,
+  round4,
   saturationLevel,
   sumDays,
 } from './models/plan.model';
@@ -108,6 +112,7 @@ type LoadState = 'loading' | 'ready' | 'error';
 const PLAN_PREFERENCES = 'plan.view';
 
 interface PlanPreferences {
+  readonly unit?: PlanUnit;
   readonly statuses?: string[];
   readonly sort?: SortLevel[];
   readonly columns?: ColumnLayout;
@@ -165,6 +170,7 @@ function defaultStart(): string {
     HelpButton,
     MatAutocompleteModule,
     MatButtonModule,
+    MatButtonToggleModule,
     MatCheckboxModule,
     MatIconModule,
     MatMenuModule,
@@ -281,9 +287,14 @@ export class PlanPage {
   /** Vista telefono: settimana mostrata (indice tra quelle caricate). */
   protected readonly mobileWeek = signal(0);
 
+  /** Unità del piano: giornate (da 7,5 ore) oppure ore. Cambia solo la visualizzazione e l'inserimento. */
+  protected readonly unit = signal<PlanUnit>('days');
+  protected readonly unitName = computed(() => (this.unit() === 'hours' ? 'ore' : 'giornate'));
+
   protected readonly legendText =
     'Saturazione = caricato (progetti, ferie, festività) ÷ capacità teorica + ore extra. ' +
-    'Verde sotto il 90%, giallo dal 90 al 100%, rosso oltre il 100%.';
+    'Verde sotto il 90%, giallo dal 90 al 100%, rosso oltre il 100%. ' +
+    'Il piano si legge e si scrive a giornate (da 7,5 ore) o a ore: la percentuale non cambia.';
 
   /** Stati dei progetti presenti nel piano, nell'ordine della lista valori. */
   protected readonly statusOptions = computed(() => {
@@ -624,7 +635,7 @@ export class PlanPage {
       entries,
       rowCount: entries.length,
       weekTotals: weekTotalsOf(entries),
-      total: Math.round(entries.reduce((sum, entry) => sum + entry.gridRow.total, 0) * 100) / 100,
+      total: round4(entries.reduce((sum, entry) => sum + entry.gridRow.total, 0)),
     };
   });
 
@@ -725,6 +736,9 @@ export class PlanPage {
         }
         if (saved?.grouping && saved.grouping in GROUPING_LABELS) {
           this.grouping.set(saved.grouping);
+        }
+        if (saved?.unit === 'days' || saved?.unit === 'hours') {
+          this.unit.set(saved.unit);
         }
       },
     });
@@ -924,7 +938,7 @@ export class PlanPage {
       const target = rows[firstRow + r];
       line.split('\t').forEach((value, c) => {
         const week = weeks[firstWeek + c];
-        const days = parseDays(value);
+        const days = parseQuantity(value, this.unit());
         if (!target || !week || days === null) {
           skipped++;
           return;
@@ -1133,7 +1147,13 @@ export class PlanPage {
   }
 
   protected format(days: number | undefined): string {
-    return formatDays(days);
+    return formatDays(days, this.unit());
+  }
+
+  /** Cambia unità (giornate o ore) e la ricorda per l'utente. */
+  protected setUnit(unit: PlanUnit): void {
+    this.unit.set(unit);
+    this.savePreferences();
   }
 
   protected dayLabel(iso: string): string {
@@ -1157,10 +1177,10 @@ export class PlanPage {
     input: HTMLInputElement,
   ): void {
     const previous = gridRow.cells[weekStart];
-    const days = parseDays(input.value);
+    const days = parseQuantity(input.value, this.unit());
     if (days === null) {
       input.value = this.format(previous?.days);
-      this.snackBar.open('Giornate da 0 a 7, al massimo due decimali (es. 0,25)', 'Chiudi', {
+      this.snackBar.open(quantityHint(this.unit()), 'Chiudi', {
         duration: 4000,
       });
       return;
@@ -1284,6 +1304,7 @@ export class PlanPage {
       rowLabel: `${group.resource.name} · ${this.rowLabel(gridRow.row)}`,
       fromWeek: weeks[0].weekStart,
       toWeek: weeks[weeks.length - 1].weekStart,
+      unit: this.unit(),
     };
     this.dialog
       .open<FillDialog, FillDialogData, FillDialogResult>(FillDialog, {
@@ -1377,6 +1398,7 @@ export class PlanPage {
       sort: [...this.sortLevels()],
       ...(this.columnLayout() ? { columns: this.columnLayout()! } : {}),
       grouping: this.grouping(),
+      unit: this.unit(),
     };
     this.preferences.save(PLAN_PREFERENCES, value).subscribe({ error: () => undefined });
   }

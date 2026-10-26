@@ -107,20 +107,56 @@ export function saturationLevel(allocated: number, capacity: number): Saturation
   return ratio > 1.0001 ? 'over' : ratio >= SATURATION_WARNING ? 'full' : 'free';
 }
 
-/** Somma senza artefatti dei decimali (0,1 + 0,2 = 0,3). */
-export function sumDays(values: readonly number[]): number {
-  return Math.round(values.reduce((total, value) => total + value * 100, 0)) / 100;
+/**
+ * Unità in cui si vede e si scrive il piano: giornate o ore. Il piano resta salvato in giornate
+ * da {@link HOURS_PER_DAY} ore (come la capacità, D-14): cambia solo come lo si legge e lo si scrive.
+ */
+export type PlanUnit = 'days' | 'hours';
+
+/** Ore di una giornata del piano: la stessa per tutti, a prescindere dalle ore al giorno della persona. */
+export const HOURS_PER_DAY = 7.5;
+
+/** Valore del piano (giornate) nell'unità scelta. */
+export function toUnit(days: number, unit: PlanUnit): number {
+  return unit === 'hours' ? days * HOURS_PER_DAY : days;
 }
 
-/** Legge un valore scritto a mano: "1,5", "1.5", "" (= 0). Null se non valido. */
-export function parseDays(text: string): number | null {
+/** Arrotonda a quattro decimali: 1 ora = 0,1333 giornate, e le ore tornano esatte. */
+export function round4(value: number): number {
+  return Math.round(value * 10_000) / 10_000;
+}
+
+/** Somma senza artefatti dei decimali (0,1 + 0,2 = 0,3), a quattro decimali. */
+export function sumDays(values: readonly number[]): number {
+  return round4(values.reduce((total, value) => total + value, 0));
+}
+
+/**
+ * Legge un valore scritto a mano nell'unità scelta ("1,5", "1.5", "" = 0) e lo restituisce in
+ * giornate. Giornate da 0 a 7, ore da 0 a 52,5 (7 giornate), al massimo due decimali. Null se non valido.
+ */
+export function parseQuantity(text: string, unit: PlanUnit): number | null {
   const clean = text.trim().replace(',', '.');
   if (clean === '') {
     return 0;
   }
-  if (!/^\d{0,1}(\.\d{0,2})?$/.test(clean) || clean === '.') {
+  const pattern = unit === 'hours' ? /^\d{0,2}(\.\d{0,2})?$/ : /^\d{0,1}(\.\d{0,2})?$/;
+  if (!pattern.test(clean) || clean === '.') {
     return null;
   }
   const value = Number(clean);
-  return value >= 0 && value <= 7 ? value : null;
+  const days = unit === 'hours' ? value / HOURS_PER_DAY : value;
+  return value >= 0 && days <= 7 + 1e-9 ? round4(Math.min(days, 7)) : null;
+}
+
+/** Giornate scritte a mano (compatibilità): come {@link parseQuantity} in giornate. */
+export function parseDays(text: string): number | null {
+  return parseQuantity(text, 'days');
+}
+
+/** Testo per l'errore di inserimento, secondo l'unità. */
+export function quantityHint(unit: PlanUnit): string {
+  return unit === 'hours'
+    ? 'Ore da 0 a 52,5, al massimo due decimali (es. 1,5)'
+    : 'Giornate da 0 a 7, al massimo due decimali (es. 0,25)';
 }

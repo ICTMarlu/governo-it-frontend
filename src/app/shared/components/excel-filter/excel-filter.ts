@@ -120,12 +120,17 @@ export type ExcelSortDirection = 'asc' | 'desc';
     }
 
     .trigger {
+      width: 100%;
+    }
+
+    .trigger {
       display: inline-flex;
       align-items: center;
       gap: 0.25rem;
       height: 2rem;
       min-width: 0;
       max-width: 16rem;
+      overflow: hidden;
       padding: 0 0.5rem;
       border: 1px solid var(--mat-sys-outline);
       border-radius: 0.5rem;

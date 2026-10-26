@@ -19,6 +19,7 @@ import {
   isAwaitingApproval,
   isOpen,
   resolvedThisYear,
+  waitingAsClosed,
   matchesDimension,
 } from './bi.model';
 import { CONFIRM_IDLE_DAYS, isConfirmStatus } from '../models/ticket.model';
@@ -299,6 +300,8 @@ export class BiDetailPage {
   readonly days = input('9');
   /** Periodo in giorni scelto nella pagina Persone (entrati e chiusi). */
   readonly period = input('30');
+  /** "1" dalla pagina Persone: i ticket in attesa del cliente contano come chiusi. */
+  readonly waiting = input('');
 
   protected readonly search = signal('');
   protected readonly sort = signal<{ key: SortKey; desc: boolean }>({ key: 'age', desc: true });
@@ -363,7 +366,8 @@ export class BiDetailPage {
 
   /** Ticket di partenza, secondo la pagina e il numero o la barra da cui si arriva. */
   private base(now: Date): readonly BiTicket[] {
-    const scoped = this.store.scoped();
+    const scoped =
+      this.waiting() === '1' ? waitingAsClosed(this.store.scoped()) : this.store.scoped();
     const created = this.store.createdInPeriod();
     switch (this.scope()) {
       case 'open':

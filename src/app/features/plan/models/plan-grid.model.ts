@@ -1,4 +1,12 @@
-import { PlanCell, PlanRow, ResourcePlan, SaturationLevel } from './plan.model';
+import {
+  PlanCell,
+  PlanRow,
+  PlanUnit,
+  ResourcePlan,
+  SaturationLevel,
+  round4,
+  toUnit,
+} from './plan.model';
 
 /** Riga mostrata nella griglia, con le celle per settimana e la posizione per la tastiera. */
 export interface GridRow {
@@ -75,7 +83,7 @@ export function weekTotalsOf(entries: readonly GridEntry[]): Record<string, numb
   const totals: Record<string, number> = {};
   for (const { gridRow } of entries) {
     for (const [week, cell] of Object.entries(gridRow.cells)) {
-      totals[week] = Math.round(((totals[week] ?? 0) + cell.days) * 100) / 100;
+      totals[week] = round4((totals[week] ?? 0) + cell.days);
     }
   }
   return totals;
@@ -147,7 +155,7 @@ export function buildSections(entries: readonly GridEntry[], keyPrefix: string):
         entries: ordered,
         rowCount: ordered.length,
         weekTotals,
-        total: Math.round(total * 100) / 100,
+        total: round4(total),
       };
     });
 }
@@ -163,9 +171,9 @@ export interface CellChange {
 const NUMBER = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 2 });
 const SHORT_DATE = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'numeric' });
 
-/** Giornate in italiano (1,5); vuoto per 0. */
-export function formatDays(days: number | undefined | null): string {
-  return days ? NUMBER.format(days) : '';
+/** Giornate (o ore, secondo l'unità) in italiano (1,5); vuoto per 0. */
+export function formatDays(days: number | undefined | null, unit: PlanUnit = 'days'): string {
+  return days ? NUMBER.format(toUnit(days, unit)) : '';
 }
 
 /** Giorno e mese di una data ISO (aaaa-mm-gg), senza slittamenti di fuso. */

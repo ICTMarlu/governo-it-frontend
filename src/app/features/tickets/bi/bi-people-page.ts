@@ -4,6 +4,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { PeriodChart } from '../../../shared/charts/period-chart';
 import { CrudApiService } from '../../../shared/crud/crud-api.service';
@@ -18,6 +19,7 @@ import {
   assigneeOf,
   personTrendPeriod,
   personTrends,
+  waitingAsClosed,
   weekly,
 } from './bi.model';
 import { BiStore } from './bi-store.service';
@@ -49,6 +51,7 @@ const DIRECTIONS: Readonly<
     MatIconModule,
     MatProgressSpinnerModule,
     MatSlideToggleModule,
+    MatTooltipModule,
     PeriodChart,
   ],
   template: `
@@ -60,14 +63,14 @@ const DIRECTIONS: Readonly<
         >
           Includi i Pending negli aperti
         </mat-slide-toggle>
-        @if (inactiveCount() > 0 || showInactive()) {
-          <mat-slide-toggle [checked]="showInactive()" (change)="showInactive.set($event.checked)">
-            Mostra agenti non attivi
-            @if (!showInactive()) {
-              ({{ inactiveCount() }})
-            }
-          </mat-slide-toggle>
-        }
+        <mat-slide-toggle
+          class="tog"
+          [checked]="store.waitingAsClosed()"
+          (change)="store.waitingAsClosed.set($event.checked)"
+          matTooltip="Acceso: i ticket in attesa di risposta del cliente contano come chiusi (colonna Chiusi e barra arancione, dal giorno in cui sono entrati in quello stato) e non come aperti"
+        >
+          Considera chiusi i ticket in attesa del cliente
+        </mat-slide-toggle>
         <gov-help-button [help]="help" [compact]="true" label="Come si leggono i KPI per persona" />
       </gov-bi-filters>
       @if (store.error(); as error) {
@@ -221,6 +224,18 @@ const DIRECTIONS: Readonly<
     </div>
   `,
   styles: `
+    // Solo questa etichetta: più piccola e su due righe, per tenere tutta la barra filtri su una riga
+    .tog {
+      max-width: 13rem;
+    }
+
+    .tog ::ng-deep .mdc-label {
+      display: block;
+      font-size: 0.6875rem;
+      line-height: 1.15;
+      white-space: normal;
+    }
+
     // Tabella e spiegazione del saldo affiancate: niente riga in più sopra
     // Tabella a sinistra e grafico a destra su schermo largo; impilati su schermo stretto
     .split {
@@ -409,26 +424,24 @@ export class BiPeoplePage {
     };
   });
 
-  private readonly allTrends = computed(() =>
-    personTrends(this.store.scoped(), new Date(), this.store.includePending(), this.days()),
+  /** Ticket dei filtri in alto; con l'interruttore, quelli in attesa del cliente contano come chiusi. */
+  private readonly base = computed(() =>
+    this.store.waitingAsClosed() ? waitingAsClosed(this.store.scoped()) : this.store.scoped(),
   );
 
-  /** Risorse disattivate nell'anagrafica (id): le loro righe si nascondono, salvo "Mostra agenti non attivi". */
+  private readonly allTrends = computed(() =>
+    personTrends(this.base(), new Date(), this.store.includePending(), this.days()),
+  );
+
+  /** Risorse disattivate nell'anagrafica (id): le loro righe non si mostrano. */
   private readonly inactiveResources = signal<ReadonlySet<number>>(new Set());
-  protected readonly showInactive = signal(false);
 
   private isInactive(row: PersonTrend): boolean {
     return row.resourceId !== null && this.inactiveResources().has(row.resourceId);
   }
 
-  protected readonly inactiveCount = computed(
-    () => this.allTrends().filter((row) => this.isInactive(row)).length,
-  );
-
   protected readonly trends = computed(() =>
-    this.showInactive()
-      ? this.allTrends()
-      : this.allTrends().filter((row) => !this.isInactive(row)),
+    this.allTrends().filter((row) => !this.isInactive(row)),
   );
 
   /** Persona scelta (filtro in alto o clic nella tabella); di partenza quella con il saldo peggiore. */
@@ -444,7 +457,7 @@ export class BiPeoplePage {
     const name = this.selected();
     const now = new Date();
     const from = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7 * (DATA_WEEKS - 1));
-    const tickets = this.store.scoped().filter((ticket) => assigneeOf(ticket) === name);
+    const tickets = this.base().filter((ticket) => assigneeOf(ticket) === name);
     return weekly(tickets, from, now, this.store.includePending());
   });
   protected readonly chart = computed(() => this.series().slice(-CHART_WEEKS));
@@ -455,7 +468,13 @@ export class BiPeoplePage {
   /** Clic su un numero della persona: i suoi ticket (aperti, entrati o chiusi). */
   protected open(name: string, scope: string): void {
     void this.router.navigate(['/tickets/dettaglio'], {
-      queryParams: { scope, dim: 'assignee', value: name, period: this.days() },
+      queryParams: {
+        scope,
+        dim: 'assignee',
+        value: name,
+        period: this.days(),
+        ...(this.store.waitingAsClosed() ? { waiting: '1' } : {}),
+      },
     });
   }
 

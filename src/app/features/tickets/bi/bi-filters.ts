@@ -58,23 +58,12 @@ import { TicketSyncService } from '../services/ticket-sync.service';
         [state]="store.viewState()"
         (apply)="store.applyView($event)"
       />
-      <span class="filters__sync" role="status" [matTooltip]="sync.status()?.lastMessage ?? ''">
-        @if (sync.syncing()) {
-          Aggiornamento da Jira in corso…
-        } @else {
-          Aggiornato da Jira {{ sync.sinceText() }}
-        }
-      </span>
       <button
         mat-icon-button
         type="button"
         [class.spin]="sync.syncing() || store.loading()"
-        [attr.aria-label]="sync.canSync() ? 'Aggiorna ora da Jira' : 'Ricarica i dati'"
-        [matTooltip]="
-          sync.canSync()
-            ? 'Aggiorna ora da Jira (ticket cambiati); tutte le pagine si aggiornano'
-            : 'Ricarica i dati'
-        "
+        [attr.aria-label]="refreshHint()"
+        [matTooltip]="refreshHint()"
         [disabled]="sync.syncing() || store.loading()"
         (click)="sync.refresh()"
       >
@@ -86,7 +75,8 @@ import { TicketSyncService } from '../services/ticket-sync.service';
     // Barra su una sola riga, sempre alta uguale: i testi lunghi si troncano invece di andare a capo
     .filters {
       display: flex;
-      flex-wrap: nowrap;
+      // Su schermo largo tutto su una riga; sotto 1300px, se non ci sta, va a capo la barra (i filtri non si schiacciano)
+      flex-wrap: wrap;
       align-items: center;
       gap: 0.5rem;
       min-height: 3rem;
@@ -97,15 +87,6 @@ import { TicketSyncService } from '../services/ticket-sync.service';
 
       &__spacer {
         flex: 1;
-      }
-
-      &__sync {
-        min-width: 0;
-        overflow: hidden;
-        color: var(--mat-sys-on-surface-variant);
-        font: var(--mat-sys-body-small);
-        text-overflow: ellipsis;
-        white-space: nowrap;
       }
 
       > button,
@@ -119,13 +100,16 @@ import { TicketSyncService } from '../services/ticket-sync.service';
       flex-shrink: 0;
     }
 
+    // I filtri a tendina hanno una larghezza minima: etichetta e icona restano sempre leggibili
     :host ::ng-deep .filters > gov-excel-filter {
-      flex-shrink: 1;
-      min-width: 0;
+      flex-shrink: 0;
+      min-width: 9rem;
     }
 
-    :host ::ng-deep .filters > .filters__sync {
-      flex-shrink: 1;
+    @media (min-width: 1300px) {
+      .filters {
+        flex-wrap: nowrap;
+      }
     }
 
     // Su schermi stretti si torna a capo, come prima
@@ -180,6 +164,18 @@ export class BiFilters {
     const years = this.store.years();
     return years?.length === 1 && years[0] === new Date().getFullYear();
   }
+
+  /** Il pulsante dice anche quando i dati sono stati aggiornati da Jira l'ultima volta. */
+  protected readonly refreshHint = computed(() => {
+    const state = this.sync.syncing()
+      ? 'Aggiornamento da Jira in corso…'
+      : `Aggiornato da Jira ${this.sync.sinceText()}`;
+    return `${state}. ${
+      this.sync.canSync()
+        ? 'Clic per aggiornare ora da Jira (ticket cambiati); tutte le pagine si aggiornano'
+        : 'Clic per ricaricare i dati'
+    }`;
+  });
 
   protected setYears(values: readonly string[] | null): void {
     this.store.years.set(values === null ? null : values.map(Number));

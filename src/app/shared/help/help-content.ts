@@ -31,7 +31,7 @@ export const HOME_HELP: HelpContent = {
     {
       title: 'Chi vede cosa',
       items: [
-        'Admin e Project Manager vedono i numeri del team; gli altri ruoli vedono i propri: ticket assegnati, il proprio piano, i propri task e i punti per la direzione di cui sono owner.',
+        'La Home è sempre tua, anche per Admin e Project Manager: i ticket assegnati a te, il tuo piano, i tuoi task e i punti per la direzione (l’Admin li vede tutti, gli altri solo quelli di cui sono owner). Il team si guarda nelle pagine Ticket AMS e Piano settimanale; la sezione in fondo, Progetti in lavorazione, mostra tutto il piano.',
         'Per i numeri personali il tuo utente deve essere collegato a una persona del team (Utenti › Risorsa).',
       ],
     },
@@ -806,6 +806,7 @@ export const PEOPLE_TREND_HELP: HelpContent = {
       items: [
         'Il grafico non cambia con il periodo della tabella. Clic sul nome: entrati e chiusi per settimana nelle ultime 8 settimane, con la linea degli aperti a fine settimana. L\u2019ultima barra è la settimana in corso: è parziale e si riconosce dall\u2019asterisco e dal colore più chiaro.',
         'L’interruttore dei Pending decide se contare negli aperti i ticket che oggi sono in Pending.',
+        '“Considera chiusi i ticket in attesa del cliente”: acceso, i ticket in attesa di risposta del cliente contano come chiusi dal giorno in cui sono entrati in quello stato: sommati nella colonna Chiusi, nella barra arancione dei risolti e tolti dagli aperti. Spento (di partenza) restano aperti. Vale per tabella, grafico e liste che si aprono dai numeri.',
       ],
     },
   ],

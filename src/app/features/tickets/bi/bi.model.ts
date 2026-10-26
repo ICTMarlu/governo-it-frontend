@@ -100,6 +100,19 @@ export function assigneeOf(ticket: BiTicket): string {
   return ticket.assignee ?? UNASSIGNED;
 }
 
+/**
+ * Ticket in attesa di risposta del cliente trattati come chiusi: chiusi dal giorno in cui sono
+ * entrati in quello stato (se non si sa, dall'ultimo aggiornamento). Così contano tra i chiusi
+ * del periodo e delle settimane, e non tra gli aperti.
+ */
+export function waitingAsClosed(tickets: readonly BiTicket[]): BiTicket[] {
+  return tickets.map((ticket) =>
+    ticket.waitingCustomer && ticket.category !== 'DONE'
+      ? { ...ticket, category: 'DONE', resolved: ticket.statusChanged ?? ticket.updated }
+      : ticket,
+  );
+}
+
 /** Stato Jira "Awaiting approval": si aspetta l'approvazione, o va chiesta alla direzione. */
 export function isAwaitingApproval(ticket: BiTicket): boolean {
   return ticket.status.trim().toLowerCase() === 'awaiting approval';
