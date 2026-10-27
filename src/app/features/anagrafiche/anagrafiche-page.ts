@@ -89,6 +89,19 @@ const GROUPS: readonly Group[] = [
     ],
   },
   {
+    id: 'telephony',
+    title: 'Telefonia e device',
+    cards: [
+      {
+        label: 'Telefonia e device',
+        hint: 'Linee mobili per società, profili tariffari, smartphone e tablet',
+        icon: 'smartphone',
+        route: '/telephony',
+        module: 'TELEPHONY',
+      },
+    ],
+  },
+  {
     id: 'technology',
     title: 'Sistemi e tecnologie',
     cards: [

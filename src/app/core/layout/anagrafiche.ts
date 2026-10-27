@@ -36,6 +36,13 @@ export const ANAGRAFICHE: readonly AnagraficaEntry[] = [
     module: 'TECHNOLOGY',
   },
   {
+    label: 'Telefonia e device',
+    hint: 'Linee mobili per società, profili tariffari, smartphone e tablet',
+    icon: 'smartphone',
+    route: '/telephony',
+    module: 'TELEPHONY',
+  },
+  {
     label: 'Liste e tabelle',
     hint: 'Società, fornitori, sedi, calendari, codici progetto e liste valori (stati, priorità, sistemi…)',
     icon: 'tune',

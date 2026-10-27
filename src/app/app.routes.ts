@@ -14,6 +14,14 @@ import {
 import { MEETING_ROLES } from './features/management/management.configs';
 import { PROJECTS_CONFIG } from './features/projects/projects.configs';
 import { RESOURCES_CONFIG } from './features/resources/resources.configs';
+import {
+  MOBILE_LINES_CONFIG,
+  OPERATOR_OPTIONS_CONFIG,
+  SMARTPHONES_CONFIG,
+  TABLETS_CONFIG,
+  TARIFF_PLANS_CONFIG,
+} from './features/telephony/telephony.configs';
+import { BACK_TO_TELEPHONY } from './features/telephony/telephony-page';
 import { BackLinkTarget } from './shared/components/back-link/back-link';
 import { EntityConfig } from './shared/crud/crud.model';
 
@@ -75,7 +83,7 @@ export const routes: Routes = [
         path: 'anagrafiche',
         title: 'Anagrafiche · Governo IT',
         canActivate: [moduleGuard],
-        data: { anyOf: ['RESOURCES', 'REQUESTERS', 'TECHNOLOGY', 'MASTER_DATA'] },
+        data: { anyOf: ['RESOURCES', 'REQUESTERS', 'TECHNOLOGY', 'TELEPHONY', 'MASTER_DATA'] },
         loadComponent: () =>
           import('./features/anagrafiche/anagrafiche-page').then((m) => m.AnagrafichePage),
       },
@@ -89,6 +97,19 @@ export const routes: Routes = [
           import('./features/resources/resource-detail-page').then((m) => m.ResourceDetailPage),
       },
       crudRoute('requesters', REQUESTERS_CONFIG, BACK_TO_ANAGRAFICHE),
+      {
+        path: 'telephony',
+        title: 'Telefonia e device · Governo IT',
+        canActivate: [moduleGuard],
+        data: { module: 'TELEPHONY' },
+        loadComponent: () =>
+          import('./features/telephony/telephony-page').then((m) => m.TelephonyPage),
+      },
+      crudRoute('mobile-lines', MOBILE_LINES_CONFIG, BACK_TO_TELEPHONY),
+      crudRoute('tariff-plans', TARIFF_PLANS_CONFIG, BACK_TO_TELEPHONY),
+      crudRoute('operator-options', OPERATOR_OPTIONS_CONFIG, BACK_TO_TELEPHONY),
+      crudRoute('smartphones', SMARTPHONES_CONFIG, BACK_TO_TELEPHONY),
+      crudRoute('tablets', TABLETS_CONFIG, BACK_TO_TELEPHONY),
       {
         path: 'technologies',
         title: 'Sistemi e tecnologie · Governo IT',

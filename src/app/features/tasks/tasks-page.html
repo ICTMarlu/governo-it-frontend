@@ -104,6 +104,16 @@
       }
     </mat-select>
   </mat-form-field>
+  @if (view() === 'list') {
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filters__field">
+      <mat-label>Tipo</mat-label>
+      <mat-select [value]="kindFilter()" (valueChange)="kindFilter.set($event)">
+        <mat-option [value]="null">Task e note</mat-option>
+        <mat-option value="TASK">Solo task</mat-option>
+        <mat-option value="NOTE">Solo note</mat-option>
+      </mat-select>
+    </mat-form-field>
+  }
   <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filters__field">
     <mat-label>Origine</mat-label>
     <mat-select [value]="sourceFilter()" (valueChange)="sourceFilter.set($event)">

@@ -62,7 +62,7 @@ const NAV_ITEMS: readonly NavItem[] = [
     icon: 'database',
     route: '/anagrafiche',
     children: ANAGRAFICHE,
-    modules: ['RESOURCES', 'REQUESTERS', 'TECHNOLOGY', 'MASTER_DATA'],
+    modules: ['RESOURCES', 'REQUESTERS', 'TECHNOLOGY', 'TELEPHONY', 'MASTER_DATA'],
   },
   { label: 'Utenti', icon: 'manage_accounts', route: '/users', modules: ['USERS'] },
 ];

@@ -124,6 +124,8 @@ export class TasksPage {
 
   /** Filtri come nella pagina Direzione: stato, priorità, progetto (null = tutti). */
   protected readonly statusFilter = signal<number | null>(null);
+  /** Solo task o solo note (null = tutti e due). */
+  protected readonly kindFilter = signal<TaskKind | null>(null);
   protected readonly priorityFilter = signal<number | null>(null);
   protected readonly projectFilter = signal<number | null>(null);
   protected readonly sort = signal<{ key: SortKey; desc: boolean } | null>(null);
@@ -131,6 +133,7 @@ export class TasksPage {
   protected readonly visible = computed(() => {
     const terms = searchTerms(this.search());
     const status = this.statusFilter();
+    const kind = this.kindFilter();
     const priority = this.priorityFilter();
     const project = this.projectFilter();
     const source = this.sourceFilter();
@@ -138,6 +141,7 @@ export class TasksPage {
       (task) =>
         (source === null ||
           (source === 'FREE' ? task.sourceType === null : task.sourceType === source)) &&
+        (kind === null || task.kind === kind) &&
         (status === null || task.statusId === status) &&
         (priority === null || task.priorityLevel === priority) &&
         (project === null || task.projectId === project) &&
@@ -279,6 +283,7 @@ export class TasksPage {
     view: this.view(),
     search: this.search(),
     status: this.statusFilter(),
+    kind: this.kindFilter(),
     priority: this.priorityFilter(),
     project: this.projectFilter(),
     source: this.sourceFilter(),
@@ -292,6 +297,7 @@ export class TasksPage {
       view: TaskView;
       search: string;
       status: number | null;
+      kind: TaskKind | null;
       priority: number | null;
       project: number | null;
       source: string | null;
@@ -303,6 +309,7 @@ export class TasksPage {
     this.view.set(saved.view === 'board' ? 'board' : 'list');
     this.search.set(saved.search ?? '');
     this.statusFilter.set(saved.status ?? null);
+    this.kindFilter.set(saved.kind === 'TASK' || saved.kind === 'NOTE' ? saved.kind : null);
     this.priorityFilter.set(saved.priority ?? null);
     this.projectFilter.set(saved.project ?? null);
     // Con il link "Tutti i task da…" l'origine resta quella del link

@@ -14,6 +14,7 @@ export type ModuleKey =
   | 'REQUESTERS'
   | 'MASTER_DATA'
   | 'TECHNOLOGY'
+  | 'TELEPHONY'
   | 'USERS';
 
 export const LEVELS: readonly AccessLevel[] = ['NONE', 'VIEW', 'EDIT'];
@@ -98,6 +99,13 @@ export const MODULES: readonly ModuleInfo[] = [
     hint: 'Tecnologie in uso, fine supporto e vulnerabilità',
   },
   {
+    key: 'TELEPHONY',
+    label: 'Telefonia e device',
+    icon: 'smartphone',
+    group: 'Anagrafiche',
+    hint: 'Linee mobili per società, profili tariffari, smartphone e tablet',
+  },
+  {
     key: 'MASTER_DATA',
     label: 'Liste e tabelle',
     icon: 'tune',
@@ -146,6 +154,12 @@ export function moduleOfEndpoint(endpoint: string): ModuleKey | null {
     case 'technologies':
     case 'vulnerabilities':
       return 'TECHNOLOGY';
+    case 'mobile-lines':
+    case 'tariff-plans':
+    case 'operator-options':
+    case 'smartphones':
+    case 'tablets':
+      return 'TELEPHONY';
     case 'lookups':
     case 'legal-entities':
     case 'vendors':
