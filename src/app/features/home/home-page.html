@@ -163,6 +163,40 @@
     }
   </section>
 
+  @if (data.todayTickets.items.length > 0) {
+    <section class="card" aria-labelledby="today-title">
+      <h2 id="today-title" class="card__title">
+        <mat-icon aria-hidden="true">today</mat-icon> Ticket da guardare oggi
+      </h2>
+      <ul class="items">
+        @for (ticket of data.todayTickets.items; track ticket.key) {
+          <li class="item">
+            <span class="item__when" [class.item__when--late]="ticket.overdue">{{
+              ticket.reason
+            }}</span>
+            <span class="item__text">
+              @if (ticket.url) {
+                <a [href]="ticket.url" target="_blank" rel="noopener">{{ ticket.key }}</a>
+              } @else {
+                <strong>{{ ticket.key }}</strong>
+              }
+              {{ ticket.summary }}
+              @if (team && ticket.assignee) {
+                <span class="muted"> · {{ ticket.assignee }}</span>
+              }
+            </span>
+          </li>
+        }
+      </ul>
+      @if (data.todayTickets.total > data.todayTickets.items.length) {
+        <p class="muted">
+          e altri {{ data.todayTickets.total - data.todayTickets.items.length }} ·
+          <a routerLink="/tickets">Apri i ticket</a>
+        </p>
+      }
+    </section>
+  }
+
   <div class="columns">
     <section class="card" aria-labelledby="mine-title">
       <h2 id="mine-title" class="card__title">

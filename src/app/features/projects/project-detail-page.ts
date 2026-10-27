@@ -88,6 +88,7 @@ export class ProjectDetailPage {
       { label: 'Priorità IT', value: text(p['itPriorityLevel']) },
       { label: 'Priorità business', value: text(p['businessPriorityLevel']) },
       { label: 'Ranking', value: text(p['ranking']) },
+      { label: 'Avanzamento', value: p['progressPct'] == null ? '' : `${p['progressPct']}%` },
       { label: 'Owner', value: text(p['ownerNames']) },
       { label: 'Richiesto da', value: text(p['requesterNames']) },
       { label: 'Sponsor', value: text(p['sponsorName']) },

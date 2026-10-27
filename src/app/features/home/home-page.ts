@@ -168,7 +168,12 @@ export class HomePage {
     if (item.exhausted) {
       return { text: 'piano esaurito', level: 'late' };
     }
-    return { text: `${item.percent}% del piano`, level: item.percent >= 50 ? 'check' : 'none' };
+    const done = item.declared === null ? '' : ` · fatto ${item.declared}%`;
+    const behind = item.declared !== null && item.percent - item.declared >= 20;
+    return {
+      text: `${item.percent}% del piano${done}`,
+      level: behind ? 'late' : item.percent >= 50 ? 'check' : 'none',
+    };
   }
 
   protected toggleGroup(key: string): void {

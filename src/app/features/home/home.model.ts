@@ -21,6 +21,22 @@ export interface HomeItem {
   readonly link: string;
 }
 
+/** Un ticket da guardare oggi: scaduto, in scadenza o nuovo senza risposta. */
+export interface TodayTicket {
+  readonly key: string;
+  readonly summary: string;
+  readonly status: string | null;
+  readonly assignee: string | null;
+  readonly reason: string;
+  readonly overdue: boolean;
+  readonly url: string | null;
+}
+
+export interface TodayTickets {
+  readonly total: number;
+  readonly items: readonly TodayTicket[];
+}
+
 export interface Home {
   readonly scope: HomeScope;
   readonly resourceName: string | null;
@@ -50,6 +66,7 @@ export interface Home {
   };
   readonly insights: readonly HomeInsight[];
   readonly myItems: readonly HomeItem[];
+  readonly todayTickets: TodayTickets;
 }
 
 /** Giornate pianificate di una persona su un progetto in una settimana (progetti di tipo Project). */
@@ -72,6 +89,8 @@ export interface ProjectProgress {
   readonly projectId: number;
   readonly percent: number;
   readonly exhausted: boolean;
+  /** Avanzamento dichiarato a mano sul progetto (0-100), se indicato. */
+  readonly declared: number | null;
 }
 
 export interface ProjectsOverview {

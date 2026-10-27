@@ -45,7 +45,7 @@ interface Topic {
   readonly version: string;
 }
 
-/** Giorni per cui un punto chiuso o annullato resta visibile nella sua colonna. */
+/** Giorni per cui un punto chiuso o annullato resta visibile nella sua colonna (se il parametro manca). */
 const FINAL_VISIBLE_DAYS = 30;
 
 /**
@@ -71,7 +71,7 @@ const FINAL_VISIBLE_DAYS = 30;
         } @else {
           Clicca il titolo per aprire il punto.
         }
-        Chiusi e annullati restano {{ finalDays }} giorni.
+        Chiusi e annullati restano {{ finalDays() }} giorni.
         @if (canConfigure()) {
           <a routerLink="/master-data/lookups/management-states">Gestisci le colonne</a>
         }
@@ -276,14 +276,15 @@ export class TopicsBoard {
   /** Solo l'Admin configura le colonne (Anagrafiche). */
   readonly canConfigure = input(false);
 
-  protected readonly finalDays = FINAL_VISIBLE_DAYS;
+  /** Dal parametro MANAGEMENT_FINAL_VISIBLE_DAYS (Parametri generali). */
+  protected readonly finalDays = signal(FINAL_VISIBLE_DAYS);
   protected readonly topics = signal<readonly Topic[] | null>(null);
   protected readonly states = signal<readonly State[]>([]);
   protected readonly error = signal<string | null>(null);
 
   protected readonly columns = computed(() => {
     const limit = new Date();
-    limit.setDate(limit.getDate() - FINAL_VISIBLE_DAYS);
+    limit.setDate(limit.getDate() - this.finalDays());
     const isRecent = (topic: Topic, state: State): boolean =>
       !['CLOSED', 'CANCELLED'].includes(state.behavior) ||
       topic.closedOn === null ||
@@ -300,6 +301,20 @@ export class TopicsBoard {
   });
 
   constructor() {
+    this.http
+      .get<{ code: string; value: string | null }[]>(`${this.apiBase}/parameters`)
+      .subscribe({
+        next: (parameters) => {
+          const days = Number(
+            parameters.find((parameter) => parameter.code === 'MANAGEMENT_FINAL_VISIBLE_DAYS')
+              ?.value,
+          );
+          if (Number.isInteger(days) && days > 0) {
+            this.finalDays.set(days);
+          }
+        },
+        error: () => undefined,
+      });
     effect(() => {
       this.refresh();
       untracked(() => this.load());
