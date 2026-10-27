@@ -79,6 +79,10 @@ export class HomePage {
   protected readonly overview = signal<ProjectsOverview | null>(null);
   protected readonly overviewError = signal<string | null>(null);
   protected readonly grouping = signal<WorkGrouping>('person');
+  /** Avanzamento del piano per progetto (chiave "p<id>", come i gruppi e le righe della tabella). */
+  protected readonly progress = computed(
+    () => new Map((this.overview()?.progress ?? []).map((item) => [`p${item.projectId}`, item])),
+  );
   /** Gruppi aperti: da aperti le giornate sono quelle delle righe, senza subtotale sul gruppo. */
   protected readonly opened = signal<ReadonlySet<string>>(new Set());
   protected readonly groups = computed(() => {
@@ -111,6 +115,18 @@ export class HomePage {
       next: (overview) => this.overview.set(overview),
       error: (e) => this.overviewError.set(errorMessage(e)),
     });
+  }
+
+  /** Etichetta dell'avanzamento del piano di un progetto: "62% del piano" o "piano esaurito". */
+  protected progressLabel(key: string): { text: string; level: 'none' | 'check' | 'late' } | null {
+    const item = this.progress().get(key);
+    if (!item) {
+      return null;
+    }
+    if (item.exhausted) {
+      return { text: 'piano esaurito', level: 'late' };
+    }
+    return { text: `${item.percent}% del piano`, level: item.percent >= 50 ? 'check' : 'none' };
   }
 
   protected toggleGroup(key: string): void {

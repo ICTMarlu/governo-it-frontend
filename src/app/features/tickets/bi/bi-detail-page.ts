@@ -426,7 +426,7 @@ export class BiDetailPage {
             now.getTime() - new Date(t.updated).getTime() > Number(this.days()) * 86_400_000,
         );
       case 'resolved-year':
-        return resolvedThisYear(this.store.scoped(), now);
+        return resolvedThisYear(scoped, now);
       case 'unassigned':
         // Come il numero della pagina operativa: tutti gli aperti, senza i filtri della BI
         return this.store.tickets().filter((t) => isOpen(t) && !t.pending && t.assignee === null);

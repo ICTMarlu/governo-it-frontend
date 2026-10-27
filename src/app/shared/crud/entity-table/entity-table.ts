@@ -59,6 +59,27 @@ export class EntityTable {
   readonly titleOpensEdit = input(false);
   /** Centra etichette e valori di tutte le colonne tranne il titolo. */
   readonly centerValues = input(false);
+  /** Azioni (modifica, elimina) all'inizio della riga, dopo la casella di selezione. */
+  readonly actionsFirst = input(false);
+  /** Righe su una sola riga: testi lunghi troncati, liste con "+N". */
+  readonly singleLine = input(false);
+
+  /** Lista di nomi con il limite della colonna: i primi, quanti altri ci sono e tutti per il tooltip. */
+  protected listParts(
+    row: EntityRow,
+    column: ColumnConfig,
+  ): { shown: string; extra: number; all: string } {
+    const value = readPath(row, column.key);
+    const names = Array.isArray(value) ? value.map(String) : [];
+    const limit = column.maxItems ?? names.length;
+    return {
+      shown: names.slice(0, limit).join(', '),
+      extra: Math.max(0, names.length - limit),
+      all: names.join(', '),
+    };
+  }
+  /** Righe più basse: meno spazio sopra e sotto, pulsanti più piccoli. */
+  readonly compact = input(false);
 
   protected isCentered(column: ColumnConfig): boolean {
     return this.centerValues() && column !== this.primaryColumn();

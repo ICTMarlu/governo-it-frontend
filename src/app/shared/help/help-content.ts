@@ -31,7 +31,7 @@ export const HOME_HELP: HelpContent = {
     {
       title: 'Chi vede cosa',
       items: [
-        'La Home è sempre tua, anche per Admin e Project Manager: i ticket assegnati a te, il tuo piano, i tuoi task e i punti per la direzione (l’Admin li vede tutti, gli altri solo quelli di cui sono owner). Il team si guarda nelle pagine Ticket AMS e Piano settimanale; la sezione in fondo, Progetti in lavorazione, mostra tutto il piano.',
+        'L’Admin vede il quadro generale, senza filtri: tutti i ticket, il carico di tutto il team, tutti i task e i punti per la direzione. Gli altri ruoli, Project Manager compresi, vedono i propri numeri: ticket assegnati, il proprio piano, i propri task e i punti per la direzione di cui sono owner. In fondo, Progetti in lavorazione mostra tutto il piano a Admin e Project Manager.',
         'Per i numeri personali il tuo utente deve essere collegato a una persona del team (Utenti › Risorsa).',
       ],
     },
@@ -47,7 +47,8 @@ export const HOME_HELP: HelpContent = {
       title: 'Intuizioni e "il punto di oggi"',
       items: [
         'Segnali incrociati: backlog che cresce o cala, la persona il cui backlog cresce di più (2 o più a settimana), ticket nuovi senza risposta, scadenze vicine, persone oltre il 100%, persone senza giornate nel piano, la settimana più libera (sotto l’80%), task in ritardo, punti scaduti.',
-        'Prima gli urgenti, al massimo 2 per area e 5 in tutto. "Il punto di oggi" riassume le prime tre.',
+        'Piano dei progetti (solo progetti di tipo Project): il piano teorico è il piano settimanale stesso, quindi la percentuale è le giornate delle settimane già chiuse ÷ le giornate totali del progetto. Avvisi: piano esaurito ma progetto ancora aperto; soglie di controllo al 50, 75 e 90% ("verifica di essere in tempo"); oltre metà del piano ma ancora To Start o Approved; progetto chiuso con giornate ancora pianificate. Un avviso per tipo, con i progetti nominati; sotto 2 giornate totali non si avvisa.',
+        'Prima gli urgenti, al massimo 2 per area (3 per i progetti) e 5 in tutto. "Il punto di oggi" riassume le prime tre.',
       ],
     },
     {
@@ -680,6 +681,7 @@ export const TICKETS_HELP: HelpContent = {
         'I filtri in alto valgono per tutte le pagine BI e restano passando dall’una all’altra: Progetto Marlù, Assegnatario, Anno e Mese di creazione. Clic su una barra di area o assegnatario filtra tutto su quel valore; un secondo clic lo toglie. Le combinazioni si salvano con "Vista".',
         'Panoramica: ticket creati nel periodo, quanti sono ancora aperti (open lavorabili + pending) e quanti risolti, con le percentuali; creati e risolti per mese (i risolti nel mese di chiusura); ripartizione per area, assegnatario, stato e tipo di richiesta.',
         'Trend: per settimana creati e risolti e, sotto, i lavorabili a fine settimana; "Includi i Pending" li conta o li esclude. Giorni di backlog, come la misura di Power BI = lavorabili di oggi ÷ risolti per giorno lavorativo nelle ultime 3 settimane complete (risolti ÷ 3 settimane ÷ 5 giorni; la settimana in corso non conta). Il risultato è in giorni lavorativi. Il Pending è lo stato di oggi (lo storico degli stati non si legge).',
+        '"Considera chiusi i ticket in attesa del cliente" (Trend e Persone, stessa scelta): acceso, i ticket in attesa di risposta del cliente contano come chiusi dal giorno in cui sono entrati in quello stato: sommati ai risolti per settimana, ai chiusi al giorno e ai giorni di backlog, e tolti dai lavorabili. Spento (di partenza) restano aperti.',
         'Aperti e Pending: i ticket aperti oggi (di qualunque periodo; contano area e assegnatario) per anzianità, area, priorità, assegnatario, richiedente e stato.',
         'Elenco: i ticket creati nel periodo con ricerca dal vivo, stato (aperti, pending, risolti, tutti), ordinamento per chiave, data o età e link a Jira.',
         'Gli stati "Pending" sono nel parametro TICKET_PENDING_STATUSES (oggi Pending); lo storico letto da Jira è di 2 anni (JIRA_HISTORY_DAYS).',

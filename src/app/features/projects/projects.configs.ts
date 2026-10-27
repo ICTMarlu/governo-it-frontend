@@ -22,6 +22,11 @@ export const PROJECTS_CONFIG: EntityConfig = {
   help: PROJECTS_HELP,
   writeRoles: [ROLES.admin, ROLES.pm, ROLES.editor],
   rowLink: (row) => ['/projects', row.id!],
+  // Modifica ed elimina a sinistra, dove inizia la riga: non serve scorrere la tabella per trovarli
+  actionsFirst: true,
+  // Vista compatta: una riga per progetto, owner e richiedenti con il primo nome e "+N"
+  compact: true,
+  singleLine: true,
   // Aperti o chiusi secondo la categoria dello stato (Anagrafiche › Stati progetto)
   closedWhen: (row) => row['statusTerminal'] === true,
   searchKeys: ['code', 'name', 'ownerNames', 'requesterNames', 'mainSystemLabel', 'description'],
@@ -169,8 +174,8 @@ export const PROJECTS_CONFIG: EntityConfig = {
   columns: [
     { key: 'name', label: 'Progetto', primary: true },
     { key: 'code', label: 'Codice', width: 'narrow' },
-    { key: 'workTypeLabel', label: 'Tipo', sortKey: 'workTypeSortOrder', width: 'narrow' },
-    { key: 'mainSystemLabel', label: 'Sistema' },
+    // Stretta: un nome di sistema troppo lungo si tronca con i puntini (il tooltip lo mostra intero)
+    { key: 'mainSystemLabel', label: 'Sistema', width: 'narrow' },
     {
       key: 'statusLabel',
       label: 'Stato',
@@ -178,14 +183,16 @@ export const PROJECTS_CONFIG: EntityConfig = {
       colorKey: 'statusColor',
       sortKey: 'statusSortOrder',
     },
+    { key: 'ranking', label: 'Ranking', type: 'number', width: 'narrow' },
     { key: 'itPriorityLevel', label: 'Priorità IT', type: 'number' },
     { key: 'businessPriorityLevel', label: 'Priorità business', type: 'number' },
-    { key: 'ownerNames', label: 'Owner', type: 'list' },
-    { key: 'requesterNames', label: 'Richiesto da', type: 'list', hideOnMobile: true },
+    { key: 'workTypeLabel', label: 'Tipo', sortKey: 'workTypeSortOrder', width: 'narrow' },
+    { key: 'ownerNames', label: 'Owner', type: 'list', maxItems: 1 },
+    { key: 'requesterNames', label: 'Richiesto da', type: 'list', hideOnMobile: true, maxItems: 1 },
     { key: 'dueForLabel', label: 'Due for', hideOnMobile: true, width: 'narrow' },
     { key: 'notes', label: 'Note', clamp: true, hideOnMobile: true },
     { key: 'expenseTypeLabel', label: 'Capex / Opex', defaultHidden: true },
-    { key: 'legalEntityNames', label: 'Società', type: 'list', defaultHidden: true },
+    { key: 'legalEntityNames', label: 'Società', type: 'list', defaultHidden: true, maxItems: 1 },
     { key: 'estimatedEffortDays', label: 'Effort (gg)', type: 'number', defaultHidden: true },
     { key: 'legacyActivityNumber', label: 'N. storico', type: 'number', defaultHidden: true },
   ],

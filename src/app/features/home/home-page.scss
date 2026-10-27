@@ -318,3 +318,22 @@
     margin: 0.75rem 0 0;
   }
 }
+
+// Avanzamento del piano di un progetto: quota di giornate pianificate già passate
+.work__progress {
+  margin-inline-start: 0.5rem;
+  padding: 0 0.5rem;
+  border-radius: 1rem;
+  background: var(--mat-sys-surface-container-high);
+  font: var(--mat-sys-label-small);
+  white-space: nowrap;
+
+  &--check {
+    background: light-dark(#fdf1d3, #4a3b12);
+  }
+
+  &--late {
+    background: light-dark(#fbdcd9, #4a1e1b);
+    color: var(--mat-sys-error);
+  }
+}

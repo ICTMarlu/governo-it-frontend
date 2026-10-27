@@ -116,6 +116,21 @@ export const ALERT_KINDS: Readonly<
   CONCENTRATION: { label: 'Carico concentrato', icon: 'person_alert' },
 };
 
+/** Entrati e chiusi in un giorno. */
+export interface DayFlow {
+  readonly day: string;
+  readonly created: number;
+  readonly resolved: number;
+}
+
+/** Entrati e chiusi di oggi e dell'ultimo giorno lavorativo, con la media giornaliera delle ultime 4 settimane. */
+export interface DailyFlow {
+  readonly today: DayFlow;
+  readonly previous: DayFlow;
+  readonly averageCreated: number;
+  readonly averageResolved: number;
+}
+
 export interface TicketDashboard {
   readonly sync: TicketSync;
   readonly kpis: TicketKpis;
@@ -125,6 +140,7 @@ export interface TicketDashboard {
   readonly projects: readonly ProjectTickets[];
   readonly advice: readonly Advice[];
   readonly alerts: readonly TicketAlert[];
+  readonly daily: DailyFlow | null;
 }
 
 export interface Ticket {

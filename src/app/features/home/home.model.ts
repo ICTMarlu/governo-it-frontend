@@ -65,8 +65,16 @@ export interface ProjectWork {
   readonly days: number;
 }
 
+/** Avanzamento del piano di un progetto aperto: giornate già passate sul totale, e piano esaurito. */
+export interface ProjectProgress {
+  readonly projectId: number;
+  readonly percent: number;
+  readonly exhausted: boolean;
+}
+
 export interface ProjectsOverview {
   readonly scope: HomeScope;
+  readonly progress: readonly ProjectProgress[];
   /** Lunedì delle settimane considerate: la scorsa, quella in corso e le tre successive. */
   readonly weeks: readonly string[];
   readonly rows: readonly ProjectWork[];

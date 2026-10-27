@@ -2,6 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { PeriodChart } from '../../../shared/charts/period-chart';
 import { KpiDirective } from '../components/kpi.directive';
@@ -13,6 +14,7 @@ import {
   backlogPeriod,
   isOpen,
   resolvedPerDay,
+  waitingAsClosed,
   weekly,
 } from './bi.model';
 import { BiStore } from './bi-store.service';
@@ -23,7 +25,14 @@ import { BiStore } from './bi-store.service';
  */
 @Component({
   selector: 'gov-bi-trend-page',
-  imports: [BiFilters, KpiDirective, MatProgressSpinnerModule, MatSlideToggleModule, PeriodChart],
+  imports: [
+    BiFilters,
+    KpiDirective,
+    MatProgressSpinnerModule,
+    MatSlideToggleModule,
+    MatTooltipModule,
+    PeriodChart,
+  ],
   template: `
     <div class="bi-page">
       <gov-bi-filters />
@@ -88,6 +97,14 @@ import { BiStore } from './bi-store.service';
           >
             Includi i Pending tra i lavorabili
           </mat-slide-toggle>
+          <mat-slide-toggle
+            class="tog"
+            [checked]="store.waitingAsClosed()"
+            (change)="store.waitingAsClosed.set($event.checked)"
+            matTooltip="Acceso: i ticket in attesa di risposta del cliente contano come chiusi (nei chiusi al giorno, nella barra arancione e non tra i lavorabili), dal giorno in cui sono entrati in quello stato"
+          >
+            Considera chiusi i ticket in attesa del cliente
+          </mat-slide-toggle>
           <p class="note">
             Giorni di backlog (come in Power BI) = lavorabili di oggi ÷ chiusi al giorno (media dei
             ticket risolti per giorno lavorativo nelle ultime 3 settimane complete: risolti ÷ 3 ÷ 5;
@@ -123,6 +140,18 @@ import { BiStore } from './bi-store.service';
       .bi-kpi {
         justify-content: center;
       }
+    }
+
+    // Etichetta piccola su due righe, come nella pagina Persone
+    .tog {
+      max-width: 13rem;
+    }
+
+    .tog ::ng-deep .mdc-label {
+      display: block;
+      font-size: 0.6875rem;
+      line-height: 1.15;
+      white-space: normal;
     }
 
     .period {
@@ -167,19 +196,24 @@ export class BiTrendPage {
     return end < now ? end : now;
   });
 
+  /** Ticket dei filtri in alto; con l'interruttore, quelli in attesa del cliente contano come chiusi. */
+  private readonly base = computed(() =>
+    this.store.waitingAsClosed() ? waitingAsClosed(this.store.scoped()) : this.store.scoped(),
+  );
+
   protected readonly weeks = computed(() =>
-    weekly(this.store.scoped(), this.from(), this.to(), this.store.includePending()),
+    weekly(this.base(), this.from(), this.to(), this.store.includePending()),
   );
   protected readonly backlog = computed(() =>
-    backlogDays(this.store.scoped(), new Date(), this.store.includePending()),
+    backlogDays(this.base(), new Date(), this.store.includePending()),
   );
   protected readonly closeRate = computed(() =>
-    resolvedPerDay(this.store.scoped(), new Date()).toLocaleString('it-IT', {
+    resolvedPerDay(this.base(), new Date()).toLocaleString('it-IT', {
       maximumFractionDigits: 1,
     }),
   );
   protected readonly closeRateYear = computed(() =>
-    resolvedPerDayYear(this.store.scoped(), new Date()).toLocaleString('it-IT', {
+    resolvedPerDayYear(this.base(), new Date()).toLocaleString('it-IT', {
       maximumFractionDigits: 1,
     }),
   );
@@ -191,8 +225,7 @@ export class BiTrendPage {
   });
   protected readonly workable = computed(
     () =>
-      this.store.scoped().filter((t) => isOpen(t) && (this.store.includePending() || !t.pending))
-        .length,
+      this.base().filter((t) => isOpen(t) && (this.store.includePending() || !t.pending)).length,
   );
   protected readonly pendingStatuses = computed(() =>
     (this.store.data()?.pendingStatuses ?? []).join(', '),
@@ -210,6 +243,8 @@ export class BiTrendPage {
   }
 
   protected open(scope: string): void {
-    void this.router.navigate(['/tickets/dettaglio'], { queryParams: { scope } });
+    void this.router.navigate(['/tickets/dettaglio'], {
+      queryParams: { scope, ...(this.store.waitingAsClosed() ? { waiting: '1' } : {}) },
+    });
   }
 }

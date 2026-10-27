@@ -29,7 +29,11 @@ export class SavedViewsService {
   }
 
   update(id: number, name: string, state?: unknown): Observable<SavedView> {
-    return this.http.put<SavedView>(`${this.base}/${id}`, { name, state: state ?? null });
+    // Senza stato si rinomina soltanto: la chiave non va mandata, altrimenti cancellerebbe la vista
+    return this.http.put<SavedView>(
+      `${this.base}/${id}`,
+      state === undefined ? { name } : { name, state },
+    );
   }
 
   setDefault(id: number, defaultView: boolean): Observable<SavedView> {

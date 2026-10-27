@@ -77,6 +77,19 @@
     font: var(--mat-sys-body-small);
   }
 
+  // Giudizio sulla media: verde meglio, rosso peggio (sempre con le parole, mai solo il colore)
+  &__trend {
+    font-weight: 600;
+
+    &--good {
+      color: light-dark(#2e7d32, #7cc683);
+    }
+
+    &--bad {
+      color: var(--mat-sys-error);
+    }
+  }
+
   &__link {
     align-self: flex-start;
     padding: 0;

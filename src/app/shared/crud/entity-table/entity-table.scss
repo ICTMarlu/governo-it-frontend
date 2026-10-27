@@ -105,6 +105,20 @@
   }
 }
 
+// Lista di nomi: i primi e, se ce ne sono altri, un "+N" (i nomi per intero sono nel tooltip)
+.list-cell {
+  white-space: nowrap;
+}
+
+.more {
+  margin-inline-start: 0.25rem;
+  padding: 0 0.375rem;
+  border-radius: 1rem;
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-small);
+}
+
 // Testi lunghi (es. note): due righe al massimo, testo completo nel tooltip
 .clamp {
   display: -webkit-box;
@@ -178,6 +192,37 @@
     opacity: 0.6;
   }
 
+  // Righe compatte (config.compact): meno interlinea e pulsanti azione più piccoli
+  &--compact {
+    td,
+    th {
+      padding-block: 0.125rem;
+    }
+
+    .actions .mat-mdc-icon-button {
+      --mat-icon-button-state-layer-size: 28px;
+      width: 28px;
+      height: 28px;
+      padding: 2px;
+    }
+  }
+
+  // Una riga per record (config.singleLine): testi troncati con i puntini, il tooltip dice il resto
+  &--single {
+    td {
+      max-width: 24rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .clamp {
+      display: block;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+
   // Valori corti (es. priorità): colonna stretta, l'intestazione va al massimo su due righe
   .col--narrow {
     width: 1%;
@@ -194,8 +239,15 @@
     text-align: center;
   }
 
+  // L'icona di ordinamento sta fuori dal testo: l'etichetta resta centrata sopra i valori
   th.col--center .sort-button {
+    position: relative;
     justify-content: center;
+
+    .sort-button__icon {
+      position: absolute;
+      inset-inline-start: 100%;
+    }
   }
 
   // Testi lunghi (es. nome del progetto): più spazio, così vanno meno a capo
@@ -207,6 +259,11 @@
     width: 1%;
     white-space: nowrap;
     text-align: end;
+  }
+
+  // Azioni a sinistra, dove inizia la riga
+  .actions--first {
+    text-align: start;
   }
 }
 

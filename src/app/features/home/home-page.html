@@ -267,6 +267,11 @@
                   } @else {
                     <strong>{{ group.label }}</strong>
                   }
+                  @if (progressLabel(group.key); as progress) {
+                    <span class="work__progress work__progress--{{ progress.level }}">{{
+                      progress.text
+                    }}</span>
+                  }
                   @if (group.hint) {
                     <span class="muted"> · {{ group.hint }}</span>
                   }
@@ -311,6 +316,11 @@
                       } @else {
                         {{ row.label }}
                       }
+                      @if (progressLabel(row.key); as progress) {
+                        <span class="work__progress work__progress--{{ progress.level }}">{{
+                          progress.text
+                        }}</span>
+                      }
                     </th>
                     @for (value of row.perWeek; track $index) {
                       <td [class.work__current]="weeks[$index] === currentWeek()">
@@ -337,7 +347,10 @@
   </section>
 
   <p class="note">
-    Numeri tuoi: i ticket assegnati a te, il tuo piano, i tuoi task e i punti per la direzione. Il
-    team si guarda nelle pagine Ticket AMS e Piano settimanale.
+    {{
+      team
+        ? 'Quadro generale: tutti i ticket, il carico di tutto il team, tutti i task e i punti per la direzione. Saturazione sulle persone con giornate nel piano; saldo ticket = (entrati − chiusi) delle ultime 4 settimane complete ÷ 4.'
+        : 'Numeri tuoi: i ticket assegnati a te, il tuo piano, i tuoi task e i punti per la direzione. Il team si guarda nelle pagine Ticket AMS e Piano settimanale.'
+    }}
   </p>
 }

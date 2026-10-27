@@ -1,6 +1,14 @@
 <ng-template #cell let-row let-column="column">
   @if (column.type === 'badge' && text(row, column) !== '—') {
     <span class="badge" [style.--badge-color]="color(row, column)">{{ text(row, column) }}</span>
+  } @else if (column.type === 'list' && column.maxItems && listParts(row, column).all) {
+    @let parts = listParts(row, column);
+    <span class="list-cell" [attr.title]="parts.all"
+      >{{ parts.shown }}
+      @if (parts.extra > 0) {
+        <span class="more">+{{ parts.extra }}</span>
+      }
+    </span>
   } @else if (column.clamp) {
     <span class="clamp" [attr.title]="text(row, column)">{{ text(row, column) }}</span>
   } @else {
@@ -116,7 +124,7 @@
 
   <!-- Tablet e desktop -->
   <div class="table-wrapper">
-    <table class="table">
+    <table class="table" [class.table--compact]="compact()" [class.table--single]="singleLine()">
       <caption class="visually-hidden">
         {{
           caption()
@@ -132,6 +140,11 @@
                 [indeterminate]="someSelected()"
                 (change)="toggleAll()"
               />
+            </th>
+          }
+          @if (hasActions() && actionsFirst()) {
+            <th scope="col" class="actions actions--first">
+              <span class="visually-hidden">Azioni</span>
             </th>
           }
           @for (column of columns(); track columnId(column)) {
@@ -156,7 +169,7 @@
               </button>
             </th>
           }
-          @if (hasActions()) {
+          @if (hasActions() && !actionsFirst()) {
             <th scope="col"><span class="visually-hidden">Azioni</span></th>
           }
         </tr>
@@ -176,8 +189,14 @@
                 />
               </td>
             }
+            @if (hasActions() && actionsFirst()) {
+              <td class="actions actions--first">
+                <ng-container *ngTemplateOutlet="actions; context: { $implicit: row }" />
+              </td>
+            }
             @for (column of columns(); track $index) {
               <td
+                [attr.title]="singleLine() ? text(row, column) : null"
                 [class.col--narrow]="widthOf(column) === 'narrow'"
                 [class.col--wide]="widthOf(column) === 'wide'"
                 [class.col--center]="isCentered(column)"
@@ -191,7 +210,7 @@
                 }
               </td>
             }
-            @if (hasActions()) {
+            @if (hasActions() && !actionsFirst()) {
               <td class="actions">
                 <ng-container *ngTemplateOutlet="actions; context: { $implicit: row }" />
               </td>

@@ -99,6 +99,8 @@ export interface ColumnConfig {
    * 'wide' per i testi lunghi. Di partenza: larga la colonna principale, strette le numeriche.
    */
   readonly width?: 'narrow' | 'wide';
+  /** Per 'list': quanti nomi mostrare prima di "+N" (gli altri sono nel tooltip). */
+  readonly maxItems?: number;
 }
 
 /** Filtro rapido a scelta multipla sui valori distinti di un campo. */
@@ -149,8 +151,14 @@ export interface EntityConfig {
    * nella barra, come le categorie di stato di Jira.
    */
   readonly closedWhen?: (row: EntityRow) => boolean;
+  /** Ogni riga su una sola riga: i testi lunghi si troncano (il tooltip li mostra per intero). */
+  readonly singleLine?: boolean;
+  /** Pulsanti di modifica ed eliminazione a sinistra, dove inizia la riga (invece che a destra). */
+  readonly actionsFirst?: boolean;
   /** Etichette e valori centrati in tutte le colonne tranne il titolo (anche il trattino dei vuoti). */
   readonly centerValues?: boolean;
+  /** Righe della tabella più basse (elenchi lunghi da scorrere a colpo d'occhio). */
+  readonly compact?: boolean;
   /** Ordinamento iniziale dell'elenco. */
   readonly sort?: (a: EntityRow, b: EntityRow) => number;
   /** Guida della pagina (pulsante Guida). */

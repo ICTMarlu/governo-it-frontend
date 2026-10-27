@@ -28,6 +28,7 @@ import {
   CONFIRM_IDLE_DAYS,
   isConfirmStatus,
   jiraSearchUrl,
+  DailyFlow,
 } from './models/ticket.model';
 import { KpiSettingsService } from './services/kpi-settings.service';
 import { TicketSyncService } from './services/ticket-sync.service';
@@ -163,6 +164,38 @@ export class TicketsPage {
     return `Aperti: oggi · Chiusi: dal ${fmt(from)} al ${fmt(to)} (ultime 4 settimane)`;
   });
   protected readonly confirmIdleDays = CONFIRM_IDLE_DAYS;
+
+  /** Nome dell'ultimo giorno lavorativo mostrato: "ieri", oppure il giorno della settimana (es. dopo il fine settimana). */
+  protected previousLabel(day: string): string {
+    const date = new Date(`${day}T00:00:00`);
+    const yesterday = new Date();
+    yesterday.setHours(0, 0, 0, 0);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return date.getTime() === yesterday.getTime()
+      ? 'ieri'
+      : date.toLocaleDateString('it-IT', { weekday: 'long' });
+  }
+
+  /** Scostamento dalla media giornaliera, con segno e un decimale: "+1,5", "−0,5", "in linea". */
+  protected delta(value: number, average: number): string {
+    const diff = Math.round((value - average) * 10) / 10;
+    if (diff === 0) {
+      return 'in linea';
+    }
+    const text = Math.abs(diff).toLocaleString('it-IT', { maximumFractionDigits: 1 });
+    return `${diff > 0 ? '+' : '−'}${text}`;
+  }
+
+  /**
+   * Come sta andando rispetto alla media: gli entrati sopra la media sono un peggioramento, i chiusi
+   * sotto la media anche. In linea entro mezzo ticket.
+   */
+  protected trend(created: number, resolved: number, daily: DailyFlow): 'good' | 'bad' | 'flat' {
+    const balance = created - resolved;
+    const average = daily.averageCreated - daily.averageResolved;
+    const diff = Math.round((balance - average) * 10) / 10;
+    return diff > 0.5 ? 'bad' : diff < -0.5 ? 'good' : 'flat';
+  }
   /** Tutti i ticket aperti, senza filtri: base del numero "in conferma/UAT da oltre N giorni". */
   private readonly openTickets = signal<readonly Ticket[]>([]);
   protected readonly confirmIdleCount = computed(

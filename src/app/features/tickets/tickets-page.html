@@ -89,6 +89,69 @@
         }
       </span>
     </li>
+    @if (data.daily; as daily) {
+      <li *govKpi="'ops.today'" class="kpi">
+        <span class="kpi__value">{{ daily.today.created }} / {{ daily.today.resolved }}</span>
+        <span class="kpi__label">entrati / chiusi oggi</span>
+        <span
+          class="kpi__meta"
+          title="Giornata in corso, confrontata con la media per giorno lavorativo delle ultime 4 settimane"
+        >
+          media {{ daily.averageCreated | number: '1.0-1' }} /
+          {{ daily.averageResolved | number: '1.0-1' }} · entrati
+          {{ delta(daily.today.created, daily.averageCreated) }}, chiusi
+          {{ delta(daily.today.resolved, daily.averageResolved) }}
+        </span>
+        <span
+          class="kpi__meta kpi__trend kpi__trend--{{
+            trend(daily.today.created, daily.today.resolved, daily)
+          }}"
+        >
+          @switch (trend(daily.today.created, daily.today.resolved, daily)) {
+            @case ('good') {
+              meglio della media
+            }
+            @case ('bad') {
+              peggio della media
+            }
+            @default {
+              in linea con la media
+            }
+          }
+          · giornata in corso
+        </span>
+      </li>
+      <li *govKpi="'ops.previous'" class="kpi">
+        <span class="kpi__value">{{ daily.previous.created }} / {{ daily.previous.resolved }}</span>
+        <span class="kpi__label">entrati / chiusi {{ previousLabel(daily.previous.day) }}</span>
+        <span
+          class="kpi__meta"
+          title="Confrontato con la media per giorno lavorativo delle ultime 4 settimane"
+        >
+          media {{ daily.averageCreated | number: '1.0-1' }} /
+          {{ daily.averageResolved | number: '1.0-1' }} · entrati
+          {{ delta(daily.previous.created, daily.averageCreated) }}, chiusi
+          {{ delta(daily.previous.resolved, daily.averageResolved) }}
+        </span>
+        <span
+          class="kpi__meta kpi__trend kpi__trend--{{
+            trend(daily.previous.created, daily.previous.resolved, daily)
+          }}"
+        >
+          @switch (trend(daily.previous.created, daily.previous.resolved, daily)) {
+            @case ('good') {
+              meglio della media
+            }
+            @case ('bad') {
+              peggio della media
+            }
+            @default {
+              in linea con la media
+            }
+          }
+        </span>
+      </li>
+    }
     <li
       *govKpi="'ops.unassigned'"
       class="kpi kpi--link"

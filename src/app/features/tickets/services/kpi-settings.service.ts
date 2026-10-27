@@ -24,6 +24,8 @@ export const KPI_GROUPS: readonly KpiGroup[] = [
     items: [
       { id: 'ops.open', label: 'Ticket aperti' },
       { id: 'ops.flow7', label: 'Entrati / chiusi in 7 giorni' },
+      { id: 'ops.today', label: 'Entrati / chiusi oggi (con la media)' },
+      { id: 'ops.previous', label: 'Entrati / chiusi ieri (con la media)' },
       { id: 'ops.unassigned', label: 'Senza assegnatario' },
       { id: 'ops.overdue', label: 'Con la scadenza passata' },
       { id: 'ops.priority', label: 'Priorità più alte (Highest e High)' },
