@@ -29,6 +29,24 @@ export const HOME_HELP: HelpContent = {
     'Il punto di oggi: in pochi secondi come vanno ticket, piano, task e direzione, cosa conviene anticipare e cosa tocca a te.',
   sections: [
     {
+      title: 'Vedi la home come… (solo Admin)',
+      items: [
+        'L’amministratore ha la vista generale; tutti gli altri, PM compresi, vedono i propri numeri, i propri progetti e il proprio portafoglio.',
+        'Dal menu "Vedi la home come…" in alto l’amministratore sceglie un utente o una persona del team senza utente e vede la home esattamente come la vede lei: utile per allinearsi. Una fascia lo ricorda finché non premi "Torna alla mia home".',
+        'La scelta resta nell’indirizzo della pagina (es. ?come=u12), quindi si può ricaricare o salvare tra i preferiti. Si guarda soltanto: non si modifica nulla a nome dell’altro.',
+      ],
+    },
+    {
+      title: 'Portafoglio progetti',
+      items: [
+        'Solo i progetti di tipo Project: AMS, Continuous e Admin non contano. Admin e PM vedono tutto il portafoglio, gli altri i progetti di cui sono owner o su cui hanno giornate.',
+        'Fotografia di oggi: quanti progetti ci sono in ogni stato.',
+        'Stato e piano non tornano: in corso senza giornate nella settimana in corso e nelle 4 successive; da avviare o approvati che hanno già giornate; chiusi, abortiti o respinti con giornate ancora nel piano. Apri la riga per vedere i progetti.',
+        'In parallelo: per persona, i progetti In Progress con giornate nelle prossime 5 settimane; oltre la soglia (parametro PROJECT_WIP_LIMIT, di partenza 3) la barra diventa rossa.',
+        'Movimento nel tempo: per settimana o mese, aperti (creati), avviati (passati a In Progress), chiusi (Completed), messi in Pending, abortiti o respinti, e gli in corso a fine periodo. Lo storico parte dal 27/10/2026 (parametro PROJECT_HISTORY_SINCE): i cambi di stato fatti prima non ci sono.',
+      ],
+    },
+    {
       title: 'Chi vede cosa',
       items: [
         'L’Admin vede il quadro generale, senza filtri: tutti i ticket, il carico di tutto il team, tutti i task e i punti per la direzione. Gli altri ruoli, Project Manager compresi, vedono i propri numeri: ticket assegnati, il proprio piano, i propri task e i punti per la direzione di cui sono owner. In fondo, Progetti in lavorazione mostra tutto il piano a Admin e Project Manager.',

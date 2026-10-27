@@ -7,15 +7,39 @@
     }
   </div>
   <div class="hero__side">
+    @if (isAdmin() && currentUser(); as me) {
+      <gov-home-view-as
+        [currentUserId]="me.id"
+        [selected]="viewAs()"
+        (changed)="chooseViewAs($event)"
+        (selectedName)="viewAsName.set($event)"
+      />
+    }
     @if (home(); as data) {
       <span class="scope">
         <mat-icon aria-hidden="true">{{ data.scope === 'TEAM' ? 'groups' : 'person' }}</mat-icon>
-        {{ data.scope === 'TEAM' ? 'Vista del team' : 'La tua vista' }}
+        {{
+          data.scope === 'TEAM' ? 'Vista generale' : viewAs() ? 'Vista personale' : 'La tua vista'
+        }}
       </span>
     }
     <gov-help-button [help]="help" />
   </div>
 </header>
+
+@if (viewAs()) {
+  <p class="viewing" role="status">
+    <mat-icon aria-hidden="true">visibility</mat-icon>
+    <span>
+      Stai guardando la home di
+      <strong>{{ viewAsName() ?? home()?.resourceName ?? 'questa persona' }}</strong> così come la
+      vede quando entra: numeri, intuizioni e progetti sono i suoi. Qui si guarda soltanto.
+    </span>
+    <button type="button" class="viewing__back" (click)="chooseViewAs(null)">
+      Torna alla mia home
+    </button>
+  </p>
+}
 
 @if (error(); as message) {
   <p class="state" role="alert">Non riesco a leggere il punto di oggi: {{ message }}</p>
@@ -345,6 +369,9 @@
       </p>
     }
   </section>
+
+  <!-- Portafoglio progetti: per stato, coerenza con il piano, in parallelo e movimento nel tempo (D-34) -->
+  <gov-home-portfolio [params]="viewParams()" />
 
   <p class="note">
     {{

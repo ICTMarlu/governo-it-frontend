@@ -1,16 +1,19 @@
 import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { API_BASE_URL } from '../../core/config/api.config';
 import { errorMessage } from '../../shared/crud/crud-api.service';
 import { HelpButton } from '../../shared/help/help-button';
 import { HOME_HELP } from '../../shared/help/help-content';
+import { HomePortfolio } from './components/home-portfolio/home-portfolio';
+import { HomeViewAs, ViewAsOption, viewAsParams } from './components/home-view-as/home-view-as';
+import { ROLES } from '../../shared/crud/crud.model';
 import {
   Home,
   ProjectsOverview,
@@ -45,6 +48,8 @@ const SHORTCUTS = [
   imports: [
     DatePipe,
     HelpButton,
+    HomePortfolio,
+    HomeViewAs,
     MatButtonToggleModule,
     MatIconModule,
     MatProgressSpinnerModule,
@@ -56,6 +61,15 @@ const SHORTCUTS = [
 export class HomePage {
   private readonly http = inject(HttpClient);
   private readonly url = `${inject(API_BASE_URL)}/home`;
+  private readonly router = inject(Router);
+
+  /** "Vedi la home come…" dell'Admin (D-35), dall'indirizzo: ?come=u12 (utente) o ?come=r7 (persona). */
+  readonly come = input<string | undefined>();
+  protected readonly viewAs = computed(() => (this.isAdmin() ? (this.come() ?? null) : null));
+  protected readonly viewParams = computed(() => viewAsParams(this.viewAs()));
+  protected readonly isAdmin = computed(() => this.currentUser()?.role === ROLES.admin);
+  /** Nome di chi si sta guardando, dal menu (anche per un utente senza persona collegata). */
+  protected readonly viewAsName = signal<string | null>(null);
 
   protected readonly help = HOME_HELP;
   protected readonly currentUser = inject(AuthService).currentUser;
@@ -68,7 +82,13 @@ export class HomePage {
   protected readonly hello = greeting(this.today);
   /** Nome per il saluto: quello della persona collegata, altrimenti quello dell'utente. */
   protected readonly firstName = computed(
-    () => (this.home()?.resourceName ?? this.currentUser()?.displayName ?? '').split(' ')[0] ?? '',
+    () =>
+      (
+        (this.viewAs() ? this.viewAsName() : null) ??
+        this.home()?.resourceName ??
+        this.currentUser()?.displayName ??
+        ''
+      ).split(' ')[0] ?? '',
   );
 
   protected readonly home = signal<Home | null>(null);
@@ -107,13 +127,35 @@ export class HomePage {
   });
 
   constructor() {
-    this.http.get<Home>(this.url).subscribe({
+    // A ogni cambio di "vedi come" si ricarica la home di chi si guarda
+    effect(() => {
+      const params = this.viewParams();
+      untracked(() => this.load(params));
+    });
+  }
+
+  private load(params: Record<string, string>): void {
+    this.home.set(null);
+    this.error.set(null);
+    this.overview.set(null);
+    this.overviewError.set(null);
+    this.opened.set(new Set());
+    this.http.get<Home>(this.url, { params }).subscribe({
       next: (home) => this.home.set(home),
       error: (e) => this.error.set(errorMessage(e)),
     });
-    this.http.get<ProjectsOverview>(`${this.url}/projects`).subscribe({
+    this.http.get<ProjectsOverview>(`${this.url}/projects`, { params }).subscribe({
       next: (overview) => this.overview.set(overview),
       error: (e) => this.overviewError.set(errorMessage(e)),
+    });
+  }
+
+  /** Scelta dal menu: la porta nell'indirizzo (resta ricaricando la pagina). */
+  protected chooseViewAs(option: ViewAsOption | null): void {
+    this.viewAsName.set(option?.name ?? null);
+    void this.router.navigate([], {
+      queryParams: { come: option?.key ?? null },
+      queryParamsHandling: 'merge',
     });
   }
 

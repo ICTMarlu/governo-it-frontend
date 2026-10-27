@@ -337,3 +337,30 @@
     color: var(--mat-sys-error);
   }
 }
+
+// "Vedi la home come" (D-35): fascia che ricorda di chi è la home che si sta guardando
+.viewing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+
+  span {
+    flex: 1 1 20rem;
+  }
+
+  &__back {
+    padding: 0.25rem 0.75rem;
+    border: 1px solid currentcolor;
+    border-radius: 1rem;
+    background: none;
+    color: inherit;
+    font: var(--mat-sys-label-large);
+    cursor: pointer;
+  }
+}

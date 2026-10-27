@@ -1,0 +1,243 @@
+<section class="card portfolio" aria-labelledby="portfolio-title">
+  <h2 id="portfolio-title" class="card__title">
+    <mat-icon aria-hidden="true">dashboard</mat-icon> Portafoglio progetti
+  </h2>
+
+  @if (error(); as message) {
+    <p class="muted" role="alert">Non riesco a leggere il portafoglio: {{ message }}</p>
+  } @else if (!data()) {
+    <p class="muted" role="status">
+      <mat-progress-spinner diameter="20" mode="indeterminate" aria-hidden="true" /> Carico il
+      portafoglio…
+    </p>
+  } @else {
+    @let p = data()!;
+    <p class="muted intro">
+      {{ p.total }} progetti di tipo Project{{
+        p.scope === 'TEAM' ? '' : ' di cui sei owner o su cui hai giornate'
+      }}. AMS, Continuous e Admin non contano.
+    </p>
+
+    <!-- 1. Fotografia di oggi -->
+    <h3 class="block__title">Fotografia di oggi</h3>
+    <ul class="statuses" aria-label="Progetti per stato">
+      @for (status of p.statuses; track status.statusId) {
+        <li class="status status--{{ highlight[status.code] ?? 'none' }}">
+          <span class="status__value">{{ status.count }}</span>
+          <span class="status__label">{{ status.label }}</span>
+        </li>
+      }
+    </ul>
+
+    <div class="grid">
+      <!-- 2. Coerenza tra stato e piano -->
+      <div>
+        <h3 class="block__title">Stato e piano non tornano</h3>
+        <p class="muted small">
+          Confronto con il piano della settimana in corso e delle {{ p.coherence.aheadWeeks - 1 }}
+          successive.
+        </p>
+        <ul class="checks">
+          @for (check of checks(); track check.label) {
+            <li>
+              @if (check.list.length === 0) {
+                <span class="check check--ok">
+                  <mat-icon aria-hidden="true">check_circle</mat-icon> Nessun progetto
+                  {{ check.label }}
+                </span>
+              } @else {
+                <details>
+                  <summary class="check check--{{ check.tone }}">
+                    <mat-icon aria-hidden="true">{{ check.icon }}</mat-icon>
+                    <strong>{{ check.list.length }}</strong> {{ check.label }}
+                  </summary>
+                  <ul class="refs">
+                    @for (project of check.list; track project.id) {
+                      <li>
+                        <a [routerLink]="['/projects', project.id]">{{ refLabel(project) }}</a>
+                        <span class="muted"> · {{ project.status }}</span>
+                      </li>
+                    }
+                  </ul>
+                </details>
+              }
+            </li>
+          }
+        </ul>
+      </div>
+
+      <!-- 3. Progetti in parallelo per persona -->
+      <div>
+        <h3 class="block__title">Progetti in corso in parallelo</h3>
+        <p class="muted small">
+          Progetti In Progress con giornate nelle prossime {{ p.coherence.aheadWeeks }} settimane.
+          Soglia: {{ p.wipLimit }} per persona (parametro PROJECT_WIP_LIMIT).
+        </p>
+        @if (p.parallel.length === 0) {
+          <p class="muted">Nessun progetto in corso con giornate nel piano.</p>
+        } @else {
+          <ul class="parallel">
+            @for (person of p.parallel; track person.resourceId) {
+              @let over = person.count > p.wipLimit;
+              <li>
+                <details>
+                  <summary class="parallel__row">
+                    <span class="parallel__name">{{ person.name }}</span>
+                    <span class="parallel__track" aria-hidden="true">
+                      <span
+                        class="parallel__bar"
+                        [class.parallel__bar--over]="over"
+                        [style.width.%]="percent(person.count)"
+                      ></span>
+                      <span class="parallel__limit" [style.left.%]="percent(p.wipLimit)"></span>
+                    </span>
+                    <span class="parallel__count" [class.parallel__count--over]="over">
+                      {{ person.count }}
+                      @if (over) {
+                        <span class="parallel__tag">oltre la soglia</span>
+                      }
+                    </span>
+                  </summary>
+                  <ul class="refs">
+                    @for (project of person.projects; track project.id) {
+                      <li>
+                        <a [routerLink]="['/projects', project.id]">{{ refLabel(project) }}</a>
+                      </li>
+                    }
+                  </ul>
+                </details>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+
+    <!-- 4. Movimento nel tempo -->
+    <div class="movement__head">
+      <h3 class="block__title">Movimento nel tempo</h3>
+      <mat-button-toggle-group
+        hideSingleSelectionIndicator
+        aria-label="Periodo del grafico"
+        [value]="period()"
+        (change)="period.set($event.value)"
+      >
+        <mat-button-toggle value="week">Settimane</mat-button-toggle>
+        <mat-button-toggle value="month">Mesi</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+    <p class="muted small">
+      Dal {{ p.historySince | date: 'd MMMM yyyy' }}: aperti = creati, avviati = passati a In
+      Progress, chiusi = Completed; per settimana dal lunedì.
+    </p>
+
+    <ul class="totals" aria-label="Totali dal {{ p.historySince | date: 'd/M/yyyy' }}">
+      @for (serie of series; track serie.key) {
+        <li class="totals__item">
+          <span class="swatch swatch--{{ serie.key }}" aria-hidden="true"></span>
+          {{ serie.label }} <strong>{{ totals()[serie.key] }}</strong>
+        </li>
+      }
+    </ul>
+
+    @if (empty()) {
+      <p class="empty">
+        <mat-icon aria-hidden="true">schedule</mat-icon>
+        Lo storico è partito il {{ p.historySince | date: 'd MMMM' }}: il grafico si riempie con i
+        prossimi progetti creati e cambi di stato. Oggi sono in corso
+        <strong>{{ points().at(-1)?.inProgressAtEnd ?? 0 }}</strong> progetti.
+      </p>
+    } @else {
+      <svg
+        class="chart"
+        [attr.viewBox]="'0 0 ' + chart.width + ' ' + chart.height"
+        role="img"
+        aria-label="Progetti aperti, avviati, chiusi, in pending e abortiti per periodo"
+      >
+        @for (tick of [0, 0.5, 1]; track tick) {
+          @let y = chart.height - chart.bottom - (chart.height - chart.bottom - chart.top) * tick;
+          <line
+            class="grid-line"
+            [attr.x1]="chart.left"
+            [attr.x2]="chart.width"
+            [attr.y1]="y"
+            [attr.y2]="y"
+          />
+          <text class="axis" [attr.x]="chart.left - 6" [attr.y]="y + 4" text-anchor="end">
+            {{ maxBar() * tick | number: '1.0-0' }}
+          </text>
+        }
+        @for (point of points(); track point.label; let i = $index) {
+          @for (serie of series; track serie.key; let s = $index) {
+            @if (point[serie.key] > 0) {
+              <rect
+                class="bar bar--{{ serie.key }}"
+                [attr.x]="barX(i, s)"
+                [attr.width]="barWidth() - 2"
+                [attr.y]="chart.height - chart.bottom - barHeight(point[serie.key])"
+                [attr.height]="barHeight(point[serie.key])"
+                rx="2"
+              >
+                <title>{{ point.title }} · {{ serie.label }}: {{ point[serie.key] }}</title>
+              </rect>
+            }
+          }
+          <text class="axis" [attr.x]="lineX(i)" [attr.y]="chart.height - 6" text-anchor="middle">
+            {{ point.label }}
+          </text>
+        }
+      </svg>
+
+      <p class="block__subtitle">In corso a fine periodo</p>
+      <svg
+        class="chart chart--line"
+        [attr.viewBox]="'0 0 ' + chart.width + ' ' + line.height"
+        role="img"
+        aria-label="Progetti in corso a fine periodo"
+      >
+        <path class="line" [attr.d]="linePath()" />
+        @for (point of points(); track point.label; let i = $index) {
+          <circle class="dot" [attr.cx]="lineX(i)" [attr.cy]="lineY(point.inProgressAtEnd)" r="4">
+            <title>{{ point.title }} · in corso: {{ point.inProgressAtEnd }}</title>
+          </circle>
+          <text
+            class="axis"
+            [attr.x]="lineX(i)"
+            [attr.y]="lineY(point.inProgressAtEnd) - 8"
+            text-anchor="middle"
+          >
+            {{ point.inProgressAtEnd }}
+          </text>
+        }
+      </svg>
+    }
+
+    <details class="table-view">
+      <summary>Vedi i numeri in tabella</summary>
+      <div class="table-scroll">
+        <table class="table table--centered">
+          <thead>
+            <tr>
+              <th scope="col">Periodo</th>
+              @for (serie of series; track serie.key) {
+                <th scope="col">{{ serie.label }}</th>
+              }
+              <th scope="col">In corso a fine periodo</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (point of points(); track point.label) {
+              <tr>
+                <th scope="row">{{ point.title }}</th>
+                @for (serie of series; track serie.key) {
+                  <td>{{ point[serie.key] }}</td>
+                }
+                <td>{{ point.inProgressAtEnd }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </details>
+  }
+</section>
