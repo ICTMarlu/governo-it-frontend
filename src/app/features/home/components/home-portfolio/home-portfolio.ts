@@ -154,6 +154,11 @@ export class HomePortfolio {
     return Math.round((count / this.maxParallel()) * 100);
   }
 
+  /** Id dei progetti separati da virgola: l'elenco Progetti li mostra soli (?ids=). */
+  protected ids(projects: readonly ProjectRef[]): string {
+    return projects.map((project) => project.id).join(',');
+  }
+
   protected refLabel(project: ProjectRef): string {
     return project.code ? `${project.code} · ${project.name}` : project.name;
   }

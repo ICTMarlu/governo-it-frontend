@@ -82,7 +82,7 @@ export class EntityTable {
   readonly compact = input(false);
 
   protected isCentered(column: ColumnConfig): boolean {
-    return this.centerValues() && column !== this.primaryColumn();
+    return this.centerValues() && column !== this.primaryColumn() && column.align !== 'start';
   }
 
   /** Colonna con le caselle per selezionare più righe (azioni massive). */

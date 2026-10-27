@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ActivatedRoute } from '@angular/router';
 import { Observable, catchError, filter, forkJoin, map, of, switchMap } from 'rxjs';
 
 import { AuthService } from '../../../core/auth/auth.service';
@@ -66,6 +67,7 @@ export class CrudSection {
   );
   private readonly currentUser = inject(AuthService).currentUser;
   private readonly preferences = inject(UserPreferencesService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly config = input.required<EntityConfig>();
   /** Cambiandolo il genitore fa ricaricare l'elenco (es. dopo un inserimento fatto fuori). */
@@ -81,6 +83,12 @@ export class CrudSection {
   protected readonly openState = signal<'all' | 'open' | 'closed'>('all');
   /** Filtri rapidi a scelta multipla: valori in alternativa nello stesso filtro, filtri diversi in AND. */
   protected readonly filters = signal<Record<string, readonly string[]>>({});
+  /** Solo queste righe (indirizzo con ?ids=1,2,3, es. dai numeri della Home); null = nessun filtro. */
+  protected readonly idFilter = signal<ReadonlySet<number> | null>(null);
+  /** Filtri e righe indicati dall'indirizzo (?f.chiave=valore, ?ids=): vincono sulla vista predefinita. */
+  private linkFilters: Record<string, readonly string[]> = {};
+  private linkIds: ReadonlySet<number> | null = null;
+  private linkPending = false;
   /** Colonne scelte dall'utente (null = predefinite), salvate sul server per utente. */
   protected readonly layout = signal<ColumnLayout | null>(null);
   protected readonly visibleColumns = computed(() =>
@@ -110,7 +118,8 @@ export class CrudSection {
   protected readonly hasActiveFilters = computed(
     () =>
       Object.values(this.filters()).some((values) => values.length > 0) ||
-      this.openState() !== 'all',
+      this.openState() !== 'all' ||
+      this.idFilter() !== null,
   );
 
   /** Quanti aperti e chiusi ci sono (per i numeri sul filtro), con la ricerca e i filtri esclusi. */
@@ -166,6 +175,7 @@ export class CrudSection {
     const rows = this.rows().filter(
       (row) =>
         (this.showInactive() || row['active'] !== false) &&
+        (this.idFilter() === null || this.idFilter()!.has(row.id!)) &&
         (openState === 'all' || closedWhen!(row) === (openState === 'closed')) &&
         (!text ||
           config.searchKeys.some((key) =>
@@ -193,6 +203,7 @@ export class CrudSection {
   );
 
   constructor() {
+    this.readLink();
     effect(() => {
       const endpoint = this.config().endpoint;
       untracked(() => {
@@ -222,6 +233,7 @@ export class CrudSection {
   }
 
   protected clearFilters(): void {
+    this.idFilter.set(null);
     this.openState.set('all');
     this.filters.set({});
     this.search.set('');
@@ -252,6 +264,12 @@ export class CrudSection {
     this.showInactive.set(view.showInactive ?? false);
     this.openState.set(view.openState ?? 'all');
     this.sort.set(view.sort ?? null);
+    if (this.linkPending) {
+      this.applyLink();
+      this.linkPending = false;
+    } else {
+      this.idFilter.set(null);
+    }
     const columns = view.columns ?? null;
     this.layout.set(columns);
     const key = this.layoutKey();
@@ -423,6 +441,32 @@ export class CrudSection {
       .replace(/^\//, '')
       .replace(/\//g, '.');
     return `columns.${path}`;
+  }
+
+  /** Legge dall'indirizzo i filtri (?f.stato=In Progress, ?ids=1,2): solo negli elenchi principali. */
+  private readLink(): void {
+    if (!this.savedViews()) {
+      return;
+    }
+    const params = this.route.snapshot.queryParamMap;
+    for (const key of params.keys.filter((name) => name.startsWith('f.'))) {
+      this.linkFilters[key.slice(2)] = params.getAll(key);
+    }
+    const ids = (params.get('ids') ?? '')
+      .split(',')
+      .map(Number)
+      .filter((id) => Number.isInteger(id) && id > 0);
+    this.linkIds = ids.length > 0 ? new Set(ids) : null;
+    this.linkPending = this.linkIds !== null || Object.keys(this.linkFilters).length > 0;
+    this.applyLink();
+  }
+
+  /** Applica i filtri dell'indirizzo; la vista predefinita arriva dopo e non li deve cancellare. */
+  private applyLink(): void {
+    this.idFilter.set(this.linkIds);
+    this.filters.set({ ...this.linkFilters });
+    this.openState.set('all');
+    this.search.set('');
   }
 
   private loadLayout(): void {

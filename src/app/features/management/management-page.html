@@ -78,19 +78,22 @@
         <mat-button-toggle [value]="option.value">{{ option.label }}</mat-button-toggle>
       }
     </mat-button-toggle-group>
-    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="quick__audience">
-      <mat-label>Rivolto a (facoltativo)</mat-label>
-      <mat-select
+    <!-- "Rivolto a": pulsanti da attivare e disattivare, non una tendina. Con la tendina aperta il primo
+         clic su "Aggiungi" serviva solo a chiuderla e il punto non veniva salvato -->
+    <div class="quick__audience" role="group" aria-label="Rivolto a (facoltativo)">
+      <span class="quick__audience-label">Rivolto a</span>
+      <mat-button-toggle-group
         multiple
         name="quickAudience"
+        aria-label="Rivolto a, a scelta multipla"
         [ngModel]="quickAudience()"
         (ngModelChange)="quickAudience.set($event)"
       >
         @for (option of audienceOptions(); track option.value) {
-          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          <mat-button-toggle [value]="option.value">{{ option.label }}</mat-button-toggle>
         }
-      </mat-select>
-    </mat-form-field>
+      </mat-button-toggle-group>
+    </div>
     <button mat-stroked-button type="submit" [disabled]="adding() || !quickTitle().trim()">
       Aggiungi
     </button>

@@ -98,3 +98,8 @@
     color: var(--mat-sys-error);
   }
 }
+
+.toolbar__note {
+  color: var(--mat-sys-primary);
+  font: var(--mat-sys-label-large);
+}

@@ -153,6 +153,7 @@
               [class.col--narrow]="widthOf(column) === 'narrow'"
               [class.col--wide]="widthOf(column) === 'wide'"
               [class.col--center]="isCentered(column)"
+              [class.col--start]="column.align === 'start'"
               [attr.aria-sort]="ariaSort(column)"
             >
               <button
@@ -200,6 +201,7 @@
                 [class.col--narrow]="widthOf(column) === 'narrow'"
                 [class.col--wide]="widthOf(column) === 'wide'"
                 [class.col--center]="isCentered(column)"
+                [class.col--start]="column.align === 'start'"
               >
                 @if (column === primaryColumn()) {
                   <ng-container *ngTemplateOutlet="title; context: { $implicit: row }" />

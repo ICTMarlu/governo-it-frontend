@@ -99,6 +99,8 @@ export interface ColumnConfig {
    * 'wide' per i testi lunghi. Di partenza: larga la colonna principale, strette le numeriche.
    */
   readonly width?: 'narrow' | 'wide';
+  /** 'start': testo allineato a sinistra e stretto (max 16rem, poi a capo) anche con centerValues. */
+  readonly align?: 'start';
   /** Per 'list': quanti nomi mostrare prima di "+N" (gli altri sono nel tooltip). */
   readonly maxItems?: number;
 }

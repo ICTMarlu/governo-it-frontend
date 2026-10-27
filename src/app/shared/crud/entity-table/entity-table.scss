@@ -250,6 +250,15 @@
     }
   }
 
+  // Testo a sinistra e stretto (column.align = 'start')
+  .col--start {
+    max-width: 16rem;
+  }
+
+  td.col--start .clamp {
+    max-width: 16rem;
+  }
+
   // Testi lunghi (es. nome del progetto): più spazio, così vanno meno a capo
   .col--wide {
     min-width: 18rem;
@@ -261,9 +270,28 @@
     text-align: end;
   }
 
-  // Azioni a sinistra, dove inizia la riga
+  // Azioni a sinistra, dove inizia la riga: colonna stretta, pulsanti piccoli e vicini
   .actions--first {
+    padding-inline: 0.125rem;
     text-align: start;
+
+    .mat-mdc-icon-button {
+      --mat-icon-button-state-layer-size: 28px;
+      width: 28px;
+      height: 28px;
+      padding: 2px;
+    }
+  }
+
+  // Casella di selezione: colonna stretta (il padding generale delle celle era troppo largo)
+  .select {
+    width: 2.25rem;
+    padding-inline: 0.25rem;
+  }
+
+  // Casella di selezione prima delle azioni: meno spazio ai lati
+  .select + .actions--first {
+    padding-inline-start: 0;
   }
 }
 

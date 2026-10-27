@@ -26,8 +26,16 @@
   }
 
   &__audience {
-    flex: 1 1 14rem;
-    max-width: 20rem;
+    display: flex;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__audience-label {
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-label-large);
   }
 }
 

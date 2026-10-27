@@ -23,8 +23,15 @@
     <ul class="statuses" aria-label="Progetti per stato">
       @for (status of p.statuses; track status.statusId) {
         <li class="status status--{{ highlight[status.code] ?? 'none' }}">
-          <span class="status__value">{{ status.count }}</span>
-          <span class="status__label">{{ status.label }}</span>
+          <a
+            class="status__link"
+            routerLink="/projects"
+            [queryParams]="{ 'f.statusLabel': status.label, 'f.workTypeLabel': 'Project' }"
+            [title]="'Apri nei Progetti quelli in stato ' + status.label"
+          >
+            <span class="status__value">{{ status.count }}</span>
+            <span class="status__label">{{ status.label }}</span>
+          </a>
         </li>
       }
     </ul>
@@ -49,7 +56,14 @@
                 <details>
                   <summary class="check check--{{ check.tone }}">
                     <mat-icon aria-hidden="true">{{ check.icon }}</mat-icon>
-                    <strong>{{ check.list.length }}</strong> {{ check.label }}
+                    <a
+                      class="count-link"
+                      routerLink="/projects"
+                      [queryParams]="{ ids: ids(check.list) }"
+                      title="Apri questi progetti nell'elenco Progetti"
+                      >{{ check.list.length }}</a
+                    >
+                    {{ check.label }}
                   </summary>
                   <ul class="refs">
                     @for (project of check.list; track project.id) {
@@ -92,7 +106,13 @@
                       <span class="parallel__limit" [style.left.%]="percent(p.wipLimit)"></span>
                     </span>
                     <span class="parallel__count" [class.parallel__count--over]="over">
-                      {{ person.count }}
+                      <a
+                        class="count-link"
+                        routerLink="/projects"
+                        [queryParams]="{ ids: ids(person.projects) }"
+                        [title]="'Apri nei Progetti quelli di ' + person.name"
+                        >{{ person.count }}</a
+                      >
                       @if (over) {
                         <span class="parallel__tag">oltre la soglia</span>
                       }

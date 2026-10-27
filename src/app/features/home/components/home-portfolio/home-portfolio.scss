@@ -58,7 +58,7 @@ ul {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.5rem;
+  padding: 0;
   border-radius: 0.5rem;
   background: var(--mat-sys-surface-container);
   text-align: center;
@@ -274,4 +274,29 @@ $series: (
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+// Numeri cliccabili: aprono l'elenco Progetti già filtrato
+.status__link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem;
+  color: inherit;
+  text-decoration: none;
+  border-radius: inherit;
+
+  &:hover,
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+.count-link {
+  font-weight: 700;
+  color: var(--mat-sys-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }

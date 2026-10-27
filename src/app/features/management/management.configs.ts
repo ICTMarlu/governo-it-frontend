@@ -43,6 +43,8 @@ const byCreatedDesc = (a: EntityRow, b: EntityRow): number =>
 /** Punti da portare alla direzione: la lista viva. */
 export const TOPICS_CONFIG: EntityConfig = {
   centerValues: true,
+  // Modifica ed elimina a sinistra, dove inizia la riga
+  actionsFirst: true,
   closedWhen: (row) => row['status'] === 'CLOSED' || row['status'] === 'CANCELLED',
   title: 'Punti',
   singular: 'Punto',
@@ -191,6 +193,8 @@ export const TOPICS_CONFIG: EntityConfig = {
 /** Azioni nate dai punti: chi fa cosa entro quando. */
 export const ACTIONS_CONFIG: EntityConfig = {
   centerValues: true,
+  // Modifica ed elimina a sinistra, dove inizia la riga
+  actionsFirst: true,
   title: 'Azioni',
   singular: 'Azione',
   endpoint: '/management/actions',
@@ -252,6 +256,8 @@ export const ACTIONS_CONFIG: EntityConfig = {
 /** Riunioni con la direzione: si creano con "Inizia riunione", si aprono per marcare i punti. */
 export const MEETINGS_CONFIG: EntityConfig = {
   centerValues: true,
+  // Modifica ed elimina a sinistra, dove inizia la riga
+  actionsFirst: true,
   title: 'Riunioni',
   singular: 'Riunione',
   endpoint: '/management/meetings',
