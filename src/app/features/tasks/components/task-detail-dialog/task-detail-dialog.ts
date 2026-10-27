@@ -18,6 +18,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { RouterLink } from '@angular/router';
 import { catchError, filter, of, switchMap } from 'rxjs';
 
 import {
@@ -34,7 +35,14 @@ import {
   commentSegments,
 } from '../../../projects/models/project-comment.model';
 import { ProjectCommentsService } from '../../../projects/services/project-comments.service';
-import { EVENT_LABELS, Task, TaskDetail, TaskKind, toBody } from '../../models/task.model';
+import {
+  EVENT_LABELS,
+  TASK_SOURCES,
+  Task,
+  TaskDetail,
+  TaskKind,
+  toBody,
+} from '../../models/task.model';
 import { TasksService } from '../../services/tasks.service';
 
 export interface TaskDetailData {
@@ -67,6 +75,7 @@ const projectLabel = (project: EntityRow): string =>
     MatProgressSpinnerModule,
     MatSelectModule,
     CommentComposer,
+    RouterLink,
   ],
   templateUrl: './task-detail-dialog.html',
   styleUrl: './task-detail-dialog.scss',
@@ -116,6 +125,12 @@ export class TaskDetailDialog {
   private readonly newComposer = viewChild<CommentComposer>('newComposer');
 
   protected readonly task = computed(() => this.detail()?.task ?? null);
+  /** Pagina del record da cui è nato il task (D-36). */
+  protected readonly sourceLink = computed(() => {
+    const task = this.task();
+    const meta = task?.sourceType ? TASK_SOURCES[task.sourceType] : undefined;
+    return meta && task?.sourceId ? meta.link(task.sourceId) : null;
+  });
   protected readonly readOnly = computed(() => !this.task()?.canEdit);
   protected readonly inCell = computed(() => this.task()?.planRowId != null);
   protected readonly eventLabels = EVENT_LABELS;

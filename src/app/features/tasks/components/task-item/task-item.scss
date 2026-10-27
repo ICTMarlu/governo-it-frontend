@@ -113,3 +113,13 @@ button.status {
   margin-inline-end: 0.5rem;
   border-radius: 50%;
 }
+
+// Origine del task (D-36): il record da cui è nato, cliccabile
+.meta--source {
+  color: var(--mat-sys-primary);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

@@ -32,6 +32,11 @@ export interface Task {
   readonly updatedAt: string | null;
   readonly commentCount: number;
   readonly canEdit: boolean;
+  /** Origine (D-36): da quale record è nato; tutti null se nato libero. */
+  readonly sourceType: string | null;
+  readonly sourceTypeLabel: string | null;
+  readonly sourceId: string | null;
+  readonly sourceLabel: string | null;
   readonly version: string;
 }
 
@@ -87,6 +92,8 @@ export interface TaskBody {
   readonly weekStart: string | null;
   readonly dueDate: string | null;
   readonly remindOn: string | null;
+  /** Origine, solo alla creazione: in modifica il backend la ignora. */
+  readonly source?: TaskSourceBody | null;
   readonly version: string | null;
 }
 
@@ -97,6 +104,9 @@ export interface TaskQuery {
   readonly planRowId?: number;
   readonly weekStart?: string;
   readonly includeDone?: boolean;
+  /** Origine (D-36): tipo di record ed eventualmente il singolo record. */
+  readonly sourceType?: string;
+  readonly sourceId?: string;
 }
 
 /** Chiave di una casella del piano (riga + settimana). */
@@ -184,7 +194,69 @@ export const EVENT_LABELS: Readonly<Record<string, string>> = {
   DUE_DATE: 'Scadenza',
   REMIND_ON: 'Promemoria',
   PRIORITY: 'Priorità',
+  SOURCE: 'Nato da',
 };
+
+/** Tabelle da cui può nascere un task (D-36): nome, plurale, icona e pagina del record. */
+export const TASK_SOURCES: Readonly<
+  Record<
+    string,
+    {
+      readonly label: string;
+      readonly plural: string;
+      readonly icon: string;
+      readonly link: (id: string) => {
+        path: readonly (string | number)[];
+        query?: Record<string, string>;
+      };
+    }
+  >
+> = {
+  MOBILE_LINE: {
+    label: 'Linea mobile',
+    plural: 'linee mobili',
+    icon: 'sim_card',
+    link: (id) => ({ path: ['/mobile-lines'], query: { ids: id } }),
+  },
+  MOBILE_DEVICE: {
+    label: 'Smartphone o tablet',
+    plural: 'smartphone e tablet',
+    icon: 'smartphone',
+    link: () => ({ path: ['/telephony'] }),
+  },
+  VULNERABILITY: {
+    label: 'Vulnerabilità',
+    plural: 'vulnerabilità',
+    icon: 'gpp_maybe',
+    link: () => ({ path: ['/technologies'] }),
+  },
+  TECHNOLOGY: {
+    label: 'Tecnologia',
+    plural: 'tecnologie',
+    icon: 'dns',
+    link: () => ({ path: ['/technologies'] }),
+  },
+  RESOURCE: {
+    label: 'Risorsa',
+    plural: 'risorse',
+    icon: 'badge',
+    link: (id) => ({ path: ['/resources', id] }),
+  },
+};
+
+/** Record da cui nasce un task (solo alla creazione). */
+export interface TaskSourceBody {
+  readonly type: string;
+  readonly id: string;
+  readonly label: string;
+}
+
+/** Task aperti e totali di un record. */
+export interface SourceTaskCount {
+  readonly sourceId: string;
+  readonly open: number;
+  readonly total: number;
+}
 
 export interface TaskGroup {
   readonly key: string;

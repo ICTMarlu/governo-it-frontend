@@ -30,6 +30,7 @@ import { ConfirmDialog, ConfirmDialogData } from '../../shared/crud/confirm-dial
 import { errorMessage } from '../../shared/crud/crud-api.service';
 import { toIsoDate } from '../../shared/dates/italian-date-adapter';
 import {
+  TASK_SOURCES,
   Task,
   TaskKind,
   TaskStatusOption,
@@ -91,6 +92,16 @@ export class TasksPage {
 
   /** Persona da mostrare, dal link "Tutti i task di…" (?resource=id). */
   readonly resource = input<string | undefined>();
+  /** Origine dal link "Tutti i task da…" del pannello di un record (?origine=MOBILE_LINE). */
+  readonly origine = input<string | undefined>();
+
+  /** Tabelle da cui possono nascere i task (D-36), per il filtro Origine. */
+  protected readonly sourceOptions = Object.entries(TASK_SOURCES).map(([type, meta]) => ({
+    type,
+    label: meta.plural,
+  }));
+  /** null = tutti; FREE = solo i task nati liberi; altrimenti il tipo di record. */
+  protected readonly sourceFilter = signal<string | null>(null);
 
   protected readonly help = TASKS_HELP;
   protected readonly statuses = toSignal(this.service.statuses$, {
@@ -122,8 +133,11 @@ export class TasksPage {
     const status = this.statusFilter();
     const priority = this.priorityFilter();
     const project = this.projectFilter();
+    const source = this.sourceFilter();
     return (this.tasks() ?? []).filter(
       (task) =>
+        (source === null ||
+          (source === 'FREE' ? task.sourceType === null : task.sourceType === source)) &&
         (status === null || task.statusId === status) &&
         (priority === null || task.priorityLevel === priority) &&
         (project === null || task.projectId === project) &&
@@ -133,6 +147,7 @@ export class TasksPage {
           task.projectCode,
           task.projectName,
           task.assigneeName,
+          task.sourceLabel,
         ]),
     );
   });
@@ -231,7 +246,14 @@ export class TasksPage {
     effect(() => {
       const fromLink = Number(this.resource());
       const mine = this.currentUser()?.resourceId ?? null;
-      untracked(() => this.personId.set(fromLink > 0 ? fromLink : (mine ?? ALL)));
+      // Dal pannello di un record si vogliono i task di quel tipo di record, di chiunque siano
+      const origin = this.origine();
+      untracked(() => {
+        this.personId.set(fromLink > 0 ? fromLink : origin ? ALL : (mine ?? ALL));
+        if (origin && origin in TASK_SOURCES) {
+          this.sourceFilter.set(origin);
+        }
+      });
     });
     // L'assegnatario del nuovo task segue la persona scelta, ma si può cambiare
     effect(() => {
@@ -259,6 +281,7 @@ export class TasksPage {
     status: this.statusFilter(),
     priority: this.priorityFilter(),
     project: this.projectFilter(),
+    source: this.sourceFilter(),
   }));
 
   /** Applica una vista salvata; con il link "Tutti i task di…" la persona resta quella del link. */
@@ -271,6 +294,7 @@ export class TasksPage {
       status: number | null;
       priority: number | null;
       project: number | null;
+      source: string | null;
     }>;
     if (!(Number(this.resource()) > 0)) {
       this.personId.set(saved.person ?? this.currentUser()?.resourceId ?? ALL);
@@ -281,6 +305,10 @@ export class TasksPage {
     this.statusFilter.set(saved.status ?? null);
     this.priorityFilter.set(saved.priority ?? null);
     this.projectFilter.set(saved.project ?? null);
+    // Con il link "Tutti i task da…" l'origine resta quella del link
+    if (!this.origine()) {
+      this.sourceFilter.set(saved.source ?? null);
+    }
   }
 
   protected toggleSelect(task: Task): void {

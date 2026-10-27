@@ -1,4 +1,5 @@
 import { HelpContent } from '../help/help.model';
+import { TaskSourceConfig } from './record-tasks';
 
 /**
  * Configurazione dichiarativa di un'anagrafica: campi del form, colonne dell'elenco, permessi.
@@ -165,6 +166,11 @@ export interface EntityConfig {
   readonly sort?: (a: EntityRow, b: EntityRow) => number;
   /** Guida della pagina (pulsante Guida). */
   readonly help?: HelpContent;
+  /**
+   * Task collegati ai record (D-36): icona "Task" nella riga, con il numero dei task aperti; il
+   * task creato da lì ricorda il record da cui nasce. Solo per tabelle che si movimentano.
+   */
+  readonly taskSource?: TaskSourceConfig;
 }
 
 /** Valore di un campo della riga, anche annidato ("attributes.shortCode"). */

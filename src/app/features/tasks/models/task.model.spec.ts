@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  TASK_SOURCES,
   Task,
   TaskStatusOption,
   compareTasks,
@@ -39,6 +40,10 @@ const base: Task = {
   updatedAt: null,
   commentCount: 0,
   canEdit: true,
+  sourceType: null,
+  sourceTypeLabel: null,
+  sourceId: null,
+  sourceLabel: null,
   version: 'AAA',
 };
 
@@ -96,5 +101,22 @@ describe('task.model', () => {
     expect(body.title).toBe('Nuovo titolo');
     expect(body.planRowId).toBe(14);
     expect(body.version).toBe('AAA');
+  });
+});
+
+describe('origine dei task (D-36)', () => {
+  it('porta alla pagina del record da cui è nato il task', () => {
+    expect(TASK_SOURCES['MOBILE_LINE'].link('12')).toEqual({
+      path: ['/mobile-lines'],
+      query: { ids: '12' },
+    });
+    expect(TASK_SOURCES['RESOURCE'].link('7')).toEqual({ path: ['/resources', '7'] });
+    expect(Object.keys(TASK_SOURCES)).toEqual([
+      'MOBILE_LINE',
+      'MOBILE_DEVICE',
+      'VULNERABILITY',
+      'TECHNOLOGY',
+      'RESOURCE',
+    ]);
   });
 });

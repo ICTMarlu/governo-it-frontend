@@ -18,6 +18,11 @@ export const RESOURCES_CONFIG: EntityConfig = {
   subtitle: 'Interni, consulenti e fornitori. Apri una risorsa per capacità, ore extra e tariffe.',
   endpoint: '/resources',
   canDelete: true,
+  // Task collegati alla persona: ingresso, uscita, account e device (D-36)
+  taskSource: {
+    type: 'RESOURCE',
+    label: (row) => String(row['fullName'] ?? `Risorsa ${String(row['id'])}`),
+  },
   help: RESOURCES_HELP,
   writeRoles: RESOURCE_WRITE_ROLES,
   searchKeys: ['fullName', 'alias', 'email', 'vendorName', 'mainSystemLabels'],

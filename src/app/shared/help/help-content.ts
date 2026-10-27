@@ -619,6 +619,14 @@ export const TASKS_HELP: HelpContent = {
     'Task e note di ogni persona, nati dalle caselle del piano o scritti qui: una guida che va oltre il ticket, per non perdere nulla tra un allineamento e l’altro.',
   sections: [
     {
+      title: 'Task nati da un record',
+      items: [
+        'In Linee mobili, Smartphone, Tablet, Tecnologie, Vulnerabilità e Risorse ogni riga ha l’icona dei task: si apre il pannello dei task di quel record e si aggiungono con Invio. Sull’icona c’è il numero dei task aperti.',
+        'Il task ricorda da dove nasce: nella lista compare «Da: …» (cliccabile) e nel dettaglio «nato da». L’origine non cambia dopo la creazione; se il record viene eliminato il task resta con il suo nome.',
+        'Il filtro Origine mostra solo i task nati da un tipo di record, oppure quelli nati liberi o dal piano.',
+      ],
+    },
+    {
       title: 'Inserire e aggiornare',
       items: [
         'Scrivi il titolo nel campo in alto e premi Invio: il task è assegnato alla persona scelta. L’icona a sinistra lo trasforma in nota, il calendario aggiunge la scadenza.',

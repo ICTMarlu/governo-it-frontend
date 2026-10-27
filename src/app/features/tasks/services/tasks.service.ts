@@ -7,6 +7,7 @@ import { ProjectComment } from '../../projects/models/project-comment.model';
 import {
   CellTaskCount,
   ReminderSummary,
+  SourceTaskCount,
   Task,
   TaskBody,
   TaskDetail,
@@ -66,6 +67,11 @@ export class TasksService {
 
   cellCounts(from: string, to: string): Observable<CellTaskCount[]> {
     return this.http.get<CellTaskCount[]>(`${this.base}/cells`, { params: { from, to } });
+  }
+
+  /** Task aperti e totali per record di un tipo (es. MOBILE_LINE), per il pallino negli elenchi. */
+  sourceCounts(type: string): Observable<SourceTaskCount[]> {
+    return this.http.get<SourceTaskCount[]>(`${this.base}/sources`, { params: { type } });
   }
 
   reminders(): Observable<ReminderSummary> {

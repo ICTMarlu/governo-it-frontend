@@ -105,6 +105,16 @@
     </mat-select>
   </mat-form-field>
   <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filters__field">
+    <mat-label>Origine</mat-label>
+    <mat-select [value]="sourceFilter()" (valueChange)="sourceFilter.set($event)">
+      <mat-option [value]="null">Tutte</mat-option>
+      <mat-option value="FREE">Nati liberi o dal piano</mat-option>
+      @for (option of sourceOptions; track option.type) {
+        <mat-option [value]="option.type">Da {{ option.label }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filters__field">
     <mat-label>Stato</mat-label>
     <mat-select [value]="statusFilter()" (valueChange)="statusFilter.set($event)">
       <mat-option [value]="null">Tutti</mat-option>

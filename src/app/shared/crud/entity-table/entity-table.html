@@ -17,6 +17,32 @@
 </ng-template>
 
 <ng-template #actions let-row>
+  @if (taskSource()) {
+    @let count = taskCount(row);
+    <button
+      mat-icon-button
+      type="button"
+      class="tasks-btn"
+      [attr.aria-label]="
+        'Task di ' + rowTitle(row) + (count?.open ? ': ' + count!.open + ' aperti' : '')
+      "
+      [matTooltip]="
+        count?.open
+          ? count!.open +
+            (count!.open === 1 ? ' task aperto' : ' task aperti') +
+            ': apri o aggiungi'
+          : count?.total
+            ? 'Task tutti chiusi: apri o aggiungi'
+            : 'Aggiungi un task su questa riga'
+      "
+      (click)="openTasks(row)"
+    >
+      <mat-icon aria-hidden="true">{{ count?.open ? 'assignment' : 'add_task' }}</mat-icon>
+      @if (count?.open) {
+        <span class="tasks-btn__badge" aria-hidden="true">{{ count!.open }}</span>
+      }
+    </button>
+  }
   @if (canEdit()) {
     <button
       mat-icon-button

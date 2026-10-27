@@ -41,6 +41,21 @@
           <mat-icon aria-hidden="true">date_range</mat-icon>{{ week(item.weekStart) }}
         </span>
       }
+      @if (showSource() && item.sourceLabel) {
+        @if (source(); as src) {
+          <a
+            class="meta meta--source"
+            [routerLink]="src.path"
+            [queryParams]="src.query"
+            [title]="'Nato da: ' + item.sourceTypeLabel + ' · ' + item.sourceLabel"
+          >
+            <mat-icon aria-hidden="true">{{ src.icon }}</mat-icon
+            >Da: {{ item.sourceLabel }}
+          </a>
+        } @else {
+          <span class="meta meta--source">Da: {{ item.sourceLabel }}</span>
+        }
+      }
       @if (showAssignee() && item.assigneeName) {
         <span class="meta">
           <mat-icon aria-hidden="true">person</mat-icon>{{ item.assigneeName }}

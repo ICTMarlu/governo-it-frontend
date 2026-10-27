@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, input, model, output } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,6 +10,7 @@ import { RouterLink } from '@angular/router';
 
 import { columnId } from '../column-layout';
 import { ColumnConfig, EntityRow, readPath } from '../crud.model';
+import { RECORD_TASKS, RecordTaskCount, TaskSourceConfig } from '../record-tasks';
 
 const DATE_FORMAT = new Intl.DateTimeFormat('it-IT', {
   day: '2-digit',
@@ -135,7 +136,47 @@ export class EntityTable {
     });
   }
 
-  protected readonly hasActions = computed(() => this.canEdit() || this.canDelete());
+  protected readonly hasActions = computed(
+    () => this.canEdit() || this.canDelete() || this.taskSource() !== undefined,
+  );
+
+  /** Task dei record (D-36): tipo di record e nome della riga nel task; vuoto = niente icona. */
+  readonly taskSource = input<TaskSourceConfig>();
+  private readonly recordTasks = inject(RECORD_TASKS, { optional: true });
+  /** Task aperti e totali per id della riga. */
+  protected readonly taskCounts = signal<ReadonlyMap<string, RecordTaskCount>>(new Map());
+
+  private readonly loadTaskCounts = effect(() => {
+    const source = this.taskSource();
+    if (source && this.recordTasks) {
+      this.refreshTaskCounts(source.type);
+    }
+  });
+
+  protected taskCount(row: EntityRow): RecordTaskCount | undefined {
+    return row.id === undefined ? undefined : this.taskCounts().get(String(row.id));
+  }
+
+  /** Apre i task della riga; alla chiusura aggiorna i numeri se qualcosa è cambiato. */
+  protected openTasks(row: EntityRow): void {
+    const source = this.taskSource();
+    if (!source || !this.recordTasks || row.id === undefined) {
+      return;
+    }
+    this.recordTasks.open(source.type, String(row.id), source.label(row)).subscribe((changed) => {
+      if (changed) {
+        this.refreshTaskCounts(source.type);
+      }
+    });
+  }
+
+  private refreshTaskCounts(type: string): void {
+    this.recordTasks?.counts(type).subscribe({
+      next: (counts) => this.taskCounts.set(counts),
+      // Senza numeri l'icona resta comunque utilizzabile
+      error: () => this.taskCounts.set(new Map()),
+    });
+  }
 
   /** Righe nell'ordine scelto; senza ordinamento restano nell'ordine ricevuto. */
   protected readonly sortedRows = computed(() => {

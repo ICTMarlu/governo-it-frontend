@@ -4,6 +4,16 @@
     @if (task(); as current) {
       <small class="head__meta">
         creato da {{ current.createdByName ?? '—' }} il {{ current.createdAt | date: 'dd/MM/yyyy' }}
+        @if (current.sourceLabel) {
+          · nato da
+          @if (sourceLink(); as src) {
+            <a [routerLink]="src.path" [queryParams]="src.query" (click)="close()"
+              >{{ current.sourceTypeLabel }} {{ current.sourceLabel }}</a
+            >
+          } @else {
+            {{ current.sourceTypeLabel }} {{ current.sourceLabel }}
+          }
+        }
         @if (current.weekStart) {
           · segnato nel piano, settimana {{ current.weekStart | date: 'dd/MM' }}
         }

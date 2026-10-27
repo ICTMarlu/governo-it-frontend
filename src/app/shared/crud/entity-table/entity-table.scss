@@ -314,3 +314,23 @@
 tr.selected {
   background: var(--mat-sys-secondary-container);
 }
+
+// Task della riga (D-36): numero dei task aperti sull'icona
+.tasks-btn {
+  position: relative;
+
+  &__badge {
+    position: absolute;
+    top: 0.125rem;
+    right: 0.125rem;
+    min-width: 1rem;
+    height: 1rem;
+    padding: 0 0.25rem;
+    border-radius: 0.5rem;
+    background: var(--mat-sys-primary);
+    color: var(--mat-sys-on-primary);
+    font: var(--mat-sys-label-small);
+    line-height: 1rem;
+    text-align: center;
+  }
+}

@@ -71,6 +71,13 @@ export const TECHNOLOGIES_CONFIG: EntityConfig = {
   singular: 'Tecnologia',
   subtitle: 'Cosa si usa, in che versione e fino a quando è supportato.',
   endpoint: '/technologies',
+  // Task collegati alla tecnologia: aggiornamenti, fine supporto (D-36)
+  taskSource: {
+    type: 'TECHNOLOGY',
+    label: (row) =>
+      [row['name'], row['softwareVersion']].filter(Boolean).join(' ') ||
+      `Tecnologia ${String(row['id'])}`,
+  },
   canDelete: true,
   help: TECHNOLOGIES_HELP,
   searchKeys: [
@@ -219,6 +226,13 @@ export const VULNERABILITIES_CONFIG: EntityConfig = {
   subtitle: 'CVE e bollettini che riguardano le tecnologie in uso.',
   endpoint: '/vulnerabilities',
   canDelete: true,
+  // Task collegati alla vulnerabilità: la correzione da fare (D-36)
+  taskSource: {
+    type: 'VULNERABILITY',
+    label: (row) =>
+      [row['reference'], row['technologyName']].filter(Boolean).join(' · ') ||
+      `Vulnerabilità ${String(row['id'])}`,
+  },
   help: TECHNOLOGIES_HELP,
   searchKeys: ['reference', 'title', 'technologyName', 'fixVersion', 'notes'],
   quickFilters: [

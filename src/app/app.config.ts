@@ -13,6 +13,8 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { RecordTasksService } from './features/tasks/services/record-tasks.service';
+import { RECORD_TASKS } from './shared/crud/record-tasks';
 import { provideItalianDates } from './shared/dates/italian-date-adapter';
 
 registerLocaleData(localeIt);
@@ -25,6 +27,8 @@ export const appConfig: ApplicationConfig = {
     { provide: LOCALE_ID, useValue: 'it-IT' },
     // Calendario dei campi data: gg/mm/aaaa, settimana da lunedì
     provideItalianDates(),
+    // Task dei record degli elenchi (D-36): la tabella condivisa li chiede alla parte Task
+    { provide: RECORD_TASKS, useExisting: RecordTasksService },
     // Icone Material Symbols (font caricato in index.html)
     provideAppInitializer(() => {
       inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-outlined');
