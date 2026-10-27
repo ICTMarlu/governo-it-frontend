@@ -64,6 +64,12 @@
           <span class="flash__value">{{ data.tickets.open }} aperti</span>
           <span
             class="flash__meta"
+            title="Ticket aperti in attesa di risposta del cliente o in User Acceptance Test: aspettano una conferma, non lavoro tuo"
+          >
+            di cui {{ data.tickets.inConfirm }} in attesa cliente / UAT
+          </span>
+          <span
+            class="flash__meta"
             [class.flash__meta--bad]="data.tickets.backlogPerWeek >= 0.5"
             [class.flash__meta--good]="data.tickets.backlogPerWeek <= -0.5"
           >

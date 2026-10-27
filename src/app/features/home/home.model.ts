@@ -27,6 +27,8 @@ export interface Home {
   readonly tickets: {
     readonly configured: boolean;
     readonly open: number;
+    /** Di cui in attesa del cliente o in User Acceptance Test. */
+    readonly inConfirm: number;
     readonly backlogPerWeek: number;
     readonly dueSoon: number;
     readonly dueSoonDays: number;
