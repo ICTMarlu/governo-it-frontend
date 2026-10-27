@@ -5,6 +5,7 @@ import { PageHeader } from '../../shared/components/page-header/page-header';
 import { CrudSection } from '../../shared/crud/crud-section/crud-section';
 import { ActivityTab } from './activity-tab';
 import { AuditTab } from './audit-tab';
+import { McpActionsTab } from './mcp-actions-tab';
 import { PermissionsTab } from './permissions-tab';
 import { ProfilesTab } from './profiles-tab';
 import { USERS_CONFIG } from './users.configs';
@@ -12,7 +13,8 @@ import { USERS_HELP } from '../../shared/help/help-content';
 
 /**
  * Utenti e permessi: l'elenco degli utenti, chi può cosa (utenti × moduli), i profili con i
- * livelli di partenza e lo storico delle modifiche. Le schede si caricano quando si aprono.
+ * livelli di partenza, lo storico delle modifiche, il registro attività e le azioni fatte tramite
+ * Claude. Le schede si caricano quando si aprono.
  */
 @Component({
   selector: 'gov-users-page',
@@ -21,6 +23,7 @@ import { USERS_HELP } from '../../shared/help/help-content';
     AuditTab,
     CrudSection,
     MatTabsModule,
+    McpActionsTab,
     PageHeader,
     PermissionsTab,
     ProfilesTab,
@@ -48,6 +51,9 @@ import { USERS_HELP } from '../../shared/help/help-content';
       </mat-tab>
       <mat-tab label="Attività">
         <ng-template matTabContent><gov-activity-tab /></ng-template>
+      </mat-tab>
+      <mat-tab label="Azioni da Claude">
+        <ng-template matTabContent><gov-mcp-actions-tab /></ng-template>
       </mat-tab>
     </mat-tab-group>
   `,
