@@ -6,6 +6,8 @@ export interface StatusCount {
   readonly code: string;
   readonly label: string;
   readonly count: number;
+  /** Progetti in questo stato tra quelli visibili (per aprirli nell'elenco). */
+  readonly projectIds: readonly number[];
 }
 
 export interface ProjectRef {

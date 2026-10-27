@@ -456,7 +456,7 @@ export class CrudSection {
       .split(',')
       .map(Number)
       .filter((id) => Number.isInteger(id) && id > 0);
-    this.linkIds = ids.length > 0 ? new Set(ids) : null;
+    this.linkIds = params.has('ids') ? new Set(ids) : null;
     this.linkPending = this.linkIds !== null || Object.keys(this.linkFilters).length > 0;
     this.applyLink();
   }

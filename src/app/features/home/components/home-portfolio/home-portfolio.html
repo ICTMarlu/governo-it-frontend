@@ -26,7 +26,7 @@
           <a
             class="status__link"
             routerLink="/projects"
-            [queryParams]="{ 'f.statusLabel': status.label, 'f.workTypeLabel': 'Project' }"
+            [queryParams]="{ ids: status.projectIds.join(',') || '0' }"
             [title]="'Apri nei Progetti quelli in stato ' + status.label"
           >
             <span class="status__value">{{ status.count }}</span>
