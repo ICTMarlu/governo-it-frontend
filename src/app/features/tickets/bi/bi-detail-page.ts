@@ -28,6 +28,10 @@ import { BiStore } from './bi-store.service';
 /** Quali ticket parte dalla pagina di origine: aperti, pending, creati nel periodo, chiusi di recente… */
 type Scope =
   | 'open'
+  | 'all-open'
+  | 'all-todo'
+  | 'all-progress'
+  | 'all-waiting'
   | 'workable'
   | 'pending'
   | 'created'
@@ -55,6 +59,10 @@ type SortKey = 'key' | 'priority' | 'due' | 'created' | 'age' | 'updated';
 
 const SCOPE_LABELS: Readonly<Record<Scope, string>> = {
   open: 'ticket aperti',
+  'all-open': 'ticket aperti (compresi quelli in Pending)',
+  'all-todo': 'ticket aperti ancora da fare',
+  'all-progress': 'ticket aperti in corso (esclusi quelli in attesa del cliente)',
+  'all-waiting': 'ticket aperti in attesa del cliente (senza Pending)',
   workable: 'ticket lavorabili (aperti, senza Pending)',
   pending: 'ticket in Pending',
   created: 'ticket creati nel periodo',
@@ -292,6 +300,8 @@ export class BiDetailPage {
   /** Senza grafico di provenienza (es. clic su un numero) non c'è filtro per barra. */
   readonly dim = input<DrillDimension | ''>('');
   readonly value = input('');
+  /** Id della risorsa: solo i suoi ticket (più affidabile del nome, che in Jira può essere scritto diversamente). */
+  readonly resource = input('');
   /** Titolo libero (es. il nome della persona o del numero cliccato). */
   readonly title = input('');
   /** Fascia di anzianità scelta nella pagina di partenza (es. "8–30 giorni"): restringe l'elenco. */
@@ -338,6 +348,7 @@ export class BiDetailPage {
     const dim = this.dim();
     return this.base(now)
       .filter((t) => !dim || matchesDimension(t, dim, this.value(), now))
+      .filter((t) => !this.resource() || String(t.resourceId) === this.resource())
       .filter((t) => !this.aging() || matchesDimension(t, 'aging', this.aging(), now))
       .filter((t) =>
         matchesTerms(terms, [
@@ -372,6 +383,17 @@ export class BiDetailPage {
     switch (this.scope()) {
       case 'open':
         return scoped.filter(isOpen);
+      // Numeri del carico per persona: tutti gli aperti, senza i filtri della BI
+      case 'all-open':
+        return this.store.tickets().filter(isOpen);
+      case 'all-todo':
+        return this.store.tickets().filter((t) => isOpen(t) && t.category === 'NEW');
+      case 'all-progress':
+        return this.store
+          .tickets()
+          .filter((t) => isOpen(t) && t.category === 'INDETERMINATE' && !t.waitingCustomer);
+      case 'all-waiting':
+        return this.openWhere((t) => t.waitingCustomer);
       case 'workable':
         return scoped.filter((t) => isOpen(t) && !t.pending);
       case 'pending':

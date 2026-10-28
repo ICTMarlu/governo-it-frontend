@@ -11,8 +11,10 @@ export class TicketsService {
   private readonly http = inject(HttpClient);
   private readonly base = `${inject(API_BASE_URL)}/tickets`;
 
-  dashboard(): Observable<TicketDashboard> {
-    return this.http.get<TicketDashboard>(`${this.base}/dashboard`);
+  /** Con {@code resourceId} indicatori, flussi, azioni e allerte sono quelli di una sola persona. */
+  dashboard(resourceId: number | null = null): Observable<TicketDashboard> {
+    const params: Record<string, number> = resourceId === null ? {} : { resourceId };
+    return this.http.get<TicketDashboard>(`${this.base}/dashboard`, { params });
   }
 
   tickets(filter: TicketFilter | null, includeDone = false): Observable<Ticket[]> {

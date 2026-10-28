@@ -2,8 +2,10 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
@@ -111,8 +113,10 @@ type AdviceView = 'all' | 'EM' | 'PERSON';
     HelpButton,
     MatButtonModule,
     MatButtonToggleModule,
+    MatFormFieldModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatSelectModule,
     MatSlideToggleModule,
     MatTooltipModule,
     PageHeader,
@@ -142,6 +146,8 @@ export class TicketsPage {
       this.kpiSettings.visible('alert.' + alert.kind),
     ),
   );
+  /** Persona scelta in alto: indicatori, grafici e allerte riguardano solo lei (null = tutti). */
+  protected readonly personId = signal<number | null>(null);
   protected readonly loadError = signal<string | null>(null);
   protected readonly adviceView = signal<AdviceView>('all');
   protected readonly filter = signal<TicketFilter | null>(null);
@@ -199,7 +205,10 @@ export class TicketsPage {
   /** Tutti i ticket aperti, senza filtri: base del numero "in conferma/UAT da oltre N giorni". */
   private readonly openTickets = signal<readonly Ticket[]>([]);
   protected readonly confirmIdleCount = computed(
-    () => this.openTickets().filter(isConfirmIdle).length,
+    () =>
+      this.openTickets().filter(
+        (ticket) => isConfirmIdle(ticket) && this.inScope(ticket.resourceId),
+      ).length,
   );
 
   protected readonly hiddenPending = computed(
@@ -225,6 +234,13 @@ export class TicketsPage {
 
   /** Persone con ticket o con giornate AMS; i ticket senza assegnatario in fondo. */
   protected readonly people = computed(() => this.dashboard()?.people ?? []);
+  /** Persone tra cui scegliere (le righe senza risorsa, come "non assegnato", non servono). */
+  protected readonly assignablePeople = computed(() =>
+    this.people().filter((person) => person.resourceId !== null),
+  );
+  private readonly personName = computed(
+    () => this.people().find((person) => person.resourceId === this.personId())?.name ?? null,
+  );
 
   /** Stato salvato nelle viste (D-26): azioni mostrate e filtro dell'elenco. */
   protected readonly viewState = computed(() => ({
@@ -268,7 +284,7 @@ export class TicketsPage {
   }
 
   protected load(): void {
-    this.service.dashboard().subscribe({
+    this.service.dashboard(this.personId()).subscribe({
       next: (dashboard) => {
         this.dashboard.set(dashboard);
         this.sync.known(dashboard.sync);
@@ -282,7 +298,25 @@ export class TicketsPage {
 
   /** Ogni clic che apre un elenco porta alla pagina di dettaglio dedicata. */
   private openDetail(queryParams: Record<string, string>): void {
-    void this.router.navigate(['/tickets/dettaglio'], { queryParams });
+    // Con una persona scelta, anche gli elenchi aperti dai box restano i suoi
+    const id = this.personId();
+    const scoped =
+      id !== null &&
+      !queryParams['dim'] &&
+      !queryParams['resource'] &&
+      queryParams['scope'] !== 'unassigned'
+        ? { ...queryParams, resource: String(id), title: this.personName() ?? '' }
+        : queryParams;
+    void this.router.navigate(['/tickets/dettaglio'], { queryParams: scoped });
+  }
+
+  private inScope(resourceId: number | null): boolean {
+    return this.personId() === null || resourceId === this.personId();
+  }
+
+  protected selectResource(value: number | null): void {
+    this.personId.set(value);
+    this.load();
   }
 
   /** Persona del carico: i suoi ticket aperti (o quelli senza assegnatario). */
@@ -292,6 +326,27 @@ export class TicketsPage {
     } else {
       this.openDetail({ scope: 'open', dim: 'assignee', value: person.name });
     }
+  }
+
+  /**
+   * Un numero del carico per persona: i ticket che lo compongono. Le persone collegate a una
+   * risorsa si cercano per id, le altre (e "Senza assegnatario") per nome Jira.
+   */
+  protected openPersonCount(person: PersonLoad, scope: string): void {
+    const base: Record<string, string> = {
+      scope,
+      title: person.name ?? 'Senza assegnatario',
+    };
+    if (scope === 'stale') {
+      base['days'] = String(this.dashboard()?.kpis.staleDays ?? 9);
+    }
+    if (person.resourceId !== null) {
+      base['resource'] = String(person.resourceId);
+    } else {
+      base['dim'] = 'assignee';
+      base['value'] = person.name ?? 'Non assegnato';
+    }
+    this.openDetail(base);
   }
 
   /** Ticket aperti di un'area ("Progetto Marlù"). */
@@ -311,7 +366,7 @@ export class TicketsPage {
 
   /** Clic sui box priorità e impatto: elenco di dettaglio con priorità e impatto di ogni ticket. */
   protected openPriority(scope: string): void {
-    void this.router.navigate(['/tickets/dettaglio'], { queryParams: { scope } });
+    this.openDetail({ scope });
   }
 
   /** Clic su "fermi": ticket senza aggiornamenti oltre la soglia. */

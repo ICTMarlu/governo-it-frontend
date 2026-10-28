@@ -11,9 +11,12 @@ import { HelpContent } from '../../help/help.model';
     <header class="page-header">
       <div class="page-header__row">
         <h1 class="page-header__title">{{ title() }}</h1>
-        @if (help(); as content) {
-          <gov-help-button class="page-header__help" [help]="content" />
-        }
+        <div class="page-header__actions">
+          <ng-content />
+          @if (help(); as content) {
+            <gov-help-button class="page-header__help" [help]="content" />
+          }
+        </div>
       </div>
       @if (subtitle(); as text) {
         <p class="page-header__subtitle">{{ text }}</p>
@@ -36,6 +39,13 @@ import { HelpContent } from '../../help/help.model';
     .page-header__title {
       margin: 0;
       font: var(--mat-sys-headline-small);
+    }
+
+    .page-header__actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 1rem;
     }
 
     .page-header__help {

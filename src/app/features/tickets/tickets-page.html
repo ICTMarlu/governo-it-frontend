@@ -2,7 +2,23 @@
   title="Ticket AMS"
   subtitle="Il carico del service desk Jira su ogni persona, come scorrono i ticket e cosa conviene fare adesso."
   [help]="help"
-/>
+>
+  @if (dashboard(); as data) {
+    <mat-form-field class="person-filter" appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Persona</mat-label>
+      <mat-select
+        [value]="personId()"
+        (valueChange)="selectResource($event)"
+        aria-label="Mostra la pagina per una sola persona"
+      >
+        <mat-option [value]="null">Tutti</mat-option>
+        @for (person of assignablePeople(); track person.resourceId) {
+          <mat-option [value]="person.resourceId">{{ person.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+</gov-page-header>
 
 @if (loadError()) {
   <p class="state state--error" role="alert">
@@ -449,12 +465,84 @@
                   </span>
                 }
               </th>
-              <td class="num strong">{{ person.open }}</td>
-              <td class="num">{{ person.toDo }}</td>
-              <td class="num">{{ person.inProgress }}</td>
-              <td class="num">{{ person.waitingCustomer }}</td>
-              <td class="num" [class.late]="person.overdue > 0">{{ person.overdue }}</td>
-              <td class="num" [class.late]="person.stale > 0">{{ person.stale }}</td>
+              <td class="num strong">
+                @if (person.open > 0) {
+                  <button
+                    type="button"
+                    class="count-btn"
+                    (click)="openPersonCount(person, 'all-open')"
+                  >
+                    {{ person.open }}
+                  </button>
+                } @else {
+                  {{ person.open }}
+                }
+              </td>
+              <td class="num">
+                @if (person.toDo > 0) {
+                  <button
+                    type="button"
+                    class="count-btn"
+                    (click)="openPersonCount(person, 'all-todo')"
+                  >
+                    {{ person.toDo }}
+                  </button>
+                } @else {
+                  {{ person.toDo }}
+                }
+              </td>
+              <td class="num">
+                @if (person.inProgress > 0) {
+                  <button
+                    type="button"
+                    class="count-btn"
+                    (click)="openPersonCount(person, 'all-progress')"
+                  >
+                    {{ person.inProgress }}
+                  </button>
+                } @else {
+                  {{ person.inProgress }}
+                }
+              </td>
+              <td class="num">
+                @if (person.waitingCustomer > 0) {
+                  <button
+                    type="button"
+                    class="count-btn"
+                    (click)="openPersonCount(person, 'all-waiting')"
+                  >
+                    {{ person.waitingCustomer }}
+                  </button>
+                } @else {
+                  {{ person.waitingCustomer }}
+                }
+              </td>
+              <td class="num" [class.late]="person.overdue > 0">
+                @if (person.overdue > 0) {
+                  <button
+                    type="button"
+                    class="count-btn"
+                    (click)="openPersonCount(person, 'overdue')"
+                  >
+                    {{ person.overdue }}
+                  </button>
+                } @else {
+                  {{ person.overdue }}
+                }
+              </td>
+              <td class="num" [class.late]="person.stale > 0">
+                @if (person.stale > 0) {
+                  <button
+                    type="button"
+                    class="count-btn"
+                    (click)="openPersonCount(person, 'stale')"
+                  >
+                    {{ person.stale }}
+                  </button>
+                } @else {
+                  {{ person.stale }}
+                }
+              </td>
               <td class="num">{{ person.open > 0 ? person.oldestDays + ' gg' : '' }}</td>
               <td class="num">{{ person.createdLast7Days }} / {{ person.resolvedLast7Days }}</td>
               <td class="num">{{ person.createdLast4Weeks }} / {{ person.resolvedLast4Weeks }}</td>
