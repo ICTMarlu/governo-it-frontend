@@ -224,8 +224,9 @@ export class CrudSection {
     });
   }
 
+  /** Ricarica senza far sparire la tabella: le righe nuove compaiono al loro posto. */
   protected reload(): void {
-    this.load(this.config().endpoint);
+    this.load(this.config().endpoint, this.state() === 'ready');
   }
 
   protected setFilter(key: string, values: readonly string[]): void {
@@ -481,8 +482,10 @@ export class CrudSection {
     });
   }
 
-  private load(endpoint: string): void {
-    this.state.set('loading');
+  private load(endpoint: string, silent = false): void {
+    if (!silent) {
+      this.state.set('loading');
+    }
     this.api.list(endpoint).subscribe({
       next: (rows) => {
         this.rows.set(rows);
