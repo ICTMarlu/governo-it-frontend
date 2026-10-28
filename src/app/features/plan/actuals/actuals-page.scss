@@ -335,3 +335,19 @@
   margin: 0;
   font: var(--mat-sys-body-small);
 }
+
+// Ferie e festività (D-37): consuntivo automatico, in grigio e non modificabile
+.auto-value {
+  color: var(--mat-sys-on-surface-variant);
+
+  &--box {
+    display: inline-block;
+    min-width: 5rem;
+    padding: 0.375rem 0.5rem;
+    border: 1px dashed var(--mat-sys-outline-variant);
+    border-radius: 0.5rem;
+    background: var(--mat-sys-surface-container-high);
+    text-align: center;
+    cursor: default;
+  }
+}

@@ -255,11 +255,10 @@
                     <span class="code">{{ row.projectCode }}</span>
                   }
                   {{ row.projectName }}
-                  @if (columns().has('note') && row.rowNote) {
-                    <span class="note">{{ row.rowNote }}</span>
-                  }
                   @if (row.automatic) {
-                    <span class="note">automatiche: consuntivo uguale al piano</span>
+                    <span class="note">{{ row.rowNote }} · consuntivo uguale al piano</span>
+                  } @else if (columns().has('note') && row.rowNote) {
+                    <span class="note">{{ row.rowNote }}</span>
                   }
                 </span>
               </span>
@@ -269,7 +268,15 @@
             }
             <td>{{ hoursText(row.plannedHours) }}</td>
             <td [class.cell--over]="lv === 'over'" [class.cell--under]="lv === 'under'">
-              {{ hoursText(row.actualHours) }}
+              @if (row.automatic) {
+                <span
+                  class="auto-value"
+                  matTooltip="Automatico: uguale al pianificato, non si modifica"
+                  >{{ hoursText(row.actualHours, false) }}</span
+                >
+              } @else {
+                {{ hoursText(row.actualHours) }}
+              }
               @if (lv === 'over') {
                 <mat-icon class="flag" aria-label="Oltre il pianificato">north_east</mat-icon>
               } @else if (lv === 'under') {
@@ -280,7 +287,20 @@
             </td>
             <td class="c-input">
               @if (row.automatic) {
-                <span class="muted">—</span>
+                <!-- Ferie e festività: già consuntivate, in grigio e non modificabili -->
+                @if (row.kind === 'HOLIDAY') {
+                  <span
+                    class="auto-value auto-value--box"
+                    matTooltip="Festività: ore già consuntivate in automatico"
+                    >{{ hoursText(row.hoursByDay[selectedDay() ?? ''] ?? 0, false) }}</span
+                  >
+                } @else {
+                  <span
+                    class="auto-value auto-value--box"
+                    matTooltip="Le ferie del piano sono per settimana: sono già tutte nel consuntivo"
+                    >{{ hoursText(row.actualHours, false) }} sett.</span
+                  >
+                }
               } @else if (day()?.editable && w.canEdit) {
                 <input
                   class="hours-input"
