@@ -55,6 +55,8 @@ const TOOL_LABELS: Readonly<Record<string, string>> = {
   pianifica_progetto: 'Pianificazione su progetto',
   aggiungi_riga_piano: 'Riga del piano aggiunta',
   archivia_riga_piano: 'Riga del piano archiviata',
+  consuntiva_ore: 'Ore consuntivate',
+  conferma_consuntivo: 'Consuntivo confermato',
 };
 
 /**
