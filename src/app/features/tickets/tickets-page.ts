@@ -10,9 +10,11 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
 
+import { AuthService } from '../../core/auth/auth.service';
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { SavedViews } from '../../shared/views/saved-views';
 import { errorMessage } from '../../shared/crud/crud-api.service';
+import { ROLES } from '../../shared/crud/crud.model';
 import { HelpButton } from '../../shared/help/help-button';
 import { ALERTS_HELP, PERSON_LOAD_HELP, TICKETS_HELP } from '../../shared/help/help-content';
 import { FlowChart } from './components/flow-chart/flow-chart';
@@ -147,7 +149,11 @@ export class TicketsPage {
     ),
   );
   /** Persona scelta in alto: indicatori, grafici e allerte riguardano solo lei (null = tutti). */
-  protected readonly personId = signal<number | null>(null);
+  private readonly user = inject(AuthService).currentUser;
+  /** Chi non è Admin parte dai propri ticket (se ha una persona collegata); l'Admin da tutti. */
+  protected readonly personId = signal<number | null>(
+    this.user()?.role !== ROLES.admin ? (this.user()?.resourceId ?? null) : null,
+  );
   protected readonly loadError = signal<string | null>(null);
   protected readonly adviceView = signal<AdviceView>('all');
   protected readonly filter = signal<TicketFilter | null>(null);
