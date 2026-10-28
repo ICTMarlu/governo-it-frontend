@@ -1,5 +1,13 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import {
+  Component,
+  ViewEncapsulation,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
@@ -41,13 +49,27 @@ interface ResourceRow {
     <mat-form-field appearance="outline" subscriptSizing="dynamic" class="view-as">
       <mat-label>Vedi la home come…</mat-label>
       <mat-icon matIconPrefix aria-hidden="true">visibility</mat-icon>
-      <mat-select [value]="selected() ?? ''" (valueChange)="choose($event)">
-        <mat-option value="">La mia home (vista generale)</mat-option>
+      <mat-select
+        [value]="selected() ?? ''"
+        (valueChange)="choose($event)"
+        panelClass="view-as-panel"
+        hideSingleSelectionIndicator
+      >
+        <mat-select-trigger>{{ triggerLabel() }}</mat-select-trigger>
+        <mat-option value="">
+          <span class="opt"
+            ><span class="opt__name">La mia home</span>
+            <span class="opt__hint">vista generale</span></span
+          >
+        </mat-option>
         @if (users().length > 0) {
           <mat-optgroup label="Utenti">
             @for (option of users(); track option.key) {
               <mat-option [value]="option.key">
-                {{ option.name }} <span class="hint">· {{ option.hint }}</span>
+                <span class="opt">
+                  <span class="opt__name">{{ option.name }}</span>
+                  <span class="opt__hint">{{ option.hint }}</span>
+                </span>
               </mat-option>
             }
           </mat-optgroup>
@@ -56,7 +78,10 @@ interface ResourceRow {
           <mat-optgroup label="Persone del team senza utente">
             @for (option of people(); track option.key) {
               <mat-option [value]="option.key">
-                {{ option.name }} <span class="hint">· {{ option.hint }}</span>
+                <span class="opt">
+                  <span class="opt__name">{{ option.name }}</span>
+                  <span class="opt__hint">{{ option.hint }}</span>
+                </span>
               </mat-option>
             }
           </mat-optgroup>
@@ -67,13 +92,54 @@ interface ResourceRow {
       }
     </mat-form-field>
   `,
+  encapsulation: ViewEncapsulation.None,
   styles: `
     .view-as {
       width: min(22rem, 100%);
+      --mat-form-field-outlined-container-shape: 1.5rem;
     }
 
-    .hint {
+    /* Il pannello si apre nell'overlay: stile condiviso tramite la classe del pannello */
+    .view-as-panel.mat-mdc-select-panel {
+      min-width: 22rem;
+      max-height: 26rem;
+      margin-top: 0.25rem;
+      padding: 0.5rem;
+      border-radius: 1rem;
+    }
+
+    .view-as-panel .mat-mdc-optgroup-label {
+      min-height: 2rem;
+      padding-inline: 0.75rem;
+      color: var(--mat-sys-primary);
+      font: var(--mat-sys-label-large);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .view-as-panel .mat-mdc-option {
+      min-height: 3rem;
+      padding-block: 0.25rem;
+      border-radius: 0.75rem;
+    }
+
+    .view-as-panel .mat-mdc-option .mdc-list-item__primary-text {
+      width: 100%;
+    }
+
+    .view-as-panel .opt {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+    }
+
+    .view-as-panel .opt__name {
+      font: var(--mat-sys-body-large);
+    }
+
+    .view-as-panel .opt__hint {
       color: var(--mat-sys-on-surface-variant);
+      font: var(--mat-sys-body-small);
     }
 
     .error {
@@ -98,6 +164,10 @@ export class HomeViewAs {
   protected readonly users = computed(() => this.options().users);
   protected readonly people = computed(() => this.options().people);
   protected readonly error = signal<string | null>(null);
+  /** Nel campo chiuso solo il nome: la riga con il ruolo sta nell'elenco. */
+  protected readonly triggerLabel = computed(
+    () => this.find(this.selected())?.name ?? 'La mia home',
+  );
 
   constructor() {
     const base = inject(API_BASE_URL);
