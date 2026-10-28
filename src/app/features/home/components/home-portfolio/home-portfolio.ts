@@ -19,7 +19,7 @@ import {
 
 /** Misure del grafico del movimento (SVG in unità del viewBox). */
 const CHART = { width: 640, height: 180, left: 28, bottom: 22, top: 8 } as const;
-const LINE = { height: 90, top: 12, bottom: 20 } as const;
+const LINE = { height: 120, top: 28, bottom: 24 } as const;
 
 /** Stati messi in evidenza nella fotografia (colore + etichetta, mai solo colore). */
 const HIGHLIGHT: Readonly<Record<string, string>> = {

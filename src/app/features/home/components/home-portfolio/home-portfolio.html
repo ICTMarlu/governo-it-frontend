@@ -82,13 +82,14 @@
 
       <!-- 3. Progetti in parallelo per persona -->
       <div>
-        <h3 class="block__title">Progetti in corso in parallelo</h3>
+        <h3 class="block__title">Progetti in parallelo</h3>
         <p class="muted small">
-          Progetti In Progress con giornate nelle prossime {{ p.coherence.aheadWeeks }} settimane.
-          Soglia: {{ p.wipLimit }} per persona (parametro PROJECT_WIP_LIMIT).
+          Progetti In Progress, To Start o Approved con giornate nelle prossime
+          {{ p.coherence.aheadWeeks }} settimane (quella in corso e le successive). Soglia:
+          {{ p.wipLimit }} per persona (parametro PROJECT_WIP_LIMIT).
         </p>
         @if (p.parallel.length === 0) {
-          <p class="muted">Nessun progetto in corso con giornate nel piano.</p>
+          <p class="muted">Nessun progetto con giornate nel piano a breve.</p>
         } @else {
           <ul class="parallel">
             @for (person of p.parallel; track person.resourceId) {
@@ -208,23 +209,38 @@
         }
       </svg>
 
-      <p class="block__subtitle">In corso a fine periodo</p>
+      <p class="block__subtitle">Quanti progetti sono In Progress a fine periodo</p>
+      <p class="muted small">
+        Il numero sopra ogni punto è quanti progetti erano in corso l'ultimo giorno del periodo (per
+        l'ultimo, oggi).
+      </p>
       <svg
         class="chart chart--line"
         [attr.viewBox]="'0 0 ' + chart.width + ' ' + line.height"
         role="img"
         aria-label="Progetti in corso a fine periodo"
       >
+        <line
+          class="grid-line"
+          [attr.x1]="chart.left"
+          [attr.x2]="chart.width"
+          [attr.y1]="line.height - line.bottom"
+          [attr.y2]="line.height - line.bottom"
+        />
         <path class="line" [attr.d]="linePath()" />
         @for (point of points(); track point.label; let i = $index) {
+          <text class="axis" [attr.x]="lineX(i)" [attr.y]="line.height - 6" text-anchor="middle">
+            {{ point.label }}
+          </text>
           <circle class="dot" [attr.cx]="lineX(i)" [attr.cy]="lineY(point.inProgressAtEnd)" r="4">
             <title>{{ point.title }} · in corso: {{ point.inProgressAtEnd }}</title>
           </circle>
           <text
             class="axis"
             [attr.x]="lineX(i)"
-            [attr.y]="lineY(point.inProgressAtEnd) - 8"
+            [attr.y]="lineY(point.inProgressAtEnd) - 10"
             text-anchor="middle"
+            font-weight="600"
           >
             {{ point.inProgressAtEnd }}
           </text>
