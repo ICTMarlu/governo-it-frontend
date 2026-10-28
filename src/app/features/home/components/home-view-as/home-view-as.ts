@@ -97,6 +97,10 @@ interface ResourceRow {
     .view-as {
       width: min(22rem, 100%);
       --mat-form-field-outlined-container-shape: 1.5rem;
+      /* Alto come il pulsante Guida (2.5rem) */
+      --mat-form-field-container-height: 2.5rem;
+      --mat-form-field-container-vertical-padding: 0.5rem;
+      --mat-form-field-filled-with-label-container-padding-top: 0.5rem;
     }
 
     /* Il pannello si apre nell'overlay: stile condiviso tramite la classe del pannello */
