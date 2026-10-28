@@ -5,6 +5,9 @@ import { PlanRow } from './plan.model';
  * Colonne a scelta del piano (tra Progetto e Tot) e ordinamento a due livelli (D-22).
  * Le colonne Codice e Progetto restano sempre visibili e fisse a sinistra.
  */
+/** "Colonna" Actual: le ore consuntivate dentro le caselle delle settimane (D-37). */
+export const ACTUAL_COLUMN_ID = 'actual';
+
 export const PLAN_INFO_COLUMNS: readonly ColumnConfig[] = [
   { key: 'statusLabel', id: 'status', label: 'Stato' },
   { key: 'itPriorityLevel', id: 'prio', label: 'Prio IT' },
@@ -14,6 +17,8 @@ export const PLAN_INFO_COLUMNS: readonly ColumnConfig[] = [
   { key: 'ownerNames', id: 'owner', label: 'Owner', defaultHidden: true },
   { key: 'requesterNames', id: 'requester', label: 'Richiesto da', defaultHidden: true },
   { key: 'rowNote', id: 'note', label: 'Nota' },
+  // Non è una colonna a sé: accesa, ogni casella mostra anche le ore consuntivate (D-37)
+  { key: 'actual', id: ACTUAL_COLUMN_ID, label: 'Actual nelle settimane', defaultHidden: true },
 ];
 
 /** Colonne ordinabili oltre a quelle a scelta. */
@@ -21,7 +26,12 @@ export const PLAN_SORT_LABELS: Readonly<Record<string, string>> = {
   code: 'Codice',
   project: 'Progetto',
   total: 'Tot',
-  ...Object.fromEntries(PLAN_INFO_COLUMNS.map((column) => [column.id!, column.label])),
+  ...Object.fromEntries(
+    PLAN_INFO_COLUMNS.filter((column) => column.id !== ACTUAL_COLUMN_ID).map((column) => [
+      column.id!,
+      column.label,
+    ]),
+  ),
 };
 
 /** Le settimane si ordinano per giornate: id "w:" + lunedì della settimana (es. w:2026-10-19). */

@@ -241,6 +241,20 @@
             format(gridRow.cells[week.weekStart]?.days)
           }}</span>
         }
+        @if (showActual() && gridRow.row.id !== null) {
+          @let actual = cellActuals().get(cellKey(gridRow.row.id, week.weekStart));
+          @if (actual) {
+            <!-- Actual (D-37): ore consuntivate nella settimana, in rosso se oltre il pianificato -->
+            <span
+              class="cell__actual"
+              [class.cell__actual--over]="
+                actual > (gridRow.cells[week.weekStart]?.days ?? 0) * 7.5 + 0.005
+              "
+              [title]="'Consuntivate: ' + actual + ' ore'"
+              >act {{ actualText(actual) }}</span
+            >
+          }
+        }
         @if (gridRow.row.id !== null) {
           <!-- Task e note della casella: pallino col numero degli aperti, + al passaggio -->
           @let tasks = cellTasks().get(cellKey(gridRow.row.id, week.weekStart));

@@ -85,6 +85,7 @@ import {
   weekTotalsOf,
 } from './models/plan-grid.model';
 import {
+  ACTUAL_COLUMN_ID,
   PLAN_INFO_COLUMNS,
   PLAN_SORT_LABELS,
   SortDirection,
@@ -105,6 +106,7 @@ import {
 } from '../tasks/components/cell-tasks-panel/cell-tasks-panel';
 import { CellTaskCount, cellKey } from '../tasks/models/task.model';
 import { TasksService } from '../tasks/services/tasks.service';
+import { ActualsService } from './actuals/actuals.service';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -186,6 +188,9 @@ function defaultStart(): string {
 export class PlanPage {
   private readonly planService = inject(PlanService);
   private readonly tasksService = inject(TasksService);
+  private readonly actualsService = inject(ActualsService);
+  /** Ore consuntivate per casella (riga + settimana), per la colonna Actual (D-37). */
+  protected readonly cellActuals = signal<ReadonlyMap<string, number>>(new Map());
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly currentUser = inject(AuthService).currentUser;
@@ -265,8 +270,15 @@ export class PlanPage {
     const showSystem = this.grouping() === 'person';
     return orderedColumns(PLAN_INFO_COLUMNS, this.columnLayout())
       .filter((item) => item.visible && (showSystem || item.column.id !== 'system'))
+      .filter((item) => item.column.id !== ACTUAL_COLUMN_ID)
       .map((item) => item.column.id!);
   });
+  /** Actual acceso dal pulsante Colonne: le caselle mostrano anche le ore consuntivate. */
+  protected readonly showActual = computed(() =>
+    orderedColumns(PLAN_INFO_COLUMNS, this.columnLayout()).some(
+      (item) => item.visible && item.column.id === ACTUAL_COLUMN_ID,
+    ),
+  );
   protected readonly sortLabels = PLAN_SORT_LABELS;
   protected readonly sortHint =
     "Clic: ordina (poi decrescente, poi togli). Su un'altra colonna diventa il secondo livello";
@@ -1543,6 +1555,7 @@ export class PlanPage {
         this.plan.set(plan);
         afterNextRender(() => this.applyPendingScroll(), { injector: this.injector });
         this.loadCellTasks();
+        this.loadActuals();
         this.mobileWeek.set(
           Math.max(
             0,
@@ -1571,6 +1584,29 @@ export class PlanPage {
     }
     this.extending = false;
     this.updateVisibleRange();
+  }
+
+  /** Ore consuntivate delle settimane caricate (colonna Actual, D-37). */
+  private loadActuals(): void {
+    const weeks = this.weeks();
+    if (weeks.length === 0) {
+      return;
+    }
+    this.actualsService
+      .planActuals(weeks[0].weekStart, weeks[weeks.length - 1].weekStart)
+      .subscribe({
+        next: (rows) =>
+          this.cellActuals.set(
+            new Map(rows.map((row) => [cellKey(row.planRowId, row.weekStart), row.hours])),
+          ),
+        // Senza consuntivo il piano resta usabile
+        error: () => this.cellActuals.set(new Map()),
+      });
+  }
+
+  /** Consuntivo di una casella nell'unità del piano (le ore diventano giornate da 7,5). */
+  protected actualText(hours: number): string {
+    return this.format(hours / 7.5);
   }
 
   private loadCellTasks(): void {

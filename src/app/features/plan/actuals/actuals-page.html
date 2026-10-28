@@ -1,0 +1,390 @@
+<gov-page-header
+  title="Consuntivo ore"
+  subtitle="Le ore lavorate giorno per giorno sui progetti del tuo piano: pianificato, già consuntivato e da inserire."
+  [help]="help"
+/>
+
+<div class="toolbar">
+  @if (isAdmin()) {
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="toolbar__person">
+      <mat-label>Persona</mat-label>
+      <mat-icon matIconPrefix aria-hidden="true">person</mat-icon>
+      <mat-select [value]="resourceId()" (valueChange)="chooseResource($event)">
+        <mat-option [value]="null">La mia</mat-option>
+        @for (person of people(); track person.id) {
+          <mat-option [value]="person.id">{{ person.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+
+  <div class="weeknav" role="group" aria-label="Settimana">
+    <button mat-icon-button type="button" aria-label="Settimana precedente" (click)="shiftWeek(-1)">
+      <mat-icon aria-hidden="true">chevron_left</mat-icon>
+    </button>
+    <span class="weeknav__label">
+      @if (week(); as w) {
+        <strong>W{{ w.isoWeek }}</strong> · {{ weekRange(w) }}
+      } @else {
+        …
+      }
+    </span>
+    <button mat-icon-button type="button" aria-label="Settimana successiva" (click)="shiftWeek(1)">
+      <mat-icon aria-hidden="true">chevron_right</mat-icon>
+    </button>
+    <button mat-stroked-button type="button" (click)="goToday()">Questa settimana</button>
+  </div>
+
+  <span class="spacer"></span>
+
+  <gov-saved-views page="plan.actuals" [state]="viewState()" (apply)="applyView($event)" />
+  <button mat-stroked-button type="button" [matMenuTriggerFor]="columnsMenu">
+    <mat-icon aria-hidden="true">view_column</mat-icon> Colonne
+  </button>
+  <mat-menu #columnsMenu="matMenu">
+    @for (column of columnsList; track column.id) {
+      <button
+        mat-menu-item
+        type="button"
+        (click)="$event.stopPropagation(); toggleColumn(column.id)"
+      >
+        <mat-icon aria-hidden="true">{{
+          columns().has(column.id) ? 'check_box' : 'check_box_outline_blank'
+        }}</mat-icon>
+        {{ column.label }}
+      </button>
+    }
+  </mat-menu>
+</div>
+
+@if (error(); as message) {
+  <p class="state state--error" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon> {{ message }}
+  </p>
+} @else if (!week()) {
+  <p class="state" role="status">
+    <mat-progress-spinner diameter="24" mode="indeterminate" aria-hidden="true" /> Carico la
+    settimana…
+  </p>
+} @else {
+  @let w = week()!;
+
+  <!-- Stato della settimana e conferma -->
+  <section class="status status--{{ w.status }}" aria-label="Stato della settimana">
+    <mat-icon aria-hidden="true">{{
+      w.status === 'OPEN'
+        ? 'edit_calendar'
+        : w.status === 'CONFIRMED'
+          ? 'verified'
+          : w.status === 'FUTURE'
+            ? 'schedule'
+            : 'lock'
+    }}</mat-icon>
+    <span class="status__text">
+      <strong>{{ w.resourceName }}</strong> ·
+      @switch (w.status) {
+        @case ('OPEN') {
+          Settimana aperta: puoi inserire e correggere le ore fino a oggi.
+        }
+        @default {
+          {{ w.statusMessage }}
+        }
+      }
+    </span>
+    @if (w.canConfirm) {
+      <button
+        mat-flat-button
+        type="button"
+        [disabled]="busy()"
+        matTooltip="Da qui la settimana la modifica solo l'amministratore"
+        (click)="confirmWeek()"
+      >
+        <mat-icon aria-hidden="true">done_all</mat-icon> Conferma la settimana
+      </button>
+    }
+    @if (w.canReopen) {
+      <button mat-stroked-button type="button" [disabled]="busy()" (click)="reopenWeek()">
+        <mat-icon aria-hidden="true">lock_open</mat-icon> Riapri
+      </button>
+    }
+  </section>
+
+  <!-- Totali della settimana -->
+  <ul class="totals" aria-label="Totali della settimana">
+    <li class="total">
+      <span class="total__value">{{ hoursText(w.totals.plannedHours, false) }} h</span>
+      <span class="total__label">pianificate</span>
+    </li>
+    <li class="total">
+      <span class="total__value">{{ hoursText(w.totals.actualHours, false) }} h</span>
+      <span class="total__label">consuntivate</span>
+    </li>
+    <li
+      class="total"
+      [class.total--over]="w.totals.deltaHours > 0.005"
+      [class.total--under]="lateInWeek() && w.totals.deltaHours < -4"
+    >
+      <span class="total__value">{{ signedHours(w.totals.deltaHours) }} h</span>
+      <span class="total__label">scarto sul piano</span>
+    </li>
+    <li class="total">
+      <span class="total__value">{{ hoursText(w.totals.theoreticalHours, false) }} h</span>
+      <span class="total__label">capacità della settimana</span>
+    </li>
+  </ul>
+
+  <!-- Giorno da consuntivare -->
+  <div class="days" role="radiogroup" aria-label="Giorno da consuntivare">
+    @for (d of w.days; track d.date) {
+      <button
+        type="button"
+        role="radio"
+        class="day"
+        [class.day--selected]="d.date === selectedDay()"
+        [class.day--weekend]="d.weekend"
+        [class.day--over]="d.over"
+        [class.day--today]="d.date === today"
+        [attr.aria-checked]="d.date === selectedDay()"
+        [disabled]="!d.editable"
+        [matTooltip]="
+          d.future
+            ? 'Giorno futuro: si consuntiva a giornata fatta'
+            : d.holidayName
+              ? 'Festività: ' + d.holidayName
+              : d.over
+                ? 'Oltre l\'orario: ' +
+                  hoursText(d.loggedHours, false) +
+                  ' su ' +
+                  hoursText(d.theoreticalHours, false) +
+                  ' h'
+                : ''
+        "
+        (click)="selectedDay.set(d.date)"
+      >
+        <span class="day__name">{{ dayLabel(d.date) }}</span>
+        <span class="day__hours">
+          @if (d.over) {
+            <mat-icon aria-hidden="true">warning</mat-icon>
+          }
+          {{ hoursText(d.loggedHours)
+          }}{{ d.theoreticalHours > 0 ? ' / ' + hoursText(d.theoreticalHours, false) : '' }}
+        </span>
+        @if (d.holidayName) {
+          <span class="day__tag">festività</span>
+        } @else if (d.future) {
+          <span class="day__tag">futuro</span>
+        }
+      </button>
+    }
+  </div>
+
+  @if (day(); as d) {
+    <p
+      class="dayline"
+      [class.dayline--over]="dayTotal() > d.theoreticalHours + 0.005 && d.theoreticalHours > 0"
+    >
+      Stai consuntivando <strong>{{ dayLabel(d.date) }}</strong
+      >: {{ hoursText(dayTotal(), false) }} h inserite su
+      {{ hoursText(d.theoreticalHours, false) }} h di orario.
+      @if (dayTotal() > d.theoreticalHours + 0.005 && d.theoreticalHours > 0) {
+        <mat-icon aria-hidden="true">warning</mat-icon> Oltre l'orario: va bene se hai fatto
+        straordinari.
+      }
+    </p>
+  }
+
+  <!-- Righe -->
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col" class="c-project">
+            <button type="button" class="sort" (click)="toggleSort('project')">
+              Progetto <mat-icon aria-hidden="true">{{ sortIcon('project') }}</mat-icon>
+            </button>
+          </th>
+          @if (columns().has('workType')) {
+            <th scope="col">Tipo</th>
+          }
+          <th scope="col">
+            <button type="button" class="sort" (click)="toggleSort('planned')">
+              Pianificate settimana
+              <mat-icon aria-hidden="true">{{ sortIcon('planned') }}</mat-icon>
+            </button>
+          </th>
+          <th scope="col">
+            <button type="button" class="sort" (click)="toggleSort('actual')">
+              Consuntivate finora <mat-icon aria-hidden="true">{{ sortIcon('actual') }}</mat-icon>
+            </button>
+          </th>
+          <th scope="col" class="c-input">
+            Da inserire
+            @if (day(); as d) {
+              <span class="th-sub">{{ dayLabel(d.date) }}</span>
+            }
+          </th>
+          @if (columns().has('delta')) {
+            <th scope="col">
+              <button type="button" class="sort" (click)="toggleSort('delta')">
+                Scarto <mat-icon aria-hidden="true">{{ sortIcon('delta') }}</mat-icon>
+              </button>
+            </th>
+          }
+          @if (columns().has('days')) {
+            @for (d of w.days; track d.date) {
+              <th scope="col" class="c-day" [class.c-day--weekend]="d.weekend">
+                {{ dayLabel(d.date) }}
+              </th>
+            }
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.kind + (row.planRowId ?? row.projectName)) {
+          @let lv = level(row);
+          <tr [class.row--auto]="row.automatic">
+            <th scope="row" class="c-project">
+              <span class="project">
+                @if (row.automatic) {
+                  <mat-icon aria-hidden="true" class="project__icon">{{
+                    row.kind === 'VACATION' ? 'beach_access' : 'celebration'
+                  }}</mat-icon>
+                }
+                <span>
+                  @if (columns().has('code') && row.projectCode) {
+                    <span class="code">{{ row.projectCode }}</span>
+                  }
+                  {{ row.projectName }}
+                  @if (columns().has('note') && row.rowNote) {
+                    <span class="note">{{ row.rowNote }}</span>
+                  }
+                  @if (row.automatic) {
+                    <span class="note">automatiche: consuntivo uguale al piano</span>
+                  }
+                </span>
+              </span>
+            </th>
+            @if (columns().has('workType')) {
+              <td>{{ row.workType ?? '' }}</td>
+            }
+            <td>{{ hoursText(row.plannedHours) }}</td>
+            <td [class.cell--over]="lv === 'over'" [class.cell--under]="lv === 'under'">
+              {{ hoursText(row.actualHours) }}
+              @if (lv === 'over') {
+                <mat-icon class="flag" aria-label="Oltre il pianificato">north_east</mat-icon>
+              } @else if (lv === 'under') {
+                <mat-icon class="flag" aria-label="Indietro rispetto al pianificato"
+                  >south_east</mat-icon
+                >
+              }
+            </td>
+            <td class="c-input">
+              @if (row.automatic) {
+                <span class="muted">—</span>
+              } @else if (day()?.editable && w.canEdit) {
+                <input
+                  class="hours-input"
+                  inputmode="decimal"
+                  autocomplete="off"
+                  maxlength="5"
+                  placeholder="0"
+                  [attr.aria-label]="
+                    'Ore di ' + dayLabel(selectedDay()!) + ' su ' + row.projectName
+                  "
+                  [value]="draftOf(row)"
+                  [disabled]="saving().has(row.planRowId!)"
+                  (input)="setDraft(row, $any($event.target).value)"
+                  (blur)="commit(row)"
+                  (keydown.enter)="next(row, $event)"
+                />
+              } @else {
+                <span class="muted">{{ hoursText(row.hoursByDay[selectedDay() ?? ''] ?? 0) }}</span>
+              }
+            </td>
+            @if (columns().has('delta')) {
+              <td [class.cell--over]="lv === 'over'" [class.cell--under]="lv === 'under'">
+                {{ row.automatic ? '0' : signedHours(row.deltaHours) }}
+              </td>
+            }
+            @if (columns().has('days')) {
+              @for (d of w.days; track d.date) {
+                <td
+                  class="c-day"
+                  [class.c-day--weekend]="d.weekend"
+                  [class.c-day--selected]="d.date === selectedDay()"
+                >
+                  {{ hoursText(row.hoursByDay[d.date] ?? 0) }}
+                </td>
+              }
+            }
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="10" class="empty">
+              Nessun progetto pianificato in questa settimana. Aggiungi qui sotto quello su cui hai
+              lavorato.
+            </td>
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr>
+          <th scope="row" class="c-project">Totale</th>
+          @if (columns().has('workType')) {
+            <td></td>
+          }
+          <td>{{ hoursText(w.totals.plannedHours, false) }}</td>
+          <td>{{ hoursText(w.totals.actualHours, false) }}</td>
+          <td class="c-input">{{ hoursText(dayTotal(), false) }}</td>
+          @if (columns().has('delta')) {
+            <td>{{ signedHours(w.totals.deltaHours) }}</td>
+          }
+          @if (columns().has('days')) {
+            @for (d of w.days; track d.date) {
+              <td class="c-day" [class.cell--over]="d.over">{{ hoursText(d.loggedHours) }}</td>
+            }
+          }
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="below">
+    <mat-slide-toggle [checked]="showAll()" (change)="showAll.set($event.checked)">
+      Mostra anche gli altri progetti del mio piano
+      @if (hiddenRows() > 0 && !showAll()) {
+        ({{ hiddenRows() }})
+      }
+    </mat-slide-toggle>
+
+    @if (w.canEdit) {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="add">
+        <mat-label>Progetto non pianificato su cui hai lavorato</mat-label>
+        <mat-icon matIconPrefix aria-hidden="true">add</mat-icon>
+        <input
+          matInput
+          [matAutocomplete]="projectAuto"
+          [ngModel]="projectText()"
+          (ngModelChange)="projectText.set($event)"
+          [disabled]="adding()"
+          placeholder="Cerca per codice o nome"
+        />
+        <mat-autocomplete
+          #projectAuto="matAutocomplete"
+          (optionSelected)="addProject($event.option.value)"
+        >
+          @for (project of projectMatches(); track project.id) {
+            <mat-option [value]="project.id">{{ project.label }}</mat-option>
+          }
+        </mat-autocomplete>
+        <mat-hint>Entra anche nel piano settimanale, con zero giornate pianificate</mat-hint>
+      </mat-form-field>
+    }
+  </div>
+
+  <p class="foot muted">
+    Pianificate = giornate del piano × 7,5 ore. Ferie e festività non si inseriscono: valgono come
+    pianificate. Si consuntivano la settimana in corso e la precedente, finché non le confermi; i
+    giorni futuri no. <a routerLink="/plan">Torna al piano settimanale</a>
+  </p>
+}

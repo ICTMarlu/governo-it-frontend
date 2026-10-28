@@ -46,8 +46,8 @@
           </button>
           <mat-menu #groupMenu="matMenu">
             <a mat-menu-item [routerLink]="item.route">
-              <mat-icon aria-hidden="true">apps</mat-icon>
-              Tutte le {{ item.label.toLowerCase() }}
+              <mat-icon aria-hidden="true">{{ item.homeIcon ?? 'apps' }}</mat-icon>
+              {{ item.homeLabel ?? 'Tutte le ' + item.label.toLowerCase() }}
             </a>
             @for (child of children; track child.route) {
               <a mat-menu-item [routerLink]="child.route">

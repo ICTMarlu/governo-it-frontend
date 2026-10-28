@@ -459,3 +459,15 @@ th.c-businessPrio .head-filter {
     font-style: italic;
   }
 }
+
+// Actual nella casella (D-37)
+.cell__actual {
+  display: block;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.6875rem;
+  line-height: 1;
+
+  &--over {
+    color: var(--mat-sys-error);
+  }
+}

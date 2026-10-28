@@ -80,6 +80,15 @@ export const routes: Routes = [
         loadComponent: () => import('./features/plan/plan-page').then((m) => m.PlanPage),
       },
       {
+        // Consuntivo delle ore (D-37): sottomenu del piano settimanale
+        path: 'plan/actuals',
+        title: 'Consuntivo ore · Governo IT',
+        canActivate: [moduleGuard],
+        data: { module: 'PLAN' },
+        loadComponent: () =>
+          import('./features/plan/actuals/actuals-page').then((m) => m.ActualsPage),
+      },
+      {
         path: 'anagrafiche',
         title: 'Anagrafiche · Governo IT',
         canActivate: [moduleGuard],

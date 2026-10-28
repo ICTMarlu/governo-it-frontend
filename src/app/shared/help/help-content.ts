@@ -879,3 +879,30 @@ export const TECHNOLOGIES_HELP: HelpContent = {
     },
   ],
 };
+
+export const ACTUALS_HELP: HelpContent = {
+  title: 'Consuntivo ore',
+  intro:
+    'Qui si consuntivano le ore lavorate, giorno per giorno, sui progetti del proprio piano settimanale: come un consulente sulla commessa. Tutto è in ore.',
+  sections: [
+    {
+      title: 'Come si usa',
+      items: [
+        'Scegli il giorno (in alto, oggi è già selezionato), scrivi le ore nella colonna «Da inserire» e premi Invio: si salva e si passa alla riga sotto.',
+        'Per ogni progetto vedi le ore pianificate nella settimana (giornate del piano × 7,5), quelle già consuntivate e lo scarto. Oltre il piano il numero diventa rosso con una freccia; da giovedì si segnalano anche i progetti molto indietro (4 ore o più).',
+        'Se hai lavorato su un progetto non pianificato, cercalo in fondo: si aggiunge la riga e il progetto entra anche nel piano settimanale con zero giornate.',
+        'Colonne, ordinamento e "mostra anche gli altri progetti" si salvano nelle viste.',
+      ],
+    },
+    {
+      title: 'Regole',
+      items: [
+        'Non si consuntivano i giorni futuri. Oltre l’orario del giorno compare un avviso (gli straordinari si possono inserire); il massimo è 24 ore.',
+        'Ferie e festività non si inseriscono: valgono come pianificate.',
+        'Si consuntivano la settimana in corso e la precedente finché non premi «Conferma la settimana»: da lì la modifica solo l’amministratore. Dalla seconda settimana passata in poi è chiuso per tutti.',
+        'Ognuno vede e consuntiva solo le proprie ore; l’amministratore sceglie la persona, può correggere e riaprire una settimana confermata.',
+        'Ogni venerdì alle 20 si salva una copia del piano e del consuntivo, per poter confrontare in seguito come è cambiato il piano.',
+      ],
+    },
+  ],
+};

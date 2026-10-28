@@ -38,6 +38,9 @@ interface NavItem {
   readonly route: string;
   /** Voce a menu: il clic apre le scelte (la voce "Panoramica" porta alla sua home). */
   readonly children?: readonly AnagraficaEntry[];
+  /** Nome e icona della prima scelta del menu (la pagina della voce); di norma "Tutte le …". */
+  readonly homeLabel?: string;
+  readonly homeIcon?: string;
   /** Moduli: la voce si vede se l'utente ne vede almeno uno; assente = tutti. */
   readonly modules?: readonly ModuleKey[];
 }
@@ -53,7 +56,24 @@ const DESKTOP_QUERY = '(min-width: 1024px)';
 const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Home', icon: 'home', route: '/home' },
   { label: 'Progetti', icon: 'work', route: '/projects', modules: ['PROJECTS'] },
-  { label: 'Piano settimanale', icon: 'calendar_view_week', route: '/plan', modules: ['PLAN'] },
+  {
+    label: 'Piano settimanale',
+    icon: 'calendar_view_week',
+    route: '/plan',
+    homeLabel: 'Piano settimanale',
+    homeIcon: 'calendar_view_week',
+    // Consuntivo delle ore (D-37)
+    children: [
+      {
+        label: 'Consuntivo ore',
+        hint: 'Le ore lavorate giorno per giorno sul proprio piano',
+        icon: 'more_time',
+        route: '/plan/actuals',
+        module: 'PLAN',
+      },
+    ],
+    modules: ['PLAN'],
+  },
   { label: 'Task', icon: 'task_alt', route: '/tasks', modules: ['TASKS'] },
   { label: 'Ticket AMS', icon: 'support_agent', route: '/tickets', modules: ['TICKETS'] },
   { label: 'Direzione', icon: 'record_voice_over', route: '/management', modules: ['MANAGEMENT'] },
