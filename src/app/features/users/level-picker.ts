@@ -54,7 +54,7 @@ import { AccessLevel, LEVELS, LEVEL_ICONS, LEVEL_LABELS } from '../../core/auth/
     :host {
       --lv-none: light-dark(#5f6672, #9aa1ad);
       --lv-view: light-dark(#2a78d6, #5ba0f0);
-      --lv-edit: light-dark(#2e7d32, #7cc683);
+      --lv-edit: var(--gi-ok);
       --lv-inherit: var(--mat-sys-on-surface-variant);
       display: inline-block;
     }
@@ -63,7 +63,7 @@ import { AccessLevel, LEVELS, LEVEL_ICONS, LEVEL_LABELS } from '../../core/auth/
       display: inline-flex;
       overflow: hidden;
       border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 1rem;
+      border-radius: var(--gi-radius-pill);
     }
 
     .opt {

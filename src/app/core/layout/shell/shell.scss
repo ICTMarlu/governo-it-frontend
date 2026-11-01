@@ -13,7 +13,7 @@
   padding: 0.5rem 1rem;
   background: var(--mat-sys-primary);
   color: var(--mat-sys-on-primary);
-  border-radius: 0.25rem;
+  border-radius: var(--gi-radius-sm);
 
   &:focus {
     top: 0.5rem;
@@ -80,7 +80,7 @@
     height: 2.5rem;
     padding-inline: 0.625rem;
     border: 0;
-    border-radius: 1.25rem;
+    border-radius: var(--gi-radius-pill);
     background: transparent;
     color: var(--bar-fg);
     cursor: pointer;

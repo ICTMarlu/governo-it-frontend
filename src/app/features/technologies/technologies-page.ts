@@ -204,7 +204,7 @@ import { TechnologyPriorityList } from './technology-priority-list';
       margin-block-end: 1rem;
       padding: 0.5rem 1rem;
       border-inline-start: 6px solid var(--prio-color);
-      border-radius: 0.25rem;
+      border-radius: var(--gi-radius-sm);
       background: color-mix(in srgb, var(--prio-color) 6%, transparent);
     }
 

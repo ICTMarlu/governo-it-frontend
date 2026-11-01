@@ -167,7 +167,7 @@ const FINAL_VISIBLE_DAYS = 30;
       min-height: 8rem;
       padding: 0.5rem;
       border-top: 4px solid var(--status-color, var(--mat-sys-outline));
-      border-radius: 0.5rem;
+      border-radius: var(--gi-radius-md);
       background: var(--mat-sys-surface-container-low);
 
       &__title {
@@ -187,7 +187,7 @@ const FINAL_VISIBLE_DAYS = 30;
     .card {
       margin-bottom: 0.5rem;
       padding: 0.5rem 0.625rem;
-      border-radius: 0.5rem;
+      border-radius: var(--gi-radius-md);
       background: var(--mat-sys-surface);
       box-shadow: var(--mat-sys-level1);
       cursor: grab;
@@ -230,7 +230,7 @@ const FINAL_VISIBLE_DAYS = 30;
       display: inline-flex;
       align-items: center;
       padding: 0 0.5rem;
-      border-radius: 1rem;
+      border-radius: var(--gi-radius-pill);
       background: var(--mat-sys-surface-container-high);
       font: var(--mat-sys-label-small);
 

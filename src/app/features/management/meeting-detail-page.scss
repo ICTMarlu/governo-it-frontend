@@ -26,7 +26,7 @@
 
 .status {
   padding: 0.125rem 0.75rem;
-  border-radius: 1rem;
+  border-radius: var(--gi-radius-pill);
   background: var(--mat-sys-tertiary-container);
   color: var(--mat-sys-on-tertiary-container);
   font: var(--mat-sys-label-large);
@@ -45,7 +45,7 @@
   margin-block-end: 1rem;
   padding: 0.75rem 1rem;
   border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 0.75rem;
+  border-radius: var(--gi-radius-lg);
 
   &__summary {
     cursor: pointer;

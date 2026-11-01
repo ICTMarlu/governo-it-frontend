@@ -191,7 +191,7 @@ function ticks(max: number): number[] {
   `,
   styles: `
     :host {
-      --series-1: light-dark(#2a78d6, #3987e5);
+      --series-1: var(--gi-info);
       --series-2: light-dark(#eb6834, #d95926);
       --series-3: light-dark(#1baf7a, #199e70);
       display: block;
@@ -351,7 +351,7 @@ function ticks(max: number): number[] {
       flex-direction: column;
       gap: 0.125rem;
       padding: 0.5rem 0.75rem;
-      border-radius: 0.5rem;
+      border-radius: var(--gi-radius-md);
       background: var(--mat-sys-inverse-surface);
       color: var(--mat-sys-inverse-on-surface);
       font: var(--mat-sys-body-small);

@@ -143,7 +143,7 @@ export interface CellTasksRequest {
       margin-block-end: 0.75rem;
       padding: 0.75rem;
       border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 0.75rem;
+      border-radius: var(--gi-radius-lg);
 
       &__head {
         display: flex;
@@ -181,7 +181,7 @@ export interface CellTasksRequest {
         top: 0.25rem;
         right: 0.125rem;
         min-width: 1rem;
-        border-radius: 0.5rem;
+        border-radius: var(--gi-radius-md);
         background: light-dark(#0b57d0, #a8c7fa);
         color: light-dark(#ffffff, #062e6f);
         font:
@@ -198,7 +198,7 @@ export interface CellTasksRequest {
         flex: 0 0 4.5rem;
         height: 2.5rem;
         border: 1px solid var(--mat-sys-outline);
-        border-radius: 0.25rem;
+        border-radius: var(--gi-radius-sm);
         background: transparent;
         color: inherit;
         font: inherit;

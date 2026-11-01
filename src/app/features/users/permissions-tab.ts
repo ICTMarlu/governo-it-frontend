@@ -118,7 +118,7 @@ import { SearchField } from '../../shared/components/search-field/search-field';
     :host {
       --lv-none: light-dark(#5f6672, #9aa1ad);
       --lv-view: light-dark(#2a78d6, #5ba0f0);
-      --lv-edit: light-dark(#2e7d32, #7cc683);
+      --lv-edit: var(--gi-ok);
       display: block;
     }
 
@@ -213,7 +213,7 @@ import { SearchField } from '../../shared/components/search-field/search-field';
       align-items: center;
       gap: 0.25rem;
       padding: 0.125rem 0.5rem 0.125rem 0.375rem;
-      border-radius: 1rem;
+      border-radius: var(--gi-radius-pill);
       font: var(--mat-sys-label-medium);
       white-space: nowrap;
 

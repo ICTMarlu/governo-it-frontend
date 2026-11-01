@@ -5,7 +5,7 @@
   gap: 0.5rem;
   padding: 0.75rem 1rem 1rem;
   border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 0.75rem;
+  border-radius: var(--gi-radius-lg);
   background: var(--mat-sys-surface-container-lowest);
 
   &--done {
@@ -39,7 +39,7 @@
 .badge {
   display: inline-block;
   padding: 0.125rem 0.75rem;
-  border-radius: 1rem;
+  border-radius: var(--gi-radius-pill);
   border: 1px solid var(--badge-color, var(--mat-sys-outline));
   background: color-mix(in srgb, var(--badge-color, transparent) 15%, transparent);
   font: var(--mat-sys-label-medium);
@@ -150,7 +150,7 @@
   align-items: center;
   gap: 0.5rem 1rem;
   padding: 0.75rem;
-  border-radius: 0.5rem;
+  border-radius: var(--gi-radius-md);
   background: var(--mat-sys-secondary-container);
 
   &__choice {

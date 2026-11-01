@@ -82,7 +82,7 @@ import { TicketSyncService } from '../services/ticket-sync.service';
       min-height: 3rem;
       box-sizing: border-box;
       padding: 0.5rem 0.75rem;
-      border-radius: 0.75rem;
+      border-radius: var(--gi-radius-lg);
       background: var(--mat-sys-surface-container);
 
       &__spacer {

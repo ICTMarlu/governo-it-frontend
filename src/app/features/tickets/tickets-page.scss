@@ -36,7 +36,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  border-radius: 0.75rem;
+  border-radius: var(--gi-radius-lg);
   background: var(--mat-sys-surface-container);
 
   &__icon {
@@ -57,7 +57,7 @@
   min-width: 0;
   padding: 1rem;
   border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 0.75rem;
+  border-radius: var(--gi-radius-lg);
 
   &__head {
     display: flex;
@@ -93,7 +93,7 @@
     gap: 0.5rem;
     padding: 0.5rem;
     border-inline-start: 4px solid var(--mat-sys-outline);
-    border-radius: 0.5rem;
+    border-radius: var(--gi-radius-md);
     background: var(--mat-sys-surface-container-low);
 
     &--HIGH {
@@ -101,7 +101,7 @@
     }
 
     &--MEDIUM {
-      border-color: light-dark(#b26a00, #e9b44c);
+      border-color: var(--gi-warning);
     }
   }
 
@@ -114,7 +114,7 @@
   }
 
   &__item--MEDIUM &__icon {
-    color: light-dark(#8a5300, #e9b44c);
+    color: var(--gi-warning-text);
   }
 
   &__body {
@@ -214,7 +214,7 @@
   gap: 0.125rem;
   margin-inline-start: 0.375rem;
   padding: 0 0.375rem;
-  border-radius: 1rem;
+  border-radius: var(--gi-radius-pill);
   background: var(--mat-sys-error-container);
   color: var(--mat-sys-on-error-container);
   font: var(--mat-sys-label-small);
@@ -254,14 +254,14 @@
   padding: 0.75rem;
   border: 1px solid var(--mat-sys-outline-variant);
   border-inline-start: 4px solid var(--mat-sys-outline);
-  border-radius: 0.75rem;
+  border-radius: var(--gi-radius-lg);
 
   &--HIGH {
     border-inline-start-color: var(--mat-sys-error);
   }
 
   &--MEDIUM {
-    border-inline-start-color: light-dark(#b26a00, #e9b44c);
+    border-inline-start-color: var(--gi-warning);
   }
 
   &__icon {
@@ -273,7 +273,7 @@
   }
 
   &--MEDIUM &__icon {
-    color: light-dark(#8a5300, #e9b44c);
+    color: var(--gi-warning-text);
   }
 
   &__body {
@@ -299,13 +299,12 @@
 
 .person-filter {
   width: 15rem;
-  --mat-form-field-outlined-container-shape: 1.5rem;
 }
 
 .count-btn {
   padding: 0.125rem 0.375rem;
   border: 0;
-  border-radius: 0.25rem;
+  border-radius: var(--gi-radius-sm);
   background: none;
   color: inherit;
   font: inherit;

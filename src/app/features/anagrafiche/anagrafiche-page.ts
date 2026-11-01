@@ -224,7 +224,7 @@ const GROUPS: readonly Group[] = [
     .shortcut {
       color: inherit;
       text-decoration: none;
-      border-radius: 0.75rem;
+      border-radius: var(--gi-radius-lg);
     }
 
     .shortcut__card {

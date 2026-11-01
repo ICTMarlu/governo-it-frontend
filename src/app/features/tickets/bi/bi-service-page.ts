@@ -436,7 +436,6 @@ interface Column {
 
     .period {
       width: 14rem;
-      --mat-form-field-outlined-container-shape: 1.5rem;
     }
 
     .muted {
@@ -472,7 +471,7 @@ interface Column {
       min-width: 0;
       padding: 1rem 1.25rem;
       border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 0.75rem;
+      border-radius: var(--gi-radius-lg);
 
       &__title {
         margin: 0 0 0.125rem;

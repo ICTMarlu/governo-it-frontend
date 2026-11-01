@@ -54,7 +54,7 @@
 
 .comment {
   padding: 0.5rem 0.75rem;
-  border-radius: 0.75rem;
+  border-radius: var(--gi-radius-lg);
   background: var(--mat-sys-surface-container);
 
   &__head {
@@ -84,7 +84,7 @@
 
 .mention {
   padding: 0 0.25rem;
-  border-radius: 0.25rem;
+  border-radius: var(--gi-radius-sm);
   background: var(--mat-sys-secondary-container);
   color: var(--mat-sys-on-secondary-container);
 }

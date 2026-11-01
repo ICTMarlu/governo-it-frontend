@@ -79,7 +79,7 @@ export interface HBarItem {
   `,
   styles: `
     :host {
-      --series-1: light-dark(#2a78d6, #3987e5);
+      --series-1: var(--gi-info);
       --series-2: light-dark(#eb6834, #d95926);
       display: block;
     }

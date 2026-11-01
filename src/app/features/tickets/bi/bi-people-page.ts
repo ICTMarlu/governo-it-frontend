@@ -453,7 +453,7 @@ const DIRECTIONS: Readonly<
       }
 
       &--down {
-        color: light-dark(#2e7d32, #7cc683);
+        color: var(--gi-ok);
       }
     }
   `,

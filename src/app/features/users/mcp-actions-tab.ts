@@ -198,7 +198,7 @@ const TOOL_LABELS: Readonly<Record<string, string>> = {
         height: 2rem;
         padding: 0 0.5rem;
         border: 1px solid var(--mat-sys-outline);
-        border-radius: 0.5rem;
+        border-radius: var(--gi-radius-md);
         background: var(--mat-sys-surface);
         color: inherit;
         font: inherit;
@@ -273,7 +273,7 @@ const TOOL_LABELS: Readonly<Record<string, string>> = {
       align-items: center;
       gap: 0.25rem;
       padding: 0 0.5rem;
-      border-radius: 1rem;
+      border-radius: var(--gi-radius-pill);
       font: var(--mat-sys-label-small);
 
       mat-icon {

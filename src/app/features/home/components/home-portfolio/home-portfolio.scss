@@ -6,7 +6,7 @@
 .card {
   padding: 1rem 1.25rem;
   border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 0.75rem;
+  border-radius: var(--gi-radius-lg);
 
   &__title {
     display: flex;
@@ -59,7 +59,7 @@ ul {
   flex-direction: column;
   align-items: center;
   padding: 0;
-  border-radius: 0.5rem;
+  border-radius: var(--gi-radius-md);
   background: var(--mat-sys-surface-container);
   text-align: center;
 
@@ -111,7 +111,7 @@ summary {
   }
 
   &--warn mat-icon {
-    color: light-dark(#8a5300, #e9b44c);
+    color: var(--gi-warning-text);
   }
 
   &--accent mat-icon {
@@ -140,14 +140,14 @@ summary {
 .parallel__track {
   position: relative;
   height: 0.5rem;
-  border-radius: 0.25rem;
+  border-radius: var(--gi-radius-sm);
   background: var(--mat-sys-surface-container-high);
 }
 
 .parallel__bar {
   position: absolute;
   inset: 0 auto 0 0;
-  border-radius: 0.25rem;
+  border-radius: var(--gi-radius-sm);
   background: var(--mat-sys-primary);
 
   &--over {
@@ -208,7 +208,7 @@ summary {
 }
 
 $series: (
-  opened: light-dark(#2a78d6, #3987e5),
+  opened: var(--gi-info),
   started: light-dark(#eb6834, #d95926),
   closed: light-dark(#1baf7a, #199e70),
   pending: light-dark(#eda100, #c98500),
@@ -228,7 +228,7 @@ $series: (
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: var(--gi-radius-md);
   background: var(--mat-sys-surface-container);
 }
 

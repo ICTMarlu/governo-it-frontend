@@ -96,7 +96,6 @@ interface ResourceRow {
   styles: `
     .view-as {
       width: min(22rem, 100%);
-      --mat-form-field-outlined-container-shape: 1.5rem;
       /* Alto come il pulsante Guida: gi-filter-bar */
       --mat-form-field-filled-with-label-container-padding-top: 0.5rem;
     }
@@ -107,7 +106,7 @@ interface ResourceRow {
       max-height: 26rem;
       margin-top: 0.25rem;
       padding: 0.5rem;
-      border-radius: 1rem;
+      border-radius: var(--gi-radius-lg);
     }
 
     .view-as-panel .mat-mdc-optgroup-label {
@@ -122,7 +121,7 @@ interface ResourceRow {
     .view-as-panel .mat-mdc-option {
       min-height: 3rem;
       padding-block: 0.25rem;
-      border-radius: 0.75rem;
+      border-radius: var(--gi-radius-lg);
     }
 
     .view-as-panel .mat-mdc-option .mdc-list-item__primary-text {

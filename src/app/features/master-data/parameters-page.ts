@@ -136,7 +136,7 @@ const CHOICE_LABELS: Readonly<Record<string, string>> = {
         height: 2.25rem;
         padding: 0.25rem 0.5rem;
         border: 1px solid var(--mat-sys-outline);
-        border-radius: 0.5rem;
+        border-radius: var(--gi-radius-md);
         background: var(--mat-sys-surface);
         color: var(--mat-sys-on-surface);
         font: var(--mat-sys-body-medium);

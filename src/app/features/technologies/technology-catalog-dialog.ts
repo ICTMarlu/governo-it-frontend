@@ -210,7 +210,7 @@ import {
       align-items: center;
       gap: 0.5rem;
       padding: 0.5rem 0.75rem;
-      border-radius: 0.5rem;
+      border-radius: var(--gi-radius-md);
       background: color-mix(in srgb, #2e7d32 12%, transparent);
 
       &--ended {
@@ -229,7 +229,7 @@ import {
     .error {
       margin: 0;
       padding: 0.75rem;
-      border-radius: 0.25rem;
+      border-radius: var(--gi-radius-sm);
       background: var(--mat-sys-error-container);
       color: var(--mat-sys-on-error-container);
     }

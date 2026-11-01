@@ -42,6 +42,7 @@ html {
   // Colori di stato leggibili in entrambi i temi; sempre con un'etichetta accanto (mai solo colore)
   --gi-ok: light-dark(#2e7d32, #7cc683);
   --gi-warning: light-dark(#b26a00, #e9b44c);
+  --gi-warning-text: light-dark(#8a5300, #e9b44c); // per testi piccoli: contrasto AA sul bianco
   --gi-critical: var(--mat-sys-error);
   --gi-info: light-dark(#2a78d6, #3987e5);
 
@@ -49,6 +50,9 @@ html {
 
   // Interruttori a più scelte (Elenco/Kanban, Giornate/Ore…) alti quanto i bottoni, bordo compreso
   --mat-button-toggle-height: calc(var(--gi-control-h) - 2px);
+
+  // Campi (filtri, moduli, ricerca) con angoli da 8px; i bottoni restano a pillola
+  --mat-form-field-outlined-container-shape: var(--gi-radius-md);
 }
 
 body {

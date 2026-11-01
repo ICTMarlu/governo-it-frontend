@@ -64,7 +64,7 @@
   align-items: center;
   gap: 0.375rem;
   padding: 0.375rem 0.75rem;
-  border-radius: 1rem;
+  border-radius: var(--gi-radius-pill);
   background: var(--mat-sys-secondary-container);
   color: var(--mat-sys-on-secondary-container);
   font: var(--mat-sys-label-large);
@@ -79,7 +79,7 @@
 .card {
   padding: 1rem 1.25rem;
   border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 0.75rem;
+  border-radius: var(--gi-radius-lg);
 
   &__title {
     display: flex;
@@ -120,7 +120,7 @@
   }
 
   &--MEDIUM &__icon {
-    color: light-dark(#8a5300, #e9b44c);
+    color: var(--gi-warning-text);
   }
 
   &--INFO &__icon {
@@ -286,7 +286,7 @@
 .work__progress {
   margin-inline-start: 0.5rem;
   padding: 0 0.5rem;
-  border-radius: 1rem;
+  border-radius: var(--gi-radius-pill);
   background: var(--mat-sys-surface-container-high);
   font: var(--mat-sys-label-small);
   white-space: nowrap;
@@ -309,7 +309,7 @@
   gap: 0.5rem 0.75rem;
   margin: 0;
   padding: 0.625rem 1rem;
-  border-radius: 0.75rem;
+  border-radius: var(--gi-radius-lg);
   background: var(--mat-sys-tertiary-container);
   color: var(--mat-sys-on-tertiary-container);
 
@@ -320,7 +320,7 @@
   &__back {
     padding: 0.25rem 0.75rem;
     border: 1px solid currentcolor;
-    border-radius: 1rem;
+    border-radius: var(--gi-radius-pill);
     background: none;
     color: inherit;
     font: var(--mat-sys-label-large);

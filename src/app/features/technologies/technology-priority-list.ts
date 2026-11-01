@@ -93,7 +93,7 @@ import { EntityRow } from '../../shared/crud/crud.model';
       padding: 0.75rem 1rem;
       border: 1px solid var(--mat-sys-outline-variant);
       border-inline-start: 6px solid var(--prio-color, var(--mat-sys-outline));
-      border-radius: 0.5rem;
+      border-radius: var(--gi-radius-md);
 
       &__head {
         display: flex;
@@ -130,7 +130,7 @@ import { EntityRow } from '../../shared/crud/crud.model';
     .badge {
       padding: 0.0625rem 0.5rem;
       border: 1px solid var(--prio-color);
-      border-radius: 1rem;
+      border-radius: var(--gi-radius-pill);
       background: color-mix(in srgb, var(--prio-color) 14%, transparent);
       color: var(--prio-color);
       font: var(--mat-sys-label-medium);

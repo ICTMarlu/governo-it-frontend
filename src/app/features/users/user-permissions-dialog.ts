@@ -146,7 +146,7 @@ export interface UserPermissionsDialogData {
     .error {
       margin: 0;
       padding: 0.75rem;
-      border-radius: 0.25rem;
+      border-radius: var(--gi-radius-sm);
       background: var(--mat-sys-error-container);
       color: var(--mat-sys-on-error-container);
     }

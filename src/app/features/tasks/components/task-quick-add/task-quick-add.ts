@@ -90,7 +90,7 @@ import { TasksService } from '../../services/tasks.service';
       flex-wrap: wrap;
       padding: 0.25rem 0.25rem 0.25rem 0;
       border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 0.75rem;
+      border-radius: var(--gi-radius-lg);
       background: var(--mat-sys-surface-container-low);
 
       &:focus-within {

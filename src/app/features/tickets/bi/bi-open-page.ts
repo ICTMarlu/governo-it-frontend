@@ -130,7 +130,7 @@ import { BiStore } from './bi-store.service';
       height: 2rem;
       padding: 0 0.75rem;
       border: 2px solid var(--mat-sys-error);
-      border-radius: 0.5rem;
+      border-radius: var(--gi-radius-md);
       background: transparent;
       color: var(--mat-sys-on-surface);
       font: var(--mat-sys-label-large);
@@ -139,7 +139,7 @@ import { BiStore } from './bi-store.service';
       cursor: pointer;
 
       &--warn {
-        border-color: light-dark(#b26a00, #e9b44c);
+        border-color: var(--gi-warning);
       }
 
       &:hover {

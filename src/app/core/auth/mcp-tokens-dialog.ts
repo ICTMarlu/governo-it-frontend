@@ -187,7 +187,7 @@ interface CreatedMcpToken {
       flex-direction: column;
       gap: 0.5rem;
       padding: 0.75rem;
-      border-radius: 0.5rem;
+      border-radius: var(--gi-radius-md);
       background: var(--mat-sys-tertiary-container);
       color: var(--mat-sys-on-tertiary-container);
 
@@ -199,7 +199,7 @@ interface CreatedMcpToken {
     .value {
       display: block;
       padding: 0.5rem;
-      border-radius: 0.25rem;
+      border-radius: var(--gi-radius-sm);
       background: var(--mat-sys-surface);
       color: var(--mat-sys-on-surface);
       overflow-wrap: anywhere;
@@ -244,7 +244,7 @@ interface CreatedMcpToken {
         gap: 0.25rem 1rem;
         padding: 0.5rem 0.75rem;
         border: 1px solid var(--mat-sys-outline-variant);
-        border-radius: 0.5rem;
+        border-radius: var(--gi-radius-md);
       }
 
       li.inactive {
@@ -272,7 +272,7 @@ interface CreatedMcpToken {
     .error {
       margin: 0;
       padding: 0.75rem;
-      border-radius: 0.25rem;
+      border-radius: var(--gi-radius-sm);
       background: var(--mat-sys-error-container);
       color: var(--mat-sys-on-error-container);
     }

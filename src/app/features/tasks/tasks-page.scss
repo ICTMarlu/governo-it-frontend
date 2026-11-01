@@ -12,7 +12,7 @@
     padding: 0.25rem 0.5rem;
     box-sizing: border-box;
     border: 1px solid var(--mat-sys-outline);
-    border-radius: 0.5rem;
+    border-radius: var(--gi-radius-md);
   }
 
   .inline-search__input {
@@ -96,7 +96,7 @@
   min-height: 8rem;
   padding: 0.5rem;
   border-top: 4px solid var(--status-color, var(--mat-sys-outline));
-  border-radius: 0.5rem;
+  border-radius: var(--gi-radius-md);
   background: var(--mat-sys-surface-container-low);
 
   &__title {
@@ -108,7 +108,7 @@
 .card {
   margin-bottom: 0.5rem;
   padding: 0 0.5rem;
-  border-radius: 0.5rem;
+  border-radius: var(--gi-radius-md);
   background: var(--mat-sys-surface);
   box-shadow: var(--mat-sys-level1);
   cursor: grab;
@@ -140,7 +140,7 @@
   margin-block-end: 1rem;
   padding: 0.75rem;
   border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 0.75rem;
+  border-radius: var(--gi-radius-lg);
   background: var(--mat-sys-surface-container-low);
 
   &__field {
@@ -348,7 +348,7 @@ a.link {
   display: inline-block;
   padding: 0 0.5rem;
   border: 1px solid var(--status-color, var(--mat-sys-outline));
-  border-radius: 1rem;
+  border-radius: var(--gi-radius-pill);
   font: var(--mat-sys-label-small);
   white-space: nowrap;
 }
@@ -360,7 +360,7 @@ a.link {
   gap: 0.5rem 0.75rem;
   margin-block-end: 0.75rem;
   padding: 0.5rem 0.75rem;
-  border-radius: 0.75rem;
+  border-radius: var(--gi-radius-lg);
   background: var(--mat-sys-secondary-container);
 
   &__count {

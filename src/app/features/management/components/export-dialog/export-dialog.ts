@@ -38,7 +38,7 @@ export interface ExportDialogData {
       padding: 0.75rem;
       max-height: 60vh;
       overflow: auto;
-      border-radius: 0.5rem;
+      border-radius: var(--gi-radius-md);
       background: var(--mat-sys-surface-container);
       font: var(--mat-sys-body-medium);
       white-space: pre-wrap;

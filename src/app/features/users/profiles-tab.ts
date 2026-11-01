@@ -155,7 +155,7 @@ import { PermissionsService, Profile } from './permissions.service';
       gap: 0.75rem;
       margin-block-start: 1rem;
       padding: 0.75rem;
-      border-radius: 0.75rem;
+      border-radius: var(--gi-radius-lg);
       background: var(--mat-sys-surface-container);
 
       &--on {
