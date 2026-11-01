@@ -784,7 +784,7 @@ export const ALERTS_HELP: HelpContent = {
     {
       title: 'Nuovi senza risposta',
       items: [
-        'Ticket ancora "da fare" e mai aggiornati in Jira dopo la creazione, da oltre 8 ore lavorative (TICKET_NO_RESPONSE_HOURS; ore lavorative = lunedì-venerdì dalle 8:30 alle 17, ora italiana). Urgente da 10 ticket in su.',
+        'Ticket ancora "da fare" e mai aggiornati in Jira dopo la creazione, da oltre 8 ore lavorative (TICKET_NO_RESPONSE_HOURS; ore lavorative = lunedì-venerdì dalle 8:30 alle 17 con un’ora di pausa pranzo, cioè 7,5 ore al giorno, ora italiana). Urgente da 10 ticket in su.',
         'I ticket già toccati ma poi rimasti fermi sono nelle azioni consigliate come "fermi".',
       ],
     },

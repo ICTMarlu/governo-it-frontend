@@ -136,7 +136,7 @@
           <span
             class="gi-kpi__meta"
             [class.gi-kpi__meta--bad]="data.tickets.stalled > 0"
-            title="Ticket aperti assegnati (o riassegnati) a una persona che da quel momento, da oltre 8 ore lavorative (lun-ven, 8:30-17), non ha avuto nessun movimento: né una modifica né un commento di una persona. Non contano le automazioni di Jira. Se il ticket è stato riassegnato si parte dall’ultima assegnazione. Non contano i ticket in attesa del cliente o in Pending. Non sono i ticket “fermi” della pagina Operativa (quelli sono senza movimenti da oltre 8 giorni). Clic per vedere l’elenco."
+            title="Ticket aperti assegnati (o riassegnati) a una persona che da quel momento, da oltre 8 ore lavorative (lun-ven, 8:30-17, senza un’ora di pausa pranzo: 7,5 ore al giorno), non ha avuto nessun movimento: né una modifica né un commento di una persona. Non contano le automazioni di Jira. Se il ticket è stato riassegnato si parte dall’ultima assegnazione. Non contano i ticket in attesa del cliente o in Pending. Non sono i ticket “fermi” della pagina Operativa (quelli sono senza movimenti da oltre 8 giorni). Clic per vedere l’elenco."
           >
             assegnati, nessun movimento
           </span>
@@ -209,10 +209,7 @@
         </h2>
         <ul class="items">
           @for (ticket of data.todayTickets.items; track ticket.key) {
-            <li class="item">
-              <span class="item__when" [class.item__when--late]="ticket.overdue">{{
-                ticket.reason
-              }}</span>
+            <li class="item item--ticket">
               <span class="item__text" [title]="ticket.key + ' ' + ticket.summary">
                 @if (ticket.url) {
                   <a [href]="ticket.url" target="_blank" rel="noopener">{{ ticket.key }}</a>
@@ -220,6 +217,9 @@
                   <strong>{{ ticket.key }}</strong>
                 }
                 {{ ticket.summary }}
+              </span>
+              <span class="item__when" [class.item__when--late]="ticket.overdue"
+                >{{ ticket.reason }}
                 @if (team && ticket.assignee) {
                   <span class="muted"> · {{ ticket.assignee }}</span>
                 }

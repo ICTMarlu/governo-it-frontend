@@ -152,6 +152,17 @@
   &__when--late {
     color: var(--mat-sys-error);
   }
+
+  // Ticket da guardare: il titolo su una riga, sotto il motivo (scaduto, senza risposta da…)
+  &--ticket {
+    flex-direction: column;
+    gap: 0.125rem;
+
+    .item__when {
+      flex: none;
+      font: var(--mat-sys-body-small);
+    }
+  }
 }
 
 .step {
