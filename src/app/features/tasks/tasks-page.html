@@ -66,6 +66,15 @@
   <button mat-stroked-button type="submit" [disabled]="adding() || !quickTitle().trim()">
     Aggiungi
   </button>
+  <button
+    mat-stroked-button
+    type="button"
+    class="quick__details"
+    matTooltip="Apre il modulo completo: descrizione, priorità, promemoria e progetto"
+    (click)="openCreate()"
+  >
+    <mat-icon aria-hidden="true">edit_note</mat-icon> Con dettagli
+  </button>
 </form>
 
 <div class="filters gi-filter-bar" role="search" aria-label="Filtri dei task">

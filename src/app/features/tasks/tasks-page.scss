@@ -163,7 +163,8 @@
     min-width: 9rem;
   }
 
-  button[type='submit'] {
+  button[type='submit'],
+  &__details {
     flex: 0 0 auto;
   }
 }

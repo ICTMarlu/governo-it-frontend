@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { catchError, filter, forkJoin, of } from 'rxjs';
 
@@ -25,6 +26,10 @@ import { TASKS_HELP } from '../../shared/help/help-content';
 import { matchesTerms, searchTerms } from '../../shared/util/text-search';
 import { MentionCandidate } from '../projects/models/project-comment.model';
 import { ProjectCommentsService } from '../projects/services/project-comments.service';
+import {
+  TaskCreateData,
+  TaskCreateDialog,
+} from './components/task-create-dialog/task-create-dialog';
 import { TaskItem } from './components/task-item/task-item';
 import { ConfirmDialog, ConfirmDialogData } from '../../shared/crud/confirm-dialog/confirm-dialog';
 import { errorMessage } from '../../shared/crud/crud-api.service';
@@ -70,6 +75,7 @@ const VIEW_PREFERENCE = 'tasks.view';
     MatProgressSpinnerModule,
     MatSelectModule,
     MatSlideToggleModule,
+    MatTooltipModule,
     PageHeader,
     RouterLink,
     SavedViews,
@@ -438,6 +444,31 @@ export class TasksPage {
           this.adding.set(false);
           this.snackBar.open(errorMessage(error), 'Chiudi');
         },
+      });
+  }
+
+  /** Modulo completo per il nuovo task; porta con sé quello che è già nella barra veloce. */
+  protected openCreate(): void {
+    this.dialog
+      .open<TaskCreateDialog, TaskCreateData, Task>(TaskCreateDialog, {
+        data: {
+          kind: this.quickKind(),
+          title: this.quickTitle(),
+          assigneeId: this.quickAssignee(),
+          due: this.quickDue(),
+        },
+        width: '720px',
+        maxWidth: '100vw',
+      })
+      .afterClosed()
+      .subscribe((task) => {
+        if (!task) {
+          return;
+        }
+        this.quickTitle.set('');
+        this.quickDue.set(null);
+        this.onCreated(task);
+        this.snackBar.open(`Aggiunto: ${task.title}`, 'OK', { duration: 2500 });
       });
   }
 
