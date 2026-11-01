@@ -158,6 +158,13 @@
     <mat-icon aria-hidden="true">manage_accounts</mat-icon>
   </button>
   <mat-menu #accountMenu="matMenu">
+    <!-- Chi è collegato: sempre qui, anche quando nella barra il nome non ci sta -->
+    @if (currentUser(); as user) {
+      <div class="account-head" role="presentation">
+        <span class="account-head__name">{{ user.displayName }}</span>
+        <span class="account-head__role">{{ user.roleLabel }}</span>
+      </div>
+    }
     <button mat-menu-item type="button" (click)="changePassword()">
       <mat-icon aria-hidden="true">key</mat-icon>
       <span>Cambia password</span>

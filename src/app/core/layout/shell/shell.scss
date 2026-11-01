@@ -130,13 +130,37 @@
   line-height: 1.2;
   margin-inline-end: 0.5rem;
 
+  min-width: 0;
+
   &__name {
+    max-width: 14rem;
+    overflow: hidden;
     font: var(--mat-sys-label-large);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__role {
     font: var(--mat-sys-label-small);
     opacity: 0.85;
+  }
+}
+
+// Nome e ruolo in cima al menu "Il mio account": si vedono anche quando nella barra non ci stanno
+.account-head {
+  display: flex;
+  flex-direction: column;
+  margin-block-end: var(--gi-space-1);
+  padding: var(--gi-space-2) var(--gi-space-4) var(--gi-space-3);
+  border-block-end: 1px solid var(--mat-sys-outline-variant);
+
+  &__name {
+    font: var(--mat-sys-title-small);
+  }
+
+  &__role {
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-body-small);
   }
 }
 
@@ -195,6 +219,13 @@
 
   .content--full {
     padding: 1rem 1.5rem;
+  }
+}
+
+// Fra 1024 e 1280px la barra ha già tutte le voci di menu: il nome lascia spazio (resta nel menu account)
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  .user {
+    display: none;
   }
 }
 

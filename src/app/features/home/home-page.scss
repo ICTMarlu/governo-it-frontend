@@ -11,8 +11,9 @@
   justify-content: space-between;
   gap: 0.75rem 1rem;
 
+  // Almeno 26rem per saluto e punto di oggi: se non ci stanno, i controlli a destra vanno sotto
   &__main {
-    flex: 1 1 0;
+    flex: 1 1 26rem;
     min-width: 0;
   }
 
@@ -31,19 +32,30 @@
     font: var(--mat-sys-headline-medium);
   }
 
-  // Il punto di oggi sta sempre su una riga: se è più lungo dello spazio si tronca
+  // Il punto di oggi: al massimo due righe su smartphone e tablet, una sul desktop; il resto si
+  // tronca con i puntini (testo intero nel tooltip)
   &__headline {
+    display: -webkit-box;
     margin: 0;
     overflow: hidden;
     font: var(--mat-sys-body-large);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
   }
 
   &__side {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-start;
     gap: 0.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero__headline {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
   }
 }
 

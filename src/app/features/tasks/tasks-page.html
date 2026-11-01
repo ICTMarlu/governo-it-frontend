@@ -223,7 +223,7 @@
               />
             </th>
             <th scope="col" class="table__check">
-              <span title="Spunta per segnare il task come fatto">Fatto</span>
+              <span title="Clic sul cerchio per segnare il task come fatto">Fatto</span>
             </th>
             <th scope="col">
               <button type="button" class="sort" (click)="sortBy('title')">
@@ -282,13 +282,21 @@
               </td>
               <td class="table__check">
                 @if (task.kind === 'TASK') {
-                  <input
-                    type="checkbox"
-                    [checked]="task.done"
+                  <!-- Cerchio da spuntare, diverso dalla casella di selezione accanto -->
+                  <button
+                    type="button"
+                    class="done-btn"
+                    [class.done-btn--on]="task.done"
                     [disabled]="!task.canEdit"
+                    [attr.aria-pressed]="task.done"
                     [attr.aria-label]="(task.done ? 'Riapri: ' : 'Segna come fatto: ') + task.title"
-                    (change)="toggleDone(task)"
-                  />
+                    [title]="task.done ? 'Fatto · clic per riaprire' : 'Segna come fatto'"
+                    (click)="toggleDone(task)"
+                  >
+                    <mat-icon aria-hidden="true">{{
+                      task.done ? 'check_circle' : 'radio_button_unchecked'
+                    }}</mat-icon>
+                  </button>
                 } @else {
                   <mat-icon class="note" aria-label="Nota" title="Nota">sticky_note_2</mat-icon>
                 }

@@ -227,6 +227,35 @@
   overflow-x: auto;
 }
 
+// "Fatto": cerchio vuoto o spuntato, si distingue dalla casella di selezione della riga
+.done-btn {
+  display: inline-flex;
+  padding: 0.125rem;
+  border: 0;
+  border-radius: var(--gi-radius-pill);
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--gi-ok);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.4;
+  }
+
+  &--on {
+    color: var(--gi-ok);
+  }
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -258,6 +287,12 @@
 
   th:not(:nth-child(3)) .sort {
     justify-content: center;
+  }
+
+  // Titolo: la colonna che si legge, mai stretta (sotto questa larghezza la tabella scorre)
+  th:nth-child(3),
+  td:nth-child(3) {
+    min-width: 16rem;
   }
 
   &__done td {

@@ -2,6 +2,7 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { NgTemplateOutlet } from '@angular/common';
 import {
   Component,
+  DestroyRef,
   ElementRef,
   HostListener,
   Injector,
@@ -13,7 +14,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -1572,26 +1573,31 @@ export class PlanPage {
     if (!this.plan()) {
       this.state.set('loading');
     }
-    this.planService.load(from, weekCount, archived).subscribe({
-      next: (plan) => {
-        this.plan.set(plan);
-        afterNextRender(() => this.applyPendingScroll(), { injector: this.injector });
-        this.loadCellTasks();
-        this.loadActuals();
-        this.mobileWeek.set(
-          Math.max(
-            0,
-            plan.weeks.findIndex((week) => week.current),
-          ),
-        );
-        this.state.set('ready');
-      },
-      error: () => {
-        this.extending = false;
-        this.pendingScroll = null;
-        this.state.set('error');
-      },
-    });
+    // Se si esce dalla pagina prima della risposta, il caricamento si annulla (niente
+    // afterNextRender su una vista già distrutta: errore NG0911)
+    this.planService
+      .load(from, weekCount, archived)
+      .pipe(takeUntilDestroyed(this.injector.get(DestroyRef)))
+      .subscribe({
+        next: (plan) => {
+          this.plan.set(plan);
+          afterNextRender(() => this.applyPendingScroll(), { injector: this.injector });
+          this.loadCellTasks();
+          this.loadActuals();
+          this.mobileWeek.set(
+            Math.max(
+              0,
+              plan.weeks.findIndex((week) => week.current),
+            ),
+          );
+          this.state.set('ready');
+        },
+        error: () => {
+          this.extending = false;
+          this.pendingScroll = null;
+          this.state.set('error');
+        },
+      });
   }
 
   /** Dopo un caricamento: posizione di partenza o compensazione delle settimane aggiunte a sinistra. */
