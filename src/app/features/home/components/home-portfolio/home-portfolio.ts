@@ -86,8 +86,7 @@ export class HomePortfolio {
       {
         icon: 'play_circle',
         tone: 'accent',
-        label:
-          'approvati con giornate già nel piano, o da avviare pianificati questa settimana: di fatto partiti',
+        label: 'da avviare o approvati pianificati questa settimana: di fatto partiti',
         list: coherence?.startedNotInProgress ?? [],
       },
       {

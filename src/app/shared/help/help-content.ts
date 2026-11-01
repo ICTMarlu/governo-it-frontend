@@ -65,7 +65,7 @@ export const HOME_HELP: HelpContent = {
       title: 'Intuizioni e "il punto di oggi"',
       items: [
         'Segnali incrociati: backlog che cresce o cala, la persona il cui backlog cresce di più (2 o più a settimana), ticket nuovi senza risposta, scadenze vicine, persone oltre il 100%, persone senza giornate nel piano, la settimana più libera (sotto l’80%), task in ritardo, punti scaduti.',
-        'Piano dei progetti (solo progetti di tipo Project): il piano teorico è il piano settimanale stesso, quindi la percentuale è le giornate delle settimane già chiuse ÷ le giornate totali del progetto. Avvisi: piano esaurito ma progetto ancora aperto; soglie di controllo al 50, 75 e 90% ("verifica di essere in tempo"); oltre metà del piano ma ancora Approved; To Start pianificato nella settimana corrente (lo stato va aggiornato; per i To Start non ci sono altre analisi); progetto chiuso con giornate ancora pianificate. Un avviso per tipo, con i progetti nominati; sotto 2 giornate totali non si avvisa.',
+        'Piano dei progetti (solo progetti di tipo Project): il piano teorico è il piano settimanale stesso, quindi la percentuale è le giornate delle settimane già chiuse ÷ le giornate totali del progetto. Avvisi: piano esaurito ma progetto ancora aperto; soglie di controllo al 50, 75 e 90% ("verifica di essere in tempo"); To Start o Approved pianificato nella settimana corrente (lo stato va aggiornato; per i progetti da avviare non ci sono altre analisi); progetto chiuso con giornate ancora pianificate. Un avviso per tipo, con i progetti nominati; sotto 2 giornate totali non si avvisa.',
         'Prima gli urgenti, al massimo 2 per area (3 per i progetti) e 5 in tutto. "Il punto di oggi" riassume le prime tre.',
       ],
     },
