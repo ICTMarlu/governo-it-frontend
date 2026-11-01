@@ -42,6 +42,11 @@ function ticket(changes: Partial<BiTicket>): BiTicket {
 }
 
 function render(inputs: Record<string, string>, tickets: BiTicket[]): number {
+  return renderRows(inputs, tickets).length;
+}
+
+/** Le righe dell'elenco, dall'alto in basso: la chiave del ticket di ognuna. */
+function renderRows(inputs: Record<string, string>, tickets: BiTicket[]): string[] {
   const store = {
     tickets: signal(tickets),
     scoped: signal(tickets),
@@ -57,7 +62,9 @@ function render(inputs: Record<string, string>, tickets: BiTicket[]): number {
     fixture.componentRef.setInput(name, value);
   }
   fixture.detectChanges();
-  return fixture.nativeElement.querySelectorAll('tbody tr').length;
+  return [...fixture.nativeElement.querySelectorAll('tbody tr')].map(
+    (row) => (row as HTMLElement).querySelector('a, th, td')?.textContent?.trim() ?? '',
+  );
 }
 
 describe('BiDetailPage — scope flash', () => {
@@ -115,6 +122,21 @@ describe('BiDetailPage — i Pending non sono aperti', () => {
     expect(render({ scope: 'all-todo' }, tickets)).toBe(1);
     expect(render({ scope: 'all-progress' }, tickets)).toBe(1);
     expect(render({ scope: 'all-pending' }, tickets)).toBe(2);
+  });
+});
+
+describe('BiDetailPage — ordine di partenza', () => {
+  it('i più nuovi in alto: numero progressivo del ticket dal più alto, i più vecchi in fondo', () => {
+    const tickets = [
+      ticket({ key: 'MRLIT-474', category: 'NEW', resolved: null }),
+      ticket({ key: 'MRLIT-2750', category: 'NEW', resolved: null }),
+      ticket({ key: 'MRLIT-1387', category: 'NEW', resolved: null }),
+    ];
+    expect(renderRows({ scope: 'all-open' }, tickets)).toEqual([
+      'MRLIT-2750',
+      'MRLIT-1387',
+      'MRLIT-474',
+    ]);
   });
 });
 

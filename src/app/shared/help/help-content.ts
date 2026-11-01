@@ -695,6 +695,7 @@ export const TICKETS_HELP: HelpContent = {
         '"Considera chiusi i ticket in attesa del cliente" (Trend e Persone, stessa scelta): acceso, i ticket in attesa di risposta del cliente contano come chiusi dal giorno in cui sono entrati in quello stato: sommati ai risolti per settimana, ai chiusi al giorno e ai giorni di backlog, e tolti dai lavorabili. Spento (di partenza) restano aperti.',
         'Aperti e Pending: i ticket aperti oggi (di qualunque periodo; contano area e assegnatario) per anzianità, area, priorità, assegnatario, richiedente e stato.',
         'Elenco: i ticket creati nel periodo con ricerca dal vivo, stato (aperti, pending, risolti, tutti), ordinamento per chiave, data o età e link a Jira.',
+        'Elenco dei ticket che si apre da un numero, da un grafico o da un filtro: di partenza i più nuovi in alto (numero progressivo del ticket, dal più alto) e i più vecchi in fondo; clicca un’intestazione per cambiare l’ordine.',
         'Gli stati "Pending" sono nel parametro TICKET_PENDING_STATUSES (oggi Pending); lo storico letto da Jira è di 2 anni (JIRA_HISTORY_DAYS).',
       ],
     },

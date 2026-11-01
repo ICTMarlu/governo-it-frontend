@@ -333,7 +333,8 @@ export class BiDetailPage {
   readonly keys = input('');
 
   protected readonly search = signal('');
-  protected readonly sort = signal<{ key: SortKey; desc: boolean }>({ key: 'age', desc: true });
+  // Di partenza i più nuovi in alto (numero progressivo del ticket, dal più alto), i più vecchi in fondo
+  protected readonly sort = signal<{ key: SortKey; desc: boolean }>({ key: 'key', desc: true });
 
   protected readonly dimLabel = computed(() => {
     const dim = this.dim();
