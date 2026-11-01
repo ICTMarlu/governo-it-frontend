@@ -70,37 +70,37 @@ import { TechnologyPriorityList } from './technology-priority-list';
       </div>
     }
 
-    <ul class="kpis" aria-label="Riepilogo">
-      <li class="kpi kpi--urgent">
-        <span class="kpi__value">{{ summary().urgent }}</span>
-        <span class="kpi__label">urgenti</span>
+    <ul class="gi-kpis" aria-label="Riepilogo">
+      <li class="gi-kpi gi-kpi--critical">
+        <span class="gi-kpi__value">{{ summary().urgent }}</span>
+        <span class="gi-kpi__label">urgenti</span>
       </li>
-      <li class="kpi kpi--plan">
-        <span class="kpi__value">{{ summary().plan }}</span>
-        <span class="kpi__label">da pianificare</span>
+      <li class="gi-kpi gi-kpi--warning">
+        <span class="gi-kpi__value">{{ summary().plan }}</span>
+        <span class="gi-kpi__label">da pianificare</span>
       </li>
-      <li class="kpi kpi--watch">
-        <span class="kpi__value">{{ summary().watch }}</span>
-        <span class="kpi__label">da tenere d'occhio</span>
+      <li class="gi-kpi gi-kpi--info">
+        <span class="gi-kpi__value">{{ summary().watch }}</span>
+        <span class="gi-kpi__label">da tenere d'occhio</span>
       </li>
       <li
-        class="kpi kpi--urgent"
+        class="gi-kpi gi-kpi--critical"
         matTooltip="Siti, e-commerce e servizi raggiungibili da internet con priorità urgente"
       >
-        <span class="kpi__value">{{ summary().exposedUrgent }}</span>
-        <span class="kpi__label">esposte a internet e urgenti</span>
+        <span class="gi-kpi__value">{{ summary().exposedUrgent }}</span>
+        <span class="gi-kpi__label">esposte a internet e urgenti</span>
       </li>
-      <li class="kpi">
-        <span class="kpi__value">{{ summary().ended }}</span>
-        <span class="kpi__label">fuori supporto</span>
+      <li class="gi-kpi">
+        <span class="gi-kpi__value">{{ summary().ended }}</span>
+        <span class="gi-kpi__label">fuori supporto</span>
       </li>
-      <li class="kpi">
-        <span class="kpi__value">{{ summary().vulnerabilities }}</span>
-        <span class="kpi__label">vulnerabilità aperte</span>
+      <li class="gi-kpi">
+        <span class="gi-kpi__value">{{ summary().vulnerabilities }}</span>
+        <span class="gi-kpi__label">vulnerabilità aperte</span>
       </li>
-      <li class="kpi">
-        <span class="kpi__value">{{ summary().unknown }}</span>
-        <span class="kpi__label">senza fine supporto</span>
+      <li class="gi-kpi">
+        <span class="gi-kpi__value">{{ summary().unknown }}</span>
+        <span class="gi-kpi__label">senza fine supporto</span>
       </li>
     </ul>
 
@@ -170,45 +170,8 @@ import { TechnologyPriorityList } from './technology-priority-list';
       color: var(--mat-sys-on-surface-variant);
     }
 
-    .kpis {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
-      gap: 0.75rem;
-      margin: 0 0 1rem;
-      padding: 0;
-      list-style: none;
-    }
-
-    .kpi {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 0.75rem;
-      border: 2px solid var(--kpi-color, var(--mat-sys-outline-variant));
-      border-radius: 0.75rem;
-      text-align: center;
-
-      &__value {
-        font: var(--mat-sys-headline-medium);
-      }
-
-      &__label {
-        color: var(--mat-sys-on-surface-variant);
-        font: var(--mat-sys-label-large);
-      }
-
-      &--urgent {
-        --kpi-color: #c62828;
-      }
-
-      &--plan {
-        --kpi-color: #ef6c00;
-      }
-
-      &--watch {
-        --kpi-color: #1565c0;
-      }
+    .gi-kpis {
+      margin-block-end: 1rem;
     }
 
     .intro {

@@ -1,3 +1,4 @@
+import { formatNumber } from '../../../shared/util/number-format';
 /** Consuntivo delle ore (D-37): la settimana di una persona come arriva dal backend. */
 export type WeekStatus = 'OPEN' | 'CONFIRMED' | 'LOCKED' | 'FUTURE';
 export type RowKind = 'PROJECT' | 'VACATION' | 'HOLIDAY';
@@ -131,7 +132,7 @@ export function hoursText(value: number, dash = true): string {
   if (dash && Math.abs(value) < 0.005) {
     return '—';
   }
-  return value.toLocaleString('it-IT', { maximumFractionDigits: 2 });
+  return formatNumber(value, 2);
 }
 
 /** Scarto con il segno: "+2", "−1,5", "0". */
@@ -139,7 +140,7 @@ export function signedHours(value: number): string {
   if (Math.abs(value) < 0.005) {
     return '0';
   }
-  const text = Math.abs(value).toLocaleString('it-IT', { maximumFractionDigits: 2 });
+  const text = formatNumber(Math.abs(value), 2);
   return value > 0 ? `+${text}` : `−${text}`;
 }
 

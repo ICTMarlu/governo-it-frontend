@@ -6,6 +6,7 @@ import {
   OptionsSource,
   SelectOption,
 } from '../../shared/crud/crud.model';
+import { numberFormat } from '../../shared/util/number-format';
 
 const ASSIGNEE_TYPES: readonly SelectOption[] = [
   { value: 'PERSON', label: 'Persona' },
@@ -59,7 +60,7 @@ const ACTIVE_COLUMN: ColumnConfig = {
 
 const IMEI = { regex: '^\\d{15}$', message: "L'IMEI ha esattamente 15 cifre" };
 
-const EURO = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' });
+const EURO = numberFormat({ style: 'currency', currency: 'EUR' });
 
 /** "12,00 €" oppure "Da definire" se il costo non è noto. */
 function euro(value: unknown): string {

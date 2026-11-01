@@ -131,7 +131,7 @@ export class SavedViews {
   protected readonly views = signal<SavedView[]>([]);
   protected readonly current = signal<SavedView | null>(null);
 
-  protected readonly label = computed(() => this.current()?.name ?? 'standard');
+  protected readonly label = computed(() => this.current()?.name ?? 'Standard');
   /** I filtri o le colonne sono cambiati rispetto alla vista scelta. */
   protected readonly changed = computed(() => {
     const view = this.current();

@@ -54,18 +54,36 @@
       <mat-icon aria-hidden="true">edit</mat-icon>
     </button>
   }
+  <!-- Eliminare sta nel menu "⋮": meno icone sulle righe e niente cancellazioni per sbaglio -->
   @if (canDelete()) {
     <button
       mat-icon-button
       type="button"
-      [attr.aria-label]="'Elimina ' + rowTitle(row)"
-      matTooltip="Elimina"
-      (click)="remove.emit(row)"
+      class="more-btn"
+      [attr.aria-label]="'Altre azioni su ' + rowTitle(row)"
+      matTooltip="Altre azioni"
+      [matMenuTriggerFor]="rowMenu"
+      [matMenuTriggerData]="{ row }"
     >
-      <mat-icon aria-hidden="true">delete</mat-icon>
+      <mat-icon aria-hidden="true">more_vert</mat-icon>
     </button>
   }
 </ng-template>
+
+<mat-menu #rowMenu="matMenu" xPosition="before">
+  <ng-template matMenuContent let-row="row">
+    <button
+      mat-menu-item
+      type="button"
+      class="menu-danger"
+      [attr.aria-label]="'Elimina ' + rowTitle(row)"
+      (click)="remove.emit(row)"
+    >
+      <mat-icon aria-hidden="true">delete</mat-icon>
+      <span>Elimina</span>
+    </button>
+  </ng-template>
+</mat-menu>
 
 <ng-template #title let-row>
   @if (rowLink(); as link) {

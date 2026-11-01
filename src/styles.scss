@@ -21,6 +21,33 @@ html {
   color-scheme: light;
 }
 
+// Valori comuni dell'interfaccia (audit grafico 01/11/2026): arrotondamenti, spaziature, colori di
+// stato e altezza dei controlli. I nuovi stili usano questi, non numeri scritti a mano.
+// Testi: si usano i ruoli Material (--mat-sys-headline-small titolo pagina, title-large sezione,
+// title-medium riquadro, body-medium testo, body-small / label-small note).
+:root {
+  --gi-radius-sm: 0.25rem; // badge, chip piccoli, celle
+  --gi-radius-md: 0.5rem; // campi compatti, chip-filtro, menu
+  --gi-radius-lg: 0.75rem; // riquadri, KPI, pannelli
+  --gi-radius-xl: 1.75rem; // finestre di dialogo (valore Material)
+  --gi-radius-pill: 9999px; // bottoni
+
+  --gi-space-1: 0.25rem;
+  --gi-space-2: 0.5rem;
+  --gi-space-3: 0.75rem;
+  --gi-space-4: 1rem;
+  --gi-space-5: 1.5rem;
+  --gi-space-6: 2rem;
+
+  // Colori di stato leggibili in entrambi i temi; sempre con un'etichetta accanto (mai solo colore)
+  --gi-ok: light-dark(#2e7d32, #7cc683);
+  --gi-warning: light-dark(#b26a00, #e9b44c);
+  --gi-critical: var(--mat-sys-error);
+  --gi-info: light-dark(#2a78d6, #3987e5);
+
+  --gi-control-h: 2.5rem; // bottoni, filtri e ricerche delle barre strumenti
+}
+
 body {
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
@@ -33,6 +60,34 @@ body {
 :focus-visible {
   outline: 2px solid var(--mat-sys-primary);
   outline-offset: 2px;
+}
+
+// Link di testo (senza classe propria: schede, bottoni e riquadri cliccabili hanno il loro stile):
+// colore del tema, non il blu del browser, uguali anche se già visitati; sottolineatura tenue che
+// si accende al passaggio, così restano riconoscibili anche senza colore (WCAG 1.4.1)
+a:not([class]),
+.gi-link {
+  color: var(--mat-sys-primary);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 0.15em;
+
+  &:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+// Voce di menu distruttiva (es. "Elimina" nel menu ⋮ delle righe): rossa, testo e icona
+.mat-mdc-menu-item.menu-danger {
+  --mat-menu-item-label-text-color: var(--gi-critical);
+  --mat-menu-item-icon-color: var(--gi-critical);
+}
+
+// Barra filtri: campi Material alti come bottoni e interruttori (--gi-control-h), su tutte le pagine
+.gi-filter-bar {
+  --mat-form-field-container-height: var(--gi-control-h);
+  --mat-form-field-container-vertical-padding: 0.5rem;
+  --mat-button-toggle-height: var(--gi-control-h);
 }
 
 // Trascinamento (colonne): l'anteprima vive fuori dai componenti
@@ -294,62 +349,158 @@ td:focus-within > .task-dot--empty {
   gap: 1rem;
 }
 
-.bi-kpis {
+// Riquadri dei numeri (KPI): un solo aspetto in tutta l'app (Home, Consuntivo, Ticket e pagine BI,
+// Telefonia, Tecnologie). Dall'alto: area (facoltativa, con icona), numero, etichetta, note.
+// Lo stato si vede dalla barra colorata a sinistra; il numero diventa rosso solo se critico.
+// Classi: gi-kpis (griglia), gi-kpi (+ --link, --info, --ok, --warning, --critical),
+// gi-kpi__eyebrow / __value / __label / __meta (--good, --bad) / __trend / __link / __cover.
+.gi-kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: var(--gi-space-3);
   margin: 0;
   padding: 0;
   list-style: none;
+
+  // Riquadro dentro un <li> (es. link nella Home): riempie la cella
+  > li:not(.gi-kpi) {
+    display: flex;
+    min-width: 0;
+
+    > .gi-kpi {
+      flex: 1;
+    }
+  }
 }
 
-.bi-kpi {
+.gi-kpi {
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 0.75rem;
-  border: 2px solid var(--bi-kpi-color, var(--mat-sys-outline-variant));
-  border-radius: 0.75rem;
-  text-align: center;
+  gap: 0.125rem;
+  min-width: 0;
+  padding: var(--gi-space-3) var(--gi-space-4);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--gi-radius-lg);
+  background: var(--mat-sys-surface);
+  // Barra di stato a sinistra solo se il riquadro ha uno stato (senza spostare il contenuto)
+  box-shadow: inset 4px 0 0 var(--gi-kpi-tone, transparent);
+  color: var(--mat-sys-on-surface);
+  text-align: start;
+  text-decoration: none;
+
+  &__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gi-space-2);
+    margin-block-end: var(--gi-space-1);
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-label-large);
+
+    mat-icon {
+      width: 1.25rem;
+      height: 1.25rem;
+      font-size: 1.25rem;
+    }
+  }
 
   &__value {
-    font: var(--mat-sys-headline-medium);
+    font: var(--mat-sys-headline-small);
   }
 
   &__label {
-    color: var(--mat-sys-on-surface-variant);
     font: var(--mat-sys-label-large);
   }
 
   &__meta {
-    font: var(--mat-sys-title-medium);
-  }
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-body-small);
 
-  // Numero cliccabile: porta all'elenco dei ticket che lo compongono
-  &--link {
-    cursor: pointer;
+    &--good {
+      color: var(--gi-ok);
+    }
 
-    &:hover,
-    &:focus-visible {
-      background: var(--mat-sys-surface-container);
+    &--bad {
+      color: var(--gi-critical);
     }
   }
 
-  // Colori di stato, sempre con l'etichetta accanto (mai solo colore)
+  // Giudizio rispetto alla media: sempre con le parole, mai solo il colore
+  &__trend {
+    font-weight: 600;
+
+    &--good {
+      color: var(--gi-ok);
+    }
+
+    &--bad {
+      color: var(--gi-critical);
+    }
+  }
+
+  // Link piccolo dentro il riquadro (es. "3 Highest")
+  &__link {
+    position: relative;
+    z-index: 1;
+    align-self: flex-start;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--mat-sys-primary);
+    font: var(--mat-sys-body-small);
+    text-align: start;
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:disabled {
+      color: var(--mat-sys-on-surface-variant);
+      text-decoration: none;
+      cursor: default;
+    }
+  }
+
+  // Link trasparente che copre tutto il riquadro (i link piccoli restano cliccabili sopra)
+  &__cover {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+
+    &:focus-visible {
+      outline: 2px solid var(--mat-sys-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  // Riquadro cliccabile
+  &--link,
+  &:is(a) {
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--mat-sys-outline);
+      background: var(--mat-sys-surface-container-low);
+    }
+  }
+
+  // Stati, sempre con l'etichetta accanto (mai solo colore)
   &--info {
-    --bi-kpi-color: light-dark(#2a78d6, #3987e5);
+    --gi-kpi-tone: var(--gi-info);
   }
 
-  &--alert {
-    --bi-kpi-color: var(--mat-sys-error);
+  &--ok {
+    --gi-kpi-tone: var(--gi-ok);
   }
 
-  &--warn {
-    --bi-kpi-color: light-dark(#b26a00, #e9b44c);
+  &--warning {
+    --gi-kpi-tone: var(--gi-warning);
   }
 
-  &--good {
-    --bi-kpi-color: light-dark(#2e7d32, #7cc683);
+  &--critical {
+    --gi-kpi-tone: var(--gi-critical);
+
+    .gi-kpi__value {
+      color: var(--gi-critical);
+    }
   }
 }
 

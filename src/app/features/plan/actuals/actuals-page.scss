@@ -64,39 +64,6 @@
   }
 }
 
-.totals {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.total {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.625rem;
-  border-radius: 0.75rem;
-  background: var(--mat-sys-surface-container);
-  text-align: center;
-
-  &__value {
-    font: var(--mat-sys-headline-small);
-  }
-
-  &__label {
-    color: var(--mat-sys-on-surface-variant);
-    font: var(--mat-sys-label-medium);
-  }
-
-  &--over &__value,
-  &--under &__value {
-    color: var(--mat-sys-error);
-  }
-}
-
 // Scelta del giorno: chip con le ore già inserite su quelle di orario
 .days {
   display: grid;

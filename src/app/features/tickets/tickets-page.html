@@ -84,20 +84,20 @@
   </div>
 
   <!-- Numeri principali -->
-  <ul class="kpis" aria-label="Numeri principali">
-    <li *govKpi="'ops.open'" class="kpi">
-      <span class="kpi__value">{{ data.kpis.open }}</span>
-      <span class="kpi__label">ticket aperti</span>
-      <span class="kpi__meta"
+  <ul class="gi-kpis" aria-label="Numeri principali">
+    <li *govKpi="'ops.open'" class="gi-kpi">
+      <span class="gi-kpi__value">{{ data.kpis.open }}</span>
+      <span class="gi-kpi__label">ticket aperti</span>
+      <span class="gi-kpi__meta"
         >{{ data.kpis.toDo }} da fare · {{ data.kpis.inProgress }} in corso</span
       >
     </li>
-    <li *govKpi="'ops.flow7'" class="kpi">
-      <span class="kpi__value"
+    <li *govKpi="'ops.flow7'" class="gi-kpi">
+      <span class="gi-kpi__value"
         >{{ data.kpis.createdLast7Days }} / {{ data.kpis.resolvedLast7Days }}</span
       >
-      <span class="kpi__label">entrati / chiusi in 7 giorni</span>
-      <span class="kpi__meta">
+      <span class="gi-kpi__label">entrati / chiusi in 7 giorni</span>
+      <span class="gi-kpi__meta">
         @if (data.kpis.resolvedLast7Days >= data.kpis.createdLast7Days) {
           il backlog scende
         } @else {
@@ -106,11 +106,11 @@
       </span>
     </li>
     @if (data.daily; as daily) {
-      <li *govKpi="'ops.today'" class="kpi">
-        <span class="kpi__value">{{ daily.today.created }} / {{ daily.today.resolved }}</span>
-        <span class="kpi__label">entrati / chiusi oggi</span>
+      <li *govKpi="'ops.today'" class="gi-kpi">
+        <span class="gi-kpi__value">{{ daily.today.created }} / {{ daily.today.resolved }}</span>
+        <span class="gi-kpi__label">entrati / chiusi oggi</span>
         <span
-          class="kpi__meta"
+          class="gi-kpi__meta"
           title="Giornata in corso, confrontata con la media per giorno lavorativo delle ultime 4 settimane"
         >
           media {{ daily.averageCreated | number: '1.0-1' }} /
@@ -119,7 +119,7 @@
           {{ delta(daily.today.resolved, daily.averageResolved) }}
         </span>
         <span
-          class="kpi__meta kpi__trend kpi__trend--{{
+          class="gi-kpi__meta gi-kpi__trend gi-kpi__trend--{{
             trend(daily.today.created, daily.today.resolved, daily)
           }}"
         >
@@ -137,11 +137,13 @@
           · giornata in corso
         </span>
       </li>
-      <li *govKpi="'ops.previous'" class="kpi">
-        <span class="kpi__value">{{ daily.previous.created }} / {{ daily.previous.resolved }}</span>
-        <span class="kpi__label">entrati / chiusi {{ previousLabel(daily.previous.day) }}</span>
+      <li *govKpi="'ops.previous'" class="gi-kpi">
+        <span class="gi-kpi__value"
+          >{{ daily.previous.created }} / {{ daily.previous.resolved }}</span
+        >
+        <span class="gi-kpi__label">entrati / chiusi {{ previousLabel(daily.previous.day) }}</span>
         <span
-          class="kpi__meta"
+          class="gi-kpi__meta"
           title="Confrontato con la media per giorno lavorativo delle ultime 4 settimane"
         >
           media {{ daily.averageCreated | number: '1.0-1' }} /
@@ -150,7 +152,7 @@
           {{ delta(daily.previous.resolved, daily.averageResolved) }}
         </span>
         <span
-          class="kpi__meta kpi__trend kpi__trend--{{
+          class="gi-kpi__meta gi-kpi__trend gi-kpi__trend--{{
             trend(daily.previous.created, daily.previous.resolved, daily)
           }}"
         >
@@ -170,38 +172,38 @@
     }
     <li
       *govKpi="'ops.unassigned'"
-      class="kpi kpi--link"
-      [class.kpi--alert]="data.kpis.unassigned > 0"
+      class="gi-kpi gi-kpi--link"
+      [class.gi-kpi--critical]="data.kpis.unassigned > 0"
       role="link"
       tabindex="0"
       title="Vedi i ticket senza assegnatario"
       (click)="openUnassigned()"
       (keydown.enter)="openUnassigned()"
     >
-      <span class="kpi__value">{{ data.kpis.unassigned }}</span>
-      <span class="kpi__label">senza assegnatario</span>
+      <span class="gi-kpi__value">{{ data.kpis.unassigned }}</span>
+      <span class="gi-kpi__label">senza assegnatario</span>
       @if (data.kpis.unassigned > 0) {
-        <span class="kpi__meta">
+        <span class="gi-kpi__meta">
           di cui {{ data.kpis.unassignedLate }} da oltre {{ data.kpis.unassignedHours }} ore
         </span>
       }
     </li>
     <li
       *govKpi="'ops.priority'"
-      class="kpi kpi--link"
-      [class.kpi--alert]="data.kpis.highest + data.kpis.high > 0"
+      class="gi-kpi gi-kpi--link"
+      [class.gi-kpi--critical]="data.kpis.highest + data.kpis.high > 0"
       role="link"
       tabindex="0"
       title="Vedi i ticket con priorità Highest o High"
       (click)="openPriority('prio-high')"
       (keydown.enter)="openPriority('prio-high')"
     >
-      <span class="kpi__value">{{ data.kpis.highest + data.kpis.high }}</span>
-      <span class="kpi__label">priorità alta</span>
-      <span class="kpi__meta">
+      <span class="gi-kpi__value">{{ data.kpis.highest + data.kpis.high }}</span>
+      <span class="gi-kpi__label">priorità alta</span>
+      <span class="gi-kpi__meta">
         <button
           type="button"
-          class="kpi__link"
+          class="gi-kpi__link"
           [disabled]="data.kpis.highest === 0"
           (click)="$event.stopPropagation(); openPriority('prio-highest')"
         >
@@ -210,7 +212,7 @@
         ·
         <button
           type="button"
-          class="kpi__link"
+          class="gi-kpi__link"
           [disabled]="data.kpis.high === 0"
           (click)="$event.stopPropagation(); openPriority('prio-high-only')"
         >
@@ -220,20 +222,20 @@
     </li>
     <li
       *govKpi="'ops.impact'"
-      class="kpi kpi--link"
-      [class.kpi--alert]="data.kpis.extensive + data.kpis.significant > 0"
+      class="gi-kpi gi-kpi--link"
+      [class.gi-kpi--critical]="data.kpis.extensive + data.kpis.significant > 0"
       role="link"
       tabindex="0"
       title="Vedi i ticket con impatto Extensive o Significant"
       (click)="openPriority('impact-high')"
       (keydown.enter)="openPriority('impact-high')"
     >
-      <span class="kpi__value">{{ data.kpis.extensive + data.kpis.significant }}</span>
-      <span class="kpi__label">impatto alto</span>
-      <span class="kpi__meta">
+      <span class="gi-kpi__value">{{ data.kpis.extensive + data.kpis.significant }}</span>
+      <span class="gi-kpi__label">impatto alto</span>
+      <span class="gi-kpi__meta">
         <button
           type="button"
-          class="kpi__link"
+          class="gi-kpi__link"
           [disabled]="data.kpis.extensive === 0"
           (click)="$event.stopPropagation(); openPriority('impact-extensive')"
         >
@@ -242,7 +244,7 @@
         ·
         <button
           type="button"
-          class="kpi__link"
+          class="gi-kpi__link"
           [disabled]="data.kpis.significant === 0"
           (click)="$event.stopPropagation(); openPriority('impact-significant')"
         >
@@ -252,23 +254,23 @@
     </li>
     <li
       *govKpi="'ops.overdue'"
-      class="kpi kpi--link"
-      [class.kpi--alert]="data.kpis.overdue > 0"
+      class="gi-kpi gi-kpi--link"
+      [class.gi-kpi--critical]="data.kpis.overdue > 0"
       role="link"
       tabindex="0"
       title="Vedi i ticket con la scadenza passata"
       (click)="openPriority('overdue')"
       (keydown.enter)="openPriority('overdue')"
     >
-      <span class="kpi__value">{{ data.kpis.overdue }}</span>
-      <span class="kpi__label">con la scadenza passata</span>
+      <span class="gi-kpi__value">{{ data.kpis.overdue }}</span>
+      <span class="gi-kpi__label">con la scadenza passata</span>
     </li>
-    <li *govKpi="'ops.waiting'" class="kpi">
-      <span class="kpi__value">{{ data.kpis.waitingCustomer }}</span>
-      <span class="kpi__label">in attesa del cliente</span>
+    <li *govKpi="'ops.waiting'" class="gi-kpi">
+      <span class="gi-kpi__value">{{ data.kpis.waitingCustomer }}</span>
+      <span class="gi-kpi__label">in attesa del cliente</span>
       <button
         type="button"
-        class="kpi__link"
+        class="gi-kpi__link"
         [disabled]="confirmIdleCount() === 0"
         (click)="showConfirmIdle()"
       >
@@ -277,25 +279,25 @@
     </li>
     <li
       *govKpi="'ops.stale'"
-      class="kpi kpi--link"
+      class="gi-kpi gi-kpi--link"
       role="link"
       tabindex="0"
       title="Vedi i ticket fermi"
       (click)="openStale(data.kpis.staleDays)"
       (keydown.enter)="openStale(data.kpis.staleDays)"
     >
-      <span class="kpi__value">{{ data.kpis.stale }}</span>
-      <span class="kpi__label"
+      <span class="gi-kpi__value">{{ data.kpis.stale }}</span>
+      <span class="gi-kpi__label"
         >fermi: nessun aggiornamento da oltre {{ data.kpis.staleDays }} giorni</span
       >
     </li>
-    <li *govKpi="'ops.age'" class="kpi">
-      <span class="kpi__value">{{ data.kpis.averageAgeDays | number: '1.0-1' }} gg</span>
-      <span class="kpi__label">età media degli aperti</span>
+    <li *govKpi="'ops.age'" class="gi-kpi">
+      <span class="gi-kpi__value">{{ data.kpis.averageAgeDays | number: '1.0-1' }} gg</span>
+      <span class="gi-kpi__label">età media degli aperti</span>
     </li>
-    <li *govKpi="'ops.withProject'" class="kpi">
-      <span class="kpi__value">{{ ratio(data.kpis.withProject, data.kpis.open) }}%</span>
-      <span class="kpi__label">aperti con codice progetto</span>
+    <li *govKpi="'ops.withProject'" class="gi-kpi">
+      <span class="gi-kpi__value">{{ ratio(data.kpis.withProject, data.kpis.open) }}%</span>
+      <span class="gi-kpi__label">aperti con codice progetto</span>
     </li>
   </ul>
 

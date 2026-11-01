@@ -19,6 +19,7 @@ import {
   pivot,
   total,
 } from './telephony-dashboard.model';
+import { formatNumber, numberFormat } from '../../shared/util/number-format';
 
 interface Preset {
   readonly label: string;
@@ -80,31 +81,31 @@ const ALL = '';
       } @else if (data()!.length === 0) {
         <p class="bi-state" role="status">Nessuna linea attiva da analizzare.</p>
       } @else {
-        <ul class="bi-kpis" aria-label="Numeri di sintesi, secondo i filtri scelti">
-          <li class="bi-kpi bi-kpi--info">
-            <span class="bi-kpi__value">{{ format(totalLines(), 'lines') }}</span>
-            <span class="bi-kpi__label">SIM attive</span>
+        <ul class="gi-kpis" aria-label="Numeri di sintesi, secondo i filtri scelti">
+          <li class="gi-kpi gi-kpi--info">
+            <span class="gi-kpi__value">{{ format(totalLines(), 'lines') }}</span>
+            <span class="gi-kpi__label">SIM attive</span>
           </li>
-          <li class="bi-kpi bi-kpi--good">
-            <span class="bi-kpi__value">{{ euros(totalCost()) }}</span>
-            <span class="bi-kpi__label">spesa al mese</span>
-            <span class="bi-kpi__meta">di cui opzioni {{ euros(parts().options) }}</span>
+          <li class="gi-kpi gi-kpi--ok">
+            <span class="gi-kpi__value">{{ euros(totalCost()) }}</span>
+            <span class="gi-kpi__label">spesa al mese</span>
+            <span class="gi-kpi__meta">di cui opzioni {{ euros(parts().options) }}</span>
           </li>
-          <li class="bi-kpi bi-kpi--good">
-            <span class="bi-kpi__value">{{ euros(totalCost() * 12) }}</span>
-            <span class="bi-kpi__label">spesa all’anno</span>
+          <li class="gi-kpi gi-kpi--ok">
+            <span class="gi-kpi__value">{{ euros(totalCost() * 12) }}</span>
+            <span class="gi-kpi__label">spesa all’anno</span>
           </li>
-          <li class="bi-kpi">
-            <span class="bi-kpi__value">{{ euros(averageCost()) }}</span>
-            <span class="bi-kpi__label">per SIM al mese</span>
+          <li class="gi-kpi">
+            <span class="gi-kpi__value">{{ euros(averageCost()) }}</span>
+            <span class="gi-kpi__label">per SIM al mese</span>
           </li>
-          <li class="bi-kpi">
-            <span class="bi-kpi__value">{{ companiesInScope() }}</span>
-            <span class="bi-kpi__label">società</span>
+          <li class="gi-kpi">
+            <span class="gi-kpi__value">{{ companiesInScope() }}</span>
+            <span class="gi-kpi__label">società</span>
           </li>
-          <li class="bi-kpi">
-            <span class="bi-kpi__value">{{ countriesInScope() }}</span>
-            <span class="bi-kpi__label">paesi</span>
+          <li class="gi-kpi">
+            <span class="gi-kpi__value">{{ countriesInScope() }}</span>
+            <span class="gi-kpi__label">paesi</span>
           </li>
         </ul>
 
@@ -365,16 +366,16 @@ export class TelephonyDashboard {
 
   /** Euro senza decimali: i centesimi non servono né nei numeri di sintesi né in tabella. */
   protected euros(value: number): string {
-    return value.toLocaleString('it-IT', {
+    return numberFormat({
       style: 'currency',
       currency: 'EUR',
       maximumFractionDigits: 0,
-    });
+    }).format(value);
   }
 
   /** Numero intero per le SIM, euro per il canone (misura attiva se non indicata). */
   protected format(value: number, measure: Measure = this.measure()): string {
-    return measure === 'cost' ? this.euros(value) : value.toLocaleString('it-IT');
+    return measure === 'cost' ? this.euros(value) : formatNumber(value);
   }
 }
 

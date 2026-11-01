@@ -20,11 +20,12 @@ import { ProjectComments } from './components/project-comments/project-comments'
 import { PROJECTS_CONFIG } from './projects.configs';
 import { HelpButton } from '../../shared/help/help-button';
 import { PROJECT_DETAIL_HELP } from '../../shared/help/help-content';
+import { numberFormat } from '../../shared/util/number-format';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
 const DATE = new Intl.DateTimeFormat('it-IT');
-const NUMBER = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 2 });
+const NUMBER = numberFormat({ maximumFractionDigits: 2 });
 
 interface DetailItem {
   readonly label: string;

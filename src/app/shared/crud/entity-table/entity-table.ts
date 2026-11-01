@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
@@ -11,13 +12,14 @@ import { RouterLink } from '@angular/router';
 import { columnId } from '../column-layout';
 import { ColumnConfig, EntityRow, readPath } from '../crud.model';
 import { RECORD_TASKS, RecordTaskCount, TaskSourceConfig } from '../record-tasks';
+import { numberFormat } from '../../util/number-format';
 
 const DATE_FORMAT = new Intl.DateTimeFormat('it-IT', {
   day: '2-digit',
   month: '2-digit',
   year: 'numeric',
 });
-const NUMBER_FORMAT = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 2 });
+const NUMBER_FORMAT = numberFormat({ maximumFractionDigits: 2 });
 const COLLATOR = new Intl.Collator('it', { numeric: true, sensitivity: 'base' });
 
 export type SortDirection = 'asc' | 'desc';
@@ -43,6 +45,7 @@ export interface SortState {
     MatCheckboxModule,
     MatFormFieldModule,
     MatIconModule,
+    MatMenuModule,
     MatSelectModule,
     MatTooltipModule,
   ],

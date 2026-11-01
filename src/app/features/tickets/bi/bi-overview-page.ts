@@ -29,65 +29,65 @@ import { BiStore } from './bi-store.service';
         </p>
       } @else {
         @let n = numbers();
-        <ul class="bi-kpis" aria-label="Numeri del periodo">
+        <ul class="gi-kpis" aria-label="Numeri del periodo">
           <li
             *govKpi="'bi.created'"
-            class="bi-kpi bi-kpi--link bi-kpi--info"
+            class="gi-kpi gi-kpi--link gi-kpi--info"
             role="link"
             tabindex="0"
             (click)="open('created')"
             (keydown.enter)="open('created')"
           >
-            <span class="bi-kpi__value">{{ n.created }}</span
-            ><span class="bi-kpi__label">ticket creati</span>
+            <span class="gi-kpi__value">{{ n.created }}</span
+            ><span class="gi-kpi__label">ticket creati</span>
           </li>
           <li
             *govKpi="'bi.open'"
-            class="bi-kpi bi-kpi--link bi-kpi--alert"
+            class="gi-kpi gi-kpi--link gi-kpi--critical"
             role="link"
             tabindex="0"
             (click)="open('created-open')"
             (keydown.enter)="open('created-open')"
           >
-            <span class="bi-kpi__value">{{ n.open }}</span
-            ><span class="bi-kpi__label">aperti</span>
-            <span class="bi-kpi__meta">{{ n.openPct }}%</span>
+            <span class="gi-kpi__value">{{ n.open }}</span
+            ><span class="gi-kpi__label">aperti</span>
+            <span class="gi-kpi__meta">{{ n.openPct }}%</span>
           </li>
           <li
             *govKpi="'bi.workable'"
-            class="bi-kpi bi-kpi--link bi-kpi--alert"
+            class="gi-kpi gi-kpi--link gi-kpi--critical"
             role="link"
             tabindex="0"
             (click)="open('created-workable')"
             (keydown.enter)="open('created-workable')"
           >
-            <span class="bi-kpi__value">{{ n.openWorkable }}</span
-            ><span class="bi-kpi__label">open (lavorabili)</span>
-            <span class="bi-kpi__meta">{{ n.openWorkablePct }}%</span>
+            <span class="gi-kpi__value">{{ n.openWorkable }}</span
+            ><span class="gi-kpi__label">lavorabili</span>
+            <span class="gi-kpi__meta">{{ n.openWorkablePct }}%</span>
           </li>
           <li
             *govKpi="'bi.pending'"
-            class="bi-kpi bi-kpi--link bi-kpi--warn"
+            class="gi-kpi gi-kpi--link gi-kpi--warning"
             role="link"
             tabindex="0"
             (click)="open('created-pending')"
             (keydown.enter)="open('created-pending')"
           >
-            <span class="bi-kpi__value">{{ n.pending }}</span
-            ><span class="bi-kpi__label">pending</span>
-            <span class="bi-kpi__meta">{{ n.pendingPct }}%</span>
+            <span class="gi-kpi__value">{{ n.pending }}</span
+            ><span class="gi-kpi__label">in Pending</span>
+            <span class="gi-kpi__meta">{{ n.pendingPct }}%</span>
           </li>
           <li
             *govKpi="'bi.resolved'"
-            class="bi-kpi bi-kpi--link bi-kpi--good"
+            class="gi-kpi gi-kpi--link gi-kpi--ok"
             role="link"
             tabindex="0"
             (click)="open('created-resolved')"
             (keydown.enter)="open('created-resolved')"
           >
-            <span class="bi-kpi__value">{{ n.resolved }}</span
-            ><span class="bi-kpi__label">risolti</span>
-            <span class="bi-kpi__meta">{{ n.resolvedPct }}%</span>
+            <span class="gi-kpi__value">{{ n.resolved }}</span
+            ><span class="gi-kpi__label">risolti</span>
+            <span class="gi-kpi__meta">{{ n.resolvedPct }}%</span>
           </li>
         </ul>
 

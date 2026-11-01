@@ -53,25 +53,25 @@
   @let team = data.scope === 'TEAM';
 
   <!-- Numeri flash: uno per area, ognuno apre la sua pagina -->
-  <ul class="flash" aria-label="Numeri di oggi">
+  <ul class="gi-kpis" aria-label="Numeri di oggi">
     <li>
-      <a class="flash__card" routerLink="/tickets">
-        <span class="flash__label"
+      <a class="gi-kpi" routerLink="/tickets">
+        <span class="gi-kpi__eyebrow"
           ><mat-icon aria-hidden="true">support_agent</mat-icon>
           {{ team ? 'Ticket AMS' : 'I tuoi ticket' }}</span
         >
         @if (data.tickets.configured) {
-          <span class="flash__value">{{ data.tickets.open }} aperti</span>
+          <span class="gi-kpi__value">{{ data.tickets.open }} aperti</span>
           <span
-            class="flash__meta"
+            class="gi-kpi__meta"
             title="Ticket aperti in attesa di risposta del cliente o in User Acceptance Test: aspettano una conferma, non lavoro tuo"
           >
             di cui {{ data.tickets.inConfirm }} in attesa cliente / UAT
           </span>
           <span
-            class="flash__meta"
-            [class.flash__meta--bad]="data.tickets.backlogPerWeek >= 0.5"
-            [class.flash__meta--good]="data.tickets.backlogPerWeek <= -0.5"
+            class="gi-kpi__meta"
+            [class.gi-kpi__meta--bad]="data.tickets.backlogPerWeek >= 0.5"
+            [class.gi-kpi__meta--good]="data.tickets.backlogPerWeek <= -0.5"
           >
             <mat-icon aria-hidden="true">{{
               data.tickets.backlogPerWeek >= 0.5
@@ -83,21 +83,21 @@
             {{ signed(data.tickets.backlogPerWeek) }} a settimana
           </span>
         } @else {
-          <span class="flash__value">—</span>
-          <span class="flash__meta">Jira non è collegato</span>
+          <span class="gi-kpi__value">—</span>
+          <span class="gi-kpi__meta">Jira non è collegato</span>
         }
       </a>
     </li>
     <li>
-      <a class="flash__card" routerLink="/plan">
-        <span class="flash__label"
+      <a class="gi-kpi" routerLink="/plan">
+        <span class="gi-kpi__eyebrow"
           ><mat-icon aria-hidden="true">view_week</mat-icon>
           {{ team ? 'Piano, questa settimana' : 'Il tuo piano' }}</span
         >
-        <span class="flash__value">{{
+        <span class="gi-kpi__value">{{
           data.plan.saturationPct === null ? '—' : data.plan.saturationPct + '%'
         }}</span>
-        <span class="flash__meta" [class.flash__meta--bad]="data.plan.overloaded.length > 0">
+        <span class="gi-kpi__meta" [class.gi-kpi__meta--bad]="data.plan.overloaded.length > 0">
           @if (data.plan.overloaded.length > 0) {
             {{ team ? data.plan.overloaded.length + ' oltre il 100%' : 'oltre la tua capacità' }}
           } @else if (team) {
@@ -109,23 +109,23 @@
       </a>
     </li>
     <li>
-      <a class="flash__card" routerLink="/tasks">
-        <span class="flash__label"
+      <a class="gi-kpi" routerLink="/tasks">
+        <span class="gi-kpi__eyebrow"
           ><mat-icon aria-hidden="true">task_alt</mat-icon> I tuoi task</span
         >
-        <span class="flash__value">{{ data.tasks.overdue + data.tasks.dueSoon }}</span>
-        <span class="flash__meta" [class.flash__meta--bad]="data.tasks.overdue > 0">
+        <span class="gi-kpi__value">{{ data.tasks.overdue + data.tasks.dueSoon }}</span>
+        <span class="gi-kpi__meta" [class.gi-kpi__meta--bad]="data.tasks.overdue > 0">
           {{ data.tasks.overdue }} in ritardo · {{ data.tasks.dueSoon }} in scadenza
         </span>
       </a>
     </li>
     <li>
-      <a class="flash__card" routerLink="/management">
-        <span class="flash__label"
+      <a class="gi-kpi" routerLink="/management">
+        <span class="gi-kpi__eyebrow"
           ><mat-icon aria-hidden="true">record_voice_over</mat-icon> Direzione</span
         >
-        <span class="flash__value">{{ data.management.open }} punti</span>
-        <span class="flash__meta" [class.flash__meta--bad]="data.management.overdue > 0">
+        <span class="gi-kpi__value">{{ data.management.open }} punti</span>
+        <span class="gi-kpi__meta" [class.gi-kpi__meta--bad]="data.management.overdue > 0">
           @if (data.management.nextMeeting; as next) {
             prossima riunione {{ next | date: 'EEEE d MMMM' }}
           } @else if (data.management.overdue > 0) {

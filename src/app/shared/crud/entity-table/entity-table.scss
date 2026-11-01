@@ -315,6 +315,12 @@ tr.selected {
   background: var(--mat-sys-secondary-container);
 }
 
+// Azioni di riga (matita, menu ⋮) in grigio: ripetute su ogni riga, non devono pesare più dei dati
+.actions .mat-mdc-icon-button:not(.tasks-btn),
+.card__actions .mat-mdc-icon-button:not(.tasks-btn) {
+  color: var(--mat-sys-on-surface-variant);
+}
+
 // Task della riga (D-36): numero dei task aperti sull'icona
 .tasks-btn {
   position: relative;

@@ -24,6 +24,7 @@ import {
   headline,
   isoWeek,
 } from './home.model';
+import { formatNumber } from '../../shared/util/number-format';
 
 /** Come funziona Governo IT: il giro dell'app in quattro passi (guida iniziale). */
 const STEPS = [
@@ -197,11 +198,11 @@ export class HomePage {
   }
 
   protected days(value: number): string {
-    return value === 0 ? '' : value.toLocaleString('it-IT', { maximumFractionDigits: 2 });
+    return value === 0 ? '' : formatNumber(value, 2);
   }
 
   protected signed(value: number): string {
-    const text = value.toLocaleString('it-IT', { maximumFractionDigits: 1 });
+    const text = formatNumber(value, 1);
     return value > 0 ? `+${text}` : text;
   }
 }

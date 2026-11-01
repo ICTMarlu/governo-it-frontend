@@ -1,5 +1,5 @@
-// Mobile first: ricerca a tutta larghezza, filtri due per riga, "Nuovo" in fondo;
-// da 768px tutto su una riga.
+// Mobile first: ricerca a tutta larghezza, filtri due per riga, in fondo "Colonne" (secondario,
+// largo quanto il testo) e "Nuovo" che prende il resto della riga; da 768px tutto su una riga.
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -27,12 +27,13 @@
   }
 
   &__new {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
     min-height: 48px;
   }
 
   &__columns {
-    flex: 1 1 100%;
+    flex: 0 0 auto;
+    min-height: 48px;
   }
 }
 
@@ -74,6 +75,12 @@
     &__new,
     &__columns {
       flex: 0 0 auto;
+    }
+
+    // Da tablet in su alti come gli altri controlli (48px solo per il tocco)
+    &__new,
+    &__columns {
+      min-height: var(--gi-control-h);
     }
   }
 }

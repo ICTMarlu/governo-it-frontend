@@ -110,26 +110,26 @@
   </section>
 
   <!-- Totali della settimana -->
-  <ul class="totals" aria-label="Totali della settimana">
-    <li class="total">
-      <span class="total__value">{{ hoursText(w.totals.plannedHours, false) }} h</span>
-      <span class="total__label">pianificate</span>
+  <ul class="gi-kpis" aria-label="Totali della settimana">
+    <li class="gi-kpi">
+      <span class="gi-kpi__value">{{ hoursText(w.totals.plannedHours, false) }} h</span>
+      <span class="gi-kpi__label">pianificate</span>
     </li>
-    <li class="total">
-      <span class="total__value">{{ hoursText(w.totals.actualHours, false) }} h</span>
-      <span class="total__label">consuntivate</span>
+    <li class="gi-kpi">
+      <span class="gi-kpi__value">{{ hoursText(w.totals.actualHours, false) }} h</span>
+      <span class="gi-kpi__label">consuntivate</span>
     </li>
     <li
-      class="total"
-      [class.total--over]="w.totals.deltaHours > 0.005"
+      class="gi-kpi"
+      [class.gi-kpi--critical]="w.totals.deltaHours > 0.005"
       [class.total--under]="lateInWeek() && w.totals.deltaHours < -4"
     >
-      <span class="total__value">{{ signedHours(w.totals.deltaHours) }} h</span>
-      <span class="total__label">scarto sul piano</span>
+      <span class="gi-kpi__value">{{ signedHours(w.totals.deltaHours) }} h</span>
+      <span class="gi-kpi__label">scarto sul piano</span>
     </li>
-    <li class="total">
-      <span class="total__value">{{ hoursText(w.totals.theoreticalHours, false) }} h</span>
-      <span class="total__label">capacità della settimana</span>
+    <li class="gi-kpi">
+      <span class="gi-kpi__value">{{ hoursText(w.totals.theoreticalHours, false) }} h</span>
+      <span class="gi-kpi__label">capacità della settimana</span>
     </li>
   </ul>
 

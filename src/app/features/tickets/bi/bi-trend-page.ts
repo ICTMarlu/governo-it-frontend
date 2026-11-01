@@ -45,49 +45,49 @@ import { BiStore } from './bi-store.service';
         </p>
       } @else {
         <div class="head">
-          <ul class="bi-kpis" aria-label="Numeri di oggi">
+          <ul class="gi-kpis" aria-label="Numeri di oggi">
             <li
               *govKpi="'trend.backlogDays'"
-              class="bi-kpi bi-kpi--link bi-kpi--info"
+              class="gi-kpi gi-kpi--link gi-kpi--info"
               role="link"
               tabindex="0"
               (click)="openWorkable()"
               (keydown.enter)="openWorkable()"
             >
-              <span class="bi-kpi__value">{{ backlog() ?? '—' }}</span>
-              <span class="bi-kpi__label">giorni lavorativi di backlog</span>
+              <span class="gi-kpi__value">{{ backlog() ?? '—' }}</span>
+              <span class="gi-kpi__label">giorni lavorativi di backlog</span>
             </li>
             <li
               *govKpi="'trend.workable'"
-              class="bi-kpi bi-kpi--link bi-kpi--alert"
+              class="gi-kpi gi-kpi--link gi-kpi--critical"
               role="link"
               tabindex="0"
               (click)="openWorkable()"
               (keydown.enter)="openWorkable()"
             >
-              <span class="bi-kpi__value">{{ workable() }}</span>
-              <span class="bi-kpi__label">lavorabili oggi</span>
+              <span class="gi-kpi__value">{{ workable() }}</span>
+              <span class="gi-kpi__label">lavorabili oggi</span>
             </li>
             <li
-              class="bi-kpi bi-kpi--link"
+              class="gi-kpi gi-kpi--link"
               role="link"
               tabindex="0"
               (click)="open('resolved3w')"
               (keydown.enter)="open('resolved3w')"
             >
-              <span class="bi-kpi__value">{{ closeRate() }}</span>
-              <span class="bi-kpi__label">chiusi al giorno (media)</span>
+              <span class="gi-kpi__value">{{ closeRate() }}</span>
+              <span class="gi-kpi__label">chiusi al giorno (media)</span>
               <span class="period">ultime {{ weeksCount }} settimane: {{ closePeriod() }}</span>
             </li>
             <li
-              class="bi-kpi bi-kpi--link"
+              class="gi-kpi gi-kpi--link"
               role="link"
               tabindex="0"
               (click)="open('resolved-year')"
               (keydown.enter)="open('resolved-year')"
             >
-              <span class="bi-kpi__value">{{ closeRateYear() }}</span>
-              <span class="bi-kpi__label">chiusi al giorno (anno)</span>
+              <span class="gi-kpi__value">{{ closeRateYear() }}</span>
+              <span class="gi-kpi__label">chiusi al giorno (anno)</span>
               <span class="period">dal 1/1 a ieri</span>
             </li>
           </ul>
@@ -133,11 +133,11 @@ import { BiStore } from './bi-store.service';
       align-items: center;
       gap: 1rem;
 
-      .bi-kpis {
+      .gi-kpis {
         flex: 0 1 46rem;
       }
 
-      .bi-kpi {
+      .gi-kpi {
         justify-content: center;
       }
     }

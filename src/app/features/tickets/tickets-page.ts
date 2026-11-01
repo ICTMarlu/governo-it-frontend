@@ -43,6 +43,7 @@ import {
   nextSortLevels,
   sortPosition,
 } from '../../shared/util/multi-sort';
+import { formatNumber } from '../../shared/util/number-format';
 
 /** Colonne ordinabili dell'elenco dei ticket. */
 const LIST_COLUMNS: readonly {
@@ -194,7 +195,7 @@ export class TicketsPage {
     if (diff === 0) {
       return 'in linea';
     }
-    const text = Math.abs(diff).toLocaleString('it-IT', { maximumFractionDigits: 1 });
+    const text = formatNumber(Math.abs(diff), 1);
     return `${diff > 0 ? '+' : '−'}${text}`;
   }
 

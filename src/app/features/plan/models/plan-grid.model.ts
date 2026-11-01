@@ -7,6 +7,7 @@ import {
   round4,
   toUnit,
 } from './plan.model';
+import { numberFormat } from '../../../shared/util/number-format';
 
 /** Riga mostrata nella griglia, con le celle per settimana e la posizione per la tastiera. */
 export interface GridRow {
@@ -168,7 +169,7 @@ export interface CellChange {
   readonly input: HTMLInputElement;
 }
 
-const NUMBER = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 2 });
+const NUMBER = numberFormat({ maximumFractionDigits: 2 });
 const SHORT_DATE = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'numeric' });
 
 /** Giornate (o ore, secondo l'unità) in italiano (1,5); vuoto per 0. */

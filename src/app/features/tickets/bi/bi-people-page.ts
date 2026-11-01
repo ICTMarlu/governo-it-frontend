@@ -23,6 +23,7 @@ import {
   weekly,
 } from './bi.model';
 import { BiStore } from './bi-store.service';
+import { formatNumber } from '../../../shared/util/number-format';
 
 /** Settimane del grafico della persona scelta. */
 /** Settimane del grafico e, più indietro, della tabella "Dati" sotto. */
@@ -397,9 +398,7 @@ export class BiPeoplePage {
     this.period().start.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }),
   );
   /** Settimane del periodo (es. 30 giorni = 4,3), per cui si divide il saldo. */
-  protected readonly elapsedWeeks = computed(() =>
-    this.period().weeks.toLocaleString('it-IT', { maximumFractionDigits: 1 }),
-  );
+  protected readonly elapsedWeeks = computed(() => formatNumber(this.period().weeks, 1));
   protected readonly directions = DIRECTIONS;
 
   /** Totale di ogni colonna sulle persone mostrate; il saldo è ricalcolato sui totali. */
@@ -501,7 +500,7 @@ export class BiPeoplePage {
   }
 
   protected signed(value: number): string {
-    const text = value.toLocaleString('it-IT', { maximumFractionDigits: 1 });
+    const text = formatNumber(value, 1);
     return value > 0 ? `+${text}` : text;
   }
 }
