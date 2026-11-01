@@ -90,6 +90,16 @@ a:not([class]),
   --mat-menu-item-icon-color: var(--gi-critical);
 }
 
+// Campi "outline" con l'etichetta dentro: con lo schermo in scala (es. Windows al 125%) il tratto di
+// bordo sotto l'etichetta, largo un numero non intero di pixel, si vedeva più chiaro (buchi bianchi
+// nel bordo, es. pagina di accesso). Finché l'etichetta non sale, quel tratto esce dal bordo e lo
+// disegna tutto il tratto a destra; quando sale, torna il bordo aperto di Material.
+.mdc-notched-outline:not(.mdc-notched-outline--notched) .mdc-notched-outline__notch {
+  position: absolute;
+  inset-inline-start: max(12px, var(--mat-form-field-outlined-container-shape, 4px));
+  border-block-color: transparent !important;
+}
+
 // Barra filtri: campi Material alti come bottoni e interruttori (--gi-control-h), su tutte le pagine.
 // Va sul contenitore della barra o sul singolo campo filtro.
 .gi-filter-bar {

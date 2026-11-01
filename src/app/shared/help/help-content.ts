@@ -212,24 +212,6 @@ export const REQUESTERS_HELP: HelpContent = {
   ],
 };
 
-export const MASTER_DATA_HELP: HelpContent = {
-  title: 'Anagrafiche e liste',
-  intro:
-    'Raccolta dei dati di base usati da progetti e risorse. Apri un riquadro per vederne e modificarne i valori.',
-  sections: [
-    {
-      title: 'Cosa trovi',
-      items: [
-        'Liste valori: tipi di progetto, stati, sistemi, priorità, stream, Capex/Opex, aree aziendali, ruoli nel team.',
-        'Anagrafiche di base: società del gruppo, fornitori, sedi, calendari festività.',
-        'Codici progetto: contatore dei codici e codice breve di ogni sistema.',
-        'In ogni pagina interna il pulsante "Torna indietro" riporta qui.',
-      ],
-    },
-    PERMISSIONS_ADMIN,
-  ],
-};
-
 /** Guida di una lista valori: regole comuni più quelle proprie della lista. */
 export function lookupHelp(
   title: string,
@@ -891,7 +873,7 @@ export const ACTUALS_HELP: HelpContent = {
         'Scegli il giorno (in alto, oggi è già selezionato), scrivi le ore nella colonna «Da inserire» e premi Invio: si salva e si passa alla riga sotto.',
         'Per ogni progetto vedi le ore pianificate nella settimana (giornate del piano × 7,5), quelle già consuntivate, il residuo e il delta.',
         'Residuo: le ore che ti restano da fare sul progetto (pianificate − consuntivate). Quando le finisci va a zero e ci resta, non diventa mai negativo.',
-        'Δ Delta: consuntivate − pianificate, con il segno (può essere negativo). Entro ±25% del pianificato non si colora; oltre, è rosso con una freccia se hai sforato e verde se hai risparmiato (il verde compare da giovedì, perché prima è normale essere indietro). La percentuale si cambia in Anagrafiche e liste › Parametri generali (ACTUALS_DELTA_TOLERANCE_PERCENT).',
+        'Δ Delta: consuntivate − pianificate, con il segno (può essere negativo). Entro ±25% del pianificato non si colora; oltre, è rosso con una freccia se hai sforato e verde se hai risparmiato (il verde compare da giovedì, perché prima è normale essere indietro). La percentuale si cambia in Anagrafiche › Parametri generali (ACTUALS_DELTA_TOLERANCE_PERCENT).',
         'Se hai lavorato su un progetto non pianificato, cercalo in fondo: si aggiunge la riga e il progetto entra anche nel piano settimanale con zero giornate.',
         'Colonne, ordinamento e "mostra anche gli altri progetti" si salvano nelle viste.',
       ],

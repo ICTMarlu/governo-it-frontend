@@ -39,7 +39,7 @@ const STEPS = [
 const SHORTCUTS = [
   { icon: 'groups', label: 'Risorse', link: '/resources' },
   { icon: 'contact_mail', label: 'Richiedenti', link: '/requesters' },
-  { icon: 'tune', label: 'Anagrafiche e liste', link: '/master-data' },
+  { icon: 'tune', label: 'Anagrafiche', link: '/anagrafiche' },
 ] as const;
 
 /**

@@ -42,11 +42,4 @@ export const ANAGRAFICHE: readonly AnagraficaEntry[] = [
     route: '/telephony',
     module: 'TELEPHONY',
   },
-  {
-    label: 'Liste e tabelle',
-    hint: 'Società, fornitori, sedi, calendari, codici progetto e liste valori (stati, priorità, sistemi…)',
-    icon: 'tune',
-    route: '/master-data',
-    module: 'MASTER_DATA',
-  },
 ];

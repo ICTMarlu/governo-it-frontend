@@ -34,6 +34,8 @@ import { toIsoDate } from '../../../shared/dates/italian-date-adapter';
 
 interface NavItem {
   readonly label: string;
+  /** Nome corto nella barra in alto (il nome intero resta nel tooltip e nel menu laterale). */
+  readonly short?: string;
   readonly icon: string;
   readonly route: string;
   /** Voce a menu: il clic apre le scelte (la voce "Panoramica" porta alla sua home). */
@@ -58,6 +60,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Progetti', icon: 'work', route: '/projects', modules: ['PROJECTS'] },
   {
     label: 'Piano settimanale',
+    short: 'Piano',
     icon: 'calendar_view_week',
     route: '/plan',
     homeLabel: 'Piano settimanale',
@@ -75,7 +78,13 @@ const NAV_ITEMS: readonly NavItem[] = [
     modules: ['PLAN'],
   },
   { label: 'Task', icon: 'task_alt', route: '/tasks', modules: ['TASKS'] },
-  { label: 'Ticket AMS', icon: 'support_agent', route: '/tickets', modules: ['TICKETS'] },
+  {
+    label: 'Ticket AMS',
+    short: 'Ticket',
+    icon: 'support_agent',
+    route: '/tickets',
+    modules: ['TICKETS'],
+  },
   { label: 'Direzione', icon: 'record_voice_over', route: '/management', modules: ['MANAGEMENT'] },
   {
     label: 'Anagrafiche',

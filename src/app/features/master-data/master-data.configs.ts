@@ -112,7 +112,7 @@ const BEHAVIOR_OPTIONS = [
   { value: 'CANCELLED', label: 'Annullato' },
 ];
 
-/** Liste valori configurabili, nell'ordine in cui compaiono nella pagina "Anagrafiche e liste". */
+/** Liste valori configurabili, nell'ordine in cui compaiono nella pagina Anagrafiche. */
 const LOOKUP_DEFINITIONS: readonly LookupDefinition[] = [
   {
     slug: 'work-types',

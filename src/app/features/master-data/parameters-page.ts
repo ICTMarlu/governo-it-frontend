@@ -33,7 +33,7 @@ const CHOICE_LABELS: Readonly<Record<string, string>> = {
   selector: 'gov-parameters-page',
   imports: [BackLink, MatButtonModule, MatSelectModule, PageHeader],
   template: `
-    <gov-back-link [target]="{ link: '/master-data', label: 'Anagrafiche e liste' }" />
+    <gov-back-link [target]="{ link: '/anagrafiche', label: 'Anagrafiche' }" />
     <gov-page-header
       title="Parametri generali"
       subtitle="Valori validi per tutta l’applicazione. Li modifica solo l’Admin."

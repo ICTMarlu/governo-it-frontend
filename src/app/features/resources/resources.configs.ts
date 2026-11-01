@@ -83,7 +83,7 @@ export const RESOURCES_CONFIG: EntityConfig = {
       type: 'select',
       required: true,
       options: { endpoint: '/sites', labelKey: 'name' },
-      hint: 'Le sedi si creano in "Anagrafiche e liste"',
+      hint: 'Le sedi si creano in Anagrafiche › Sedi',
     },
     {
       key: 'mainSystemIds',

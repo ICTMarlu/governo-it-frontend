@@ -62,8 +62,8 @@
 }
 
 // Menu nella barra blu (desktop). Voci bianche piene; la voce attiva è una pillola bianca con
-// testo blu. Le voci non vanno mai a capo né scorrono: sotto i 1600px restano solo le icone
-// (il nome resta leggibile dai lettori di schermo e compare al passaggio del mouse).
+// testo blu. Le voci non vanno mai a capo né scorrono: da 1280px icona + nome corto, sotto solo
+// le icone (il nome resta leggibile dai lettori di schermo e compare al passaggio del mouse).
 .topnav {
   display: flex;
   flex: 0 1 auto;
@@ -222,14 +222,15 @@
   }
 }
 
-// Fra 1024 e 1280px la barra ha già tutte le voci di menu: il nome lascia spazio (resta nel menu account)
-@media (min-width: 1024px) and (max-width: 1279.98px) {
+// Fra 1024 e 1600px la barra ha già tutte le voci di menu (da 1280 con i nomi): il nome utente
+// lascia spazio e resta in cima al menu account
+@media (min-width: 1024px) and (max-width: 1599.98px) {
   .user {
     display: none;
   }
 }
 
-@media (min-width: 1600px) {
+@media (min-width: 1280px) {
   .topnav__label {
     position: static;
     width: auto;

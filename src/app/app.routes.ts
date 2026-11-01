@@ -27,11 +27,8 @@ import { EntityConfig } from './shared/crud/crud.model';
 
 const crudPage = () => import('./shared/crud/crud-page/crud-page').then((m) => m.CrudPage);
 
-/** Ritorno alla home delle anagrafiche da Risorse, Richiedenti e Liste e tabelle. */
+/** Ritorno alla pagina unica delle anagrafiche da tutte le sue sottopagine. */
 const BACK_TO_ANAGRAFICHE: BackLinkTarget = { link: '/anagrafiche', label: 'Anagrafiche' };
-
-/** Ritorno alla pagina "Anagrafiche e liste" dalle sue sottopagine. */
-const BACK_TO_MASTER_DATA: BackLinkTarget = { link: '/master-data', label: 'Anagrafiche e liste' };
 
 /** Pagina di un'anagrafica generata dalla sua configurazione. */
 function crudRoute(path: string, config: EntityConfig, back?: BackLinkTarget) {
@@ -127,18 +124,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/technologies/technologies-page').then((m) => m.TechnologiesPage),
       },
-      {
-        path: 'master-data',
-        title: 'Anagrafiche e liste · Governo IT',
-        canActivate: [moduleGuard],
-        data: { module: 'MASTER_DATA' },
-        loadComponent: () =>
-          import('./features/master-data/master-data-page').then((m) => m.MasterDataPage),
-      },
-      crudRoute('master-data/legal-entities', LEGAL_ENTITIES_CONFIG, BACK_TO_MASTER_DATA),
-      crudRoute('master-data/vendors', VENDORS_CONFIG, BACK_TO_MASTER_DATA),
-      crudRoute('master-data/sites', SITES_CONFIG, BACK_TO_MASTER_DATA),
-      crudRoute('master-data/holiday-calendars', HOLIDAY_CALENDARS_CONFIG, BACK_TO_MASTER_DATA),
+      // "Anagrafiche e liste" è confluita nella pagina unica Anagrafiche (vecchi link e preferiti)
+      { path: 'master-data', pathMatch: 'full', redirectTo: 'anagrafiche' },
+      crudRoute('master-data/legal-entities', LEGAL_ENTITIES_CONFIG, BACK_TO_ANAGRAFICHE),
+      crudRoute('master-data/vendors', VENDORS_CONFIG, BACK_TO_ANAGRAFICHE),
+      crudRoute('master-data/sites', SITES_CONFIG, BACK_TO_ANAGRAFICHE),
+      crudRoute('master-data/holiday-calendars', HOLIDAY_CALENDARS_CONFIG, BACK_TO_ANAGRAFICHE),
       {
         path: 'master-data/holiday-calendars/:id',
         title: 'Festività · Governo IT',
@@ -261,7 +252,7 @@ export const routes: Routes = [
         loadComponent: () => import('./features/users/users-page').then((m) => m.UsersPage),
       },
       ...LOOKUP_CONFIGS.map((config) =>
-        crudRoute(`master-data/lookups/${config.slug}`, config, BACK_TO_MASTER_DATA),
+        crudRoute(`master-data/lookups/${config.slug}`, config, BACK_TO_ANAGRAFICHE),
       ),
     ],
   },
