@@ -230,17 +230,20 @@ export function agingBuckets(tickets: readonly BiTicket[], now: Date): Count[] {
 }
 
 /**
- * Numeri della panoramica sui ticket creati nel periodo. Le percentuali di open, pending e
- * risolti fanno sempre 100 (arrotondamento con il metodo del resto più grande); quella degli
- * aperti è open + pending.
+ * Numeri della panoramica sui ticket creati nel periodo. Gli aperti sono lavorabili + in attesa
+ * del cliente + Pending (che non è un'attesa del cliente: ha la sua voce). Le percentuali di
+ * lavorabili, attesa, Pending e risolti fanno sempre 100 (arrotondamento con il metodo del resto
+ * più grande); quella degli aperti è la somma delle prime tre.
  */
 export function overview(created: readonly BiTicket[]) {
   const open = created.filter(isOpen);
   const pending = open.filter((t) => t.pending).length;
-  const workable = open.length - pending;
+  const waiting = open.filter((t) => !t.pending && t.waitingCustomer).length;
+  const workable = open.length - pending - waiting;
   const resolved = created.length - open.length;
-  const [workablePct, pendingPct, resolvedPct] = percentsSummingTo100([
+  const [workablePct, waitingPct, pendingPct, resolvedPct] = percentsSummingTo100([
     workable,
+    waiting,
     pending,
     resolved,
   ]);
@@ -248,10 +251,12 @@ export function overview(created: readonly BiTicket[]) {
     created: created.length,
     open: open.length,
     openWorkable: workable,
+    waiting,
     pending,
     resolved,
-    openPct: workablePct + pendingPct,
+    openPct: workablePct + waitingPct + pendingPct,
     openWorkablePct: workablePct,
+    waitingPct,
     pendingPct,
     resolvedPct,
   };

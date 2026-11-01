@@ -100,47 +100,57 @@
   </form>
 }
 
-<mat-tab-group mat-stretch-tabs="false" dynamicHeight>
-  <mat-tab label="Punti">
-    <p class="tab-intro">
-      Restano qui finché non li chiudi o annulli. Apri la matita per aggiungere owner, priorità,
-      progetto, note o per posticiparli a una data.
-    </p>
-    <mat-button-toggle-group
-      class="view-toggle"
-      aria-label="Vista dei punti"
-      hideSingleSelectionIndicator
-      [value]="view()"
-      (change)="setView($event.value)"
-    >
-      <mat-button-toggle value="list">
-        <mat-icon aria-hidden="true">table_rows</mat-icon> Elenco
-      </mat-button-toggle>
-      <mat-button-toggle value="board">
-        <mat-icon aria-hidden="true">view_kanban</mat-icon> Kanban
-      </mat-button-toggle>
-    </mat-button-toggle-group>
-    @if (view() === 'board') {
-      <gov-topics-board
-        [refresh]="topicsRefresh()"
-        [canWrite]="canWrite()"
-        [canConfigure]="seesAll()"
-      />
-    } @else {
-      <gov-crud-section [config]="topics" [refresh]="topicsRefresh()" />
-    }
-  </mat-tab>
-  <mat-tab label="Azioni">
-    <p class="tab-intro">
-      Chi fa cosa entro quando. Quando l’ultima azione di un punto discusso è fatta, il punto si
-      chiude.
-    </p>
-    <gov-crud-section [config]="actions" />
-  </mat-tab>
-  @if (seesAll()) {
-    <mat-tab label="Riunioni">
-      <p class="tab-intro">Apri una riunione per marcare i punti o per il riepilogo.</p>
-      <gov-crud-section [config]="meetings" />
+<!-- La spiegazione della tab sta sulla riga delle linguette, a destra (stesso comportamento per Punti, Azioni e Riunioni) -->
+<div class="tabs">
+  <p class="tab-intro" [title]="tabIntro()">{{ tabIntro() }}</p>
+  <mat-tab-group
+    class="tabs__group"
+    mat-stretch-tabs="false"
+    dynamicHeight
+    [selectedIndex]="tabIndex()"
+    (selectedIndexChange)="setTab($event)"
+  >
+    <mat-tab label="Punti">
+      <ng-template #viewToggle let-inline="inline">
+        <mat-button-toggle-group
+          class="view-toggle"
+          [class.view-toggle--inline]="inline"
+          aria-label="Vista dei punti"
+          hideSingleSelectionIndicator
+          [value]="view()"
+          (change)="setView($event.value)"
+        >
+          <mat-button-toggle value="list">
+            <mat-icon aria-hidden="true">table_rows</mat-icon> Elenco
+          </mat-button-toggle>
+          <mat-button-toggle value="board">
+            <mat-icon aria-hidden="true">view_kanban</mat-icon> Kanban
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+      </ng-template>
+      @if (view() === 'board') {
+        <ng-container *ngTemplateOutlet="viewToggle; context: { inline: false }" />
+        <gov-topics-board
+          [refresh]="topicsRefresh()"
+          [canWrite]="canWrite()"
+          [canConfigure]="seesAll()"
+        />
+      } @else {
+        <!-- Nell'elenco Vista, Colonne e Nuovo salgono sulla riga di Elenco/Kanban, a destra: i filtri hanno tutta la riga -->
+        <gov-crud-section [config]="topics" [refresh]="topicsRefresh()" [leadActions]="true">
+          <div crudLead class="lead-slot">
+            <ng-container *ngTemplateOutlet="viewToggle; context: { inline: true }" />
+          </div>
+        </gov-crud-section>
+      }
     </mat-tab>
-  }
-</mat-tab-group>
+    <mat-tab label="Azioni">
+      <gov-crud-section [config]="actions" />
+    </mat-tab>
+    @if (seesAll()) {
+      <mat-tab label="Riunioni">
+        <gov-crud-section [config]="meetings" />
+      </mat-tab>
+    }
+  </mat-tab-group>
+</div>

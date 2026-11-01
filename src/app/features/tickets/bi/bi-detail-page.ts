@@ -40,6 +40,7 @@ type Scope =
   | 'created'
   | 'created-open'
   | 'created-workable'
+  | 'created-waiting'
   | 'created-pending'
   | 'created-resolved'
   | 'resolved3w'
@@ -74,7 +75,9 @@ const SCOPE_LABELS: Readonly<Record<Scope, string>> = {
   pending: 'ticket in Pending',
   created: 'ticket creati nel periodo',
   'created-open': 'ticket creati nel periodo, ancora aperti',
-  'created-workable': 'ticket creati nel periodo, aperti e lavorabili',
+  'created-workable':
+    'ticket creati nel periodo, aperti e lavorabili (senza attesa del cliente e Pending)',
+  'created-waiting': 'ticket creati nel periodo, aperti e in attesa del cliente',
   'created-pending': 'ticket creati nel periodo, in Pending',
   'created-resolved': 'ticket creati nel periodo, risolti',
   resolved3w: `ticket risolti nelle ultime ${BACKLOG_WEEKS} settimane complete`,
@@ -172,11 +175,6 @@ const PRIORITY_RANK = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
                   </th>
                   <th scope="col">Impatto</th>
                   <th scope="col">Progetto Marlù</th>
-                  <th scope="col">Tipo richiesta</th>
-                  <th scope="col">
-                    <button type="button" class="sort" (click)="sortBy('created')">Creato</button>
-                  </th>
-                  <th scope="col">Risolto</th>
                   <th scope="col">
                     <button type="button" class="sort" (click)="sortBy('age')">Età</button>
                   </th>
@@ -185,6 +183,11 @@ const PRIORITY_RANK = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
                       Ultimo agg.
                     </button>
                   </th>
+                  <th scope="col">
+                    <button type="button" class="sort" (click)="sortBy('created')">Creato</button>
+                  </th>
+                  <th scope="col">Risolto</th>
+                  <th scope="col">Tipo richiesta</th>
                 </tr>
               </thead>
               <tbody>
@@ -209,11 +212,11 @@ const PRIORITY_RANK = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
                     </td>
                     <td>{{ ticket.impact ?? '' }}</td>
                     <td>{{ ticket.area ?? '' }}</td>
-                    <td>{{ ticket.requestType ?? '' }}</td>
-                    <td>{{ ticket.created | date: 'dd/MM/yy' }}</td>
-                    <td>{{ ticket.resolved ? (ticket.resolved | date: 'dd/MM/yy') : '' }}</td>
                     <td class="num">{{ age(ticket) }} gg</td>
                     <td>{{ ticket.updated | date: 'dd/MM/yy' }}</td>
+                    <td>{{ ticket.created | date: 'dd/MM/yy' }}</td>
+                    <td>{{ ticket.resolved ? (ticket.resolved | date: 'dd/MM/yy') : '' }}</td>
+                    <td>{{ ticket.requestType ?? '' }}</td>
                   </tr>
                 }
               </tbody>
@@ -430,7 +433,9 @@ export class BiDetailPage {
       case 'created-open':
         return created.filter(isOpen);
       case 'created-workable':
-        return created.filter((t) => isOpen(t) && !t.pending);
+        return created.filter((t) => isOpen(t) && !t.pending && !t.waitingCustomer);
+      case 'created-waiting':
+        return created.filter((t) => isOpen(t) && !t.pending && t.waitingCustomer);
       case 'created-pending':
         return created.filter((t) => isOpen(t) && t.pending);
       case 'created-resolved':

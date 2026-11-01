@@ -100,14 +100,14 @@
         @if (under.length === 0) {
           <span class="gi-kpi__value">Completo</span>
           <span class="gi-kpi__meta gi-kpi__meta--good">
-            settimana corrente e prossime 3 oltre il 95%
+            settimana corrente oltre il 90%, prossime 2 oltre il 95%
           </span>
         } @else {
           <span class="gi-kpi__value">{{
             team ? underPlannedPeople(under).length + ' persone' : under.length + ' settimane'
           }}</span>
           <span class="gi-kpi__meta gi-kpi__meta--bad">
-            sotto il 95% in {{ underPlannedWeeks(under) }}
+            sotto soglia in {{ underPlannedWeeks(under) }}
           </span>
           @if (team) {
             <span class="gi-kpi__meta" [title]="underPlannedPeople(under).join(', ')">

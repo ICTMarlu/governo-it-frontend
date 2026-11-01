@@ -177,9 +177,10 @@
   color: var(--mat-sys-on-secondary-container);
 }
 
+// Stacco standard tra la testata blu e la prima riga di ogni pagina: mezzo rem in alto, 1/1,5/2 rem sugli altri lati
 .content {
   box-sizing: border-box;
-  padding: 1rem;
+  padding: 0.5rem 1rem 1rem;
   max-width: 1440px;
   margin-inline: auto;
 
@@ -208,17 +209,17 @@
   }
 
   .content {
-    padding: 1.5rem;
+    padding: 0.5rem 1.5rem 1.5rem;
   }
 }
 
 @media (min-width: 1024px) {
   .content {
-    padding: 2rem;
+    padding: 0.5rem 2rem 2rem;
   }
 
   .content--full {
-    padding: 1rem 1.5rem;
+    padding: 0.5rem 1.5rem 1rem;
   }
 }
 

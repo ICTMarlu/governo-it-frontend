@@ -39,9 +39,35 @@
   }
 }
 
+// Linguette e spiegazione sulla stessa riga: da 1100px il testo sta a destra delle linguette, su una riga
+// (se è lungo si tronca, il titolo mostra l'intero); sotto, va sopra le linguette come prima
+.tabs {
+  position: relative;
+
+  &__group ::ng-deep .mat-mdc-tab-body-wrapper {
+    margin-block-start: 0.75rem;
+  }
+}
+
 .tab-intro {
-  margin: 1rem 0;
+  margin: 0 0 0.5rem;
   color: var(--mat-sys-on-surface-variant);
+}
+
+@media (min-width: 1100px) {
+  .tab-intro {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 24rem 0;
+    z-index: 1;
+    height: 48px;
+    margin: 0;
+    line-height: 48px;
+    pointer-events: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -61,6 +87,16 @@
 
 .view-toggle {
   margin-bottom: 0.75rem;
+
+  // Dentro la riga di Vista/Colonne/Nuovo: lo stacco sotto lo dà la riga
+  &--inline {
+    margin-bottom: 0;
+  }
+}
+
+// Contenitore trasparente per proiettare il selettore nella barra della tabella
+.lead-slot {
+  display: contents;
 }
 
 // Ticket in approvazione: due riquadri stretti accanto ai pulsanti della riunione

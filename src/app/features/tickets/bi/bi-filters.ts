@@ -46,51 +46,64 @@ import { TicketSyncService } from '../services/ticket-sync.service';
         (selectedChange)="setMonths($event)"
       />
       @if (filtered()) {
-        <button mat-button type="button" (click)="store.clear()">
+        <button
+          mat-icon-button
+          type="button"
+          class="compact"
+          aria-label="Togli filtri"
+          matTooltip="Togli filtri"
+          (click)="store.clear()"
+        >
           <mat-icon aria-hidden="true">filter_alt_off</mat-icon>
-          Togli filtri
         </button>
       }
       <ng-content />
-      <span class="filters__spacer"></span>
-      <gov-saved-views
-        page="tickets.bi"
-        [state]="store.viewState()"
-        (apply)="store.applyView($event)"
-      />
-      <button
-        mat-icon-button
-        type="button"
-        [class.spin]="sync.syncing() || store.loading()"
-        [attr.aria-label]="refreshHint()"
-        [matTooltip]="refreshHint()"
-        [disabled]="sync.syncing() || store.loading()"
-        (click)="sync.refresh()"
-      >
-        <mat-icon aria-hidden="true">{{ sync.canSync() ? 'sync' : 'refresh' }}</mat-icon>
-      </button>
+      <!-- Vista e Aggiorna sono un blocco solo: se la barra va a capo vanno insieme, il pulsante non resta da solo -->
+      <div class="filters__end">
+        <gov-saved-views
+          page="tickets.bi"
+          [state]="store.viewState()"
+          (apply)="store.applyView($event)"
+        />
+        <button
+          mat-icon-button
+          type="button"
+          class="compact"
+          [class.spin]="sync.syncing() || store.loading()"
+          [attr.aria-label]="refreshHint()"
+          [matTooltip]="refreshHint()"
+          [disabled]="sync.syncing() || store.loading()"
+          (click)="sync.refresh()"
+        >
+          <mat-icon aria-hidden="true">{{ sync.canSync() ? 'sync' : 'refresh' }}</mat-icon>
+        </button>
+      </div>
     </div>
   `,
   styles: `
-    // Barra su una sola riga, sempre alta uguale: i testi lunghi si troncano invece di andare a capo
+    // Su schermo largo i controlli stanno su una riga; se non ci stanno (interruttori delle pagine, Vista, Aggiorna)
+    // la barra va a capo invece di uscire dallo schermo. Vista e Aggiorna restano a destra.
     .filters {
       display: flex;
-      // Su schermo largo tutto su una riga; sotto 1300px, se non ci sta, va a capo la barra (i filtri non si schiacciano)
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.375rem;
       min-height: 3rem;
       box-sizing: border-box;
-      padding: 0.5rem 0.75rem;
+      padding: 0.5rem;
       border-radius: var(--gi-radius-lg);
       background: var(--mat-sys-surface-container);
 
-      &__spacer {
-        flex: 1;
+      // "Vista" e "Aggiorna" a destra: niente elemento vuoto in mezzo, che con i suoi due spazi allarga la riga
+      &__end {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: 0.25rem;
+        margin-inline-start: auto;
       }
 
-      > button,
-      > gov-saved-views {
+      > button {
         flex-shrink: 0;
       }
     }
@@ -106,17 +119,12 @@ import { TicketSyncService } from '../services/ticket-sync.service';
       min-width: 9rem;
     }
 
-    @media (min-width: 1300px) {
-      .filters {
-        flex-wrap: nowrap;
-      }
-    }
-
-    // Su schermi stretti si torna a capo, come prima
-    @media (max-width: 1099.98px) {
-      .filters {
-        flex-wrap: wrap;
-      }
+    // Pulsanti con solo l'icona (Togli filtri, Aggiorna) da 40px invece di 48: serve spazio per tenere la barra su una riga
+    .compact {
+      --mat-icon-button-state-layer-size: 40px;
+      width: 40px;
+      height: 40px;
+      padding: 8px;
     }
 
     // Icona che gira mentre si aggiorna

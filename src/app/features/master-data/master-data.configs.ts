@@ -107,7 +107,7 @@ function lookupConfig(definition: LookupDefinition): EntityConfig {
 const BEHAVIOR_OPTIONS = [
   { value: 'TO_DISCUSS', label: 'Da discutere' },
   { value: 'IN_FOLLOW_UP', label: 'Discusso, in corso' },
-  { value: 'POSTPONED', label: 'Posticipato (con data)' },
+  { value: 'POSTPONED', label: 'Posticipato (data facoltativa)' },
   { value: 'CLOSED', label: 'Chiuso' },
   { value: 'CANCELLED', label: 'Annullato' },
 ];

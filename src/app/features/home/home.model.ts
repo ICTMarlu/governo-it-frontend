@@ -73,7 +73,7 @@ export interface Home {
     readonly activePeople: number;
     readonly overloaded: readonly string[];
     readonly unplanned: readonly string[];
-    /** Settimane (corrente e prossime 3) con persone sotto il 95% dell'orario standard pianificato. */
+    /** Settimane (corrente e prossime 2) con persone sotto l'orario standard pianificato: sotto il 90% la corrente, sotto il 95% le successive. */
     readonly underPlanned: readonly UnderPlannedWeek[];
   };
   readonly tasks: { readonly overdue: number; readonly dueSoon: number };

@@ -1,4 +1,5 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -39,6 +40,7 @@ type LoadState = 'loading' | 'ready' | 'error';
 @Component({
   selector: 'gov-crud-section',
   imports: [
+    NgTemplateOutlet,
     EntityTable,
     SavedViews,
     SearchField,
@@ -72,6 +74,11 @@ export class CrudSection {
   readonly refresh = input(0);
   /** Viste salvate (filtri, colonne, ordinamento); spente nelle sottoschede (es. capacità). */
   readonly savedViews = input(true);
+  /**
+   * Vista, Colonne e Nuovo in una riga sopra i filtri, a destra, accanto al contenuto proiettato con
+   * l'attributo crudLead (es. il selettore Elenco/Kanban): i filtri hanno così tutta la riga.
+   */
+  readonly leadActions = input(false);
 
   protected readonly state = signal<LoadState>('loading');
   protected readonly rows = signal<EntityRow[]>([]);

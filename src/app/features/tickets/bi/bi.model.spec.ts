@@ -53,24 +53,41 @@ const resolved = (created: Date, at: Date) =>
   });
 
 describe('bi.model', () => {
-  it('panoramica: aperti, open lavorabili, pending e risolti con le percentuali', () => {
+  it('panoramica: aperti = lavorabili + attesa del cliente + pending, con le percentuali', () => {
     const numbers = overview([
       ticket({}),
+      ticket({ status: 'In attesa di risposta dal cliente', waitingCustomer: true }),
       ticket({ status: 'Pending', category: 'INDETERMINATE', pending: true }),
       resolved(new Date(2026, 8, 1), new Date(2026, 8, 3)),
       resolved(new Date(2026, 8, 1), new Date(2026, 8, 5)),
     ]);
     expect(numbers).toEqual({
-      created: 4,
-      open: 2,
+      created: 5,
+      open: 3,
       openWorkable: 1,
+      waiting: 1,
       pending: 1,
       resolved: 2,
-      openPct: 50,
-      openWorkablePct: 25,
-      pendingPct: 25,
-      resolvedPct: 50,
+      openPct: 60,
+      openWorkablePct: 20,
+      waitingPct: 20,
+      pendingPct: 20,
+      resolvedPct: 40,
     });
+  });
+
+  it('panoramica: le percentuali fanno sempre 100 e un Pending non è mai in attesa del cliente', () => {
+    const numbers = overview([
+      ticket({ pending: true, waitingCustomer: true }),
+      ticket({}),
+      ticket({}),
+      resolved(new Date(2026, 8, 1), new Date(2026, 8, 3)),
+    ]);
+    expect(numbers.pending).toBe(1);
+    expect(numbers.waiting).toBe(0);
+    expect(
+      numbers.openWorkablePct + numbers.waitingPct + numbers.pendingPct + numbers.resolvedPct,
+    ).toBe(100);
   });
 
   it('filtri: area e assegnatario, anno e mesi della data', () => {

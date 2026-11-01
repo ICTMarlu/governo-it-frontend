@@ -119,9 +119,8 @@ export const TOPICS_CONFIG: EntityConfig = {
       key: 'postponedUntil',
       label: 'Riproponi dal',
       type: 'date',
-      required: true,
       visibleWhen: (value) => value['status'] === 'POSTPONED',
-      hint: 'Da questa data torna nell’agenda',
+      hint: 'Facoltativa: da questa data torna nell’agenda; senza data resta posticipato finché non cambi stato',
     },
     {
       key: 'priorityLevelId',

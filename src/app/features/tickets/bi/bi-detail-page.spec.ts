@@ -126,6 +126,29 @@ describe('BiDetailPage — i Pending non sono aperti', () => {
 });
 
 describe('BiDetailPage — ordine di partenza', () => {
+  it('Età e Ultimo agg. stanno subito dopo Progetto Marlù e Tipo richiesta è l’ultima', () => {
+    const tickets = [ticket({ key: 'MRLIT-1', category: 'NEW', resolved: null })];
+    const store = {
+      tickets: signal(tickets),
+      scoped: signal(tickets),
+      createdInPeriod: signal(tickets),
+      data: signal({ sync: { jiraBaseUrl: null } }),
+      error: signal(null),
+      load: () => undefined,
+    };
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [{ provide: BiStore, useValue: store }] });
+    const fixture = TestBed.createComponent(BiDetailPage);
+    fixture.componentRef.setInput('scope', 'all-open');
+    fixture.detectChanges();
+    const headers = [...fixture.nativeElement.querySelectorAll('thead th')].map((th) =>
+      (th as HTMLElement).textContent?.trim(),
+    );
+    const area = headers.indexOf('Progetto Marlù');
+    expect(headers.slice(area, area + 3)).toEqual(['Progetto Marlù', 'Età', 'Ultimo agg.']);
+    expect(headers.at(-1)).toBe('Tipo richiesta');
+  });
+
   it('i più nuovi in alto: numero progressivo del ticket dal più alto, i più vecchi in fondo', () => {
     const tickets = [
       ticket({ key: 'MRLIT-474', category: 'NEW', resolved: null }),

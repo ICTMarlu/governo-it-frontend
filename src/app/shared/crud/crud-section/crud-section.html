@@ -1,3 +1,37 @@
+<!-- Vista, Colonne e Nuovo: stanno in fondo alla barra dei filtri, oppure (leadActions) in una riga sopra,
+     a destra, sulla stessa riga del contenuto proiettato [crudLead] (es. Elenco/Kanban) -->
+<ng-template #actions>
+  @if (savedViews()) {
+    <gov-saved-views [page]="viewPage()" [state]="viewState()" (apply)="applyView($event)" />
+  }
+
+  <button mat-stroked-button type="button" class="toolbar__columns" (click)="openColumnChooser()">
+    <mat-icon aria-hidden="true">view_column</mat-icon>
+    Colonne
+  </button>
+
+  @if (canWrite() && config().canCreate !== false) {
+    <button mat-flat-button type="button" class="toolbar__new" (click)="openForm()">
+      <mat-icon aria-hidden="true">add</mat-icon>
+      Nuovo
+    </button>
+  }
+</ng-template>
+
+@if (leadActions()) {
+  <div class="lead">
+    <ng-content select="[crudLead]" />
+    @if (state() === 'ready') {
+      <span class="count count--lead" aria-live="polite">
+        {{ visibleRows().length }} {{ visibleRows().length === 1 ? 'elemento' : 'elementi' }}
+      </span>
+    }
+    <div class="lead__actions">
+      <ng-container *ngTemplateOutlet="actions" />
+    </div>
+  </div>
+}
+
 <div class="toolbar gi-filter-bar">
   @if (config().searchKeys.length > 0) {
     <gov-search-field
@@ -64,22 +98,9 @@
     </mat-slide-toggle>
   }
 
-  <span class="toolbar__spacer"></span>
-
-  @if (savedViews()) {
-    <gov-saved-views [page]="viewPage()" [state]="viewState()" (apply)="applyView($event)" />
-  }
-
-  <button mat-stroked-button type="button" class="toolbar__columns" (click)="openColumnChooser()">
-    <mat-icon aria-hidden="true">view_column</mat-icon>
-    Colonne
-  </button>
-
-  @if (canWrite() && config().canCreate !== false) {
-    <button mat-flat-button type="button" class="toolbar__new" (click)="openForm()">
-      <mat-icon aria-hidden="true">add</mat-icon>
-      Nuovo
-    </button>
+  @if (!leadActions()) {
+    <span class="toolbar__spacer"></span>
+    <ng-container *ngTemplateOutlet="actions" />
   }
 </div>
 
@@ -97,9 +118,12 @@
     </div>
   }
   @case ('ready') {
-    <p class="count" aria-live="polite">
-      {{ visibleRows().length }} {{ visibleRows().length === 1 ? 'elemento' : 'elementi' }}
-    </p>
+    <!-- Con leadActions il conteggio sta nella riga in alto, accanto al selettore Elenco/Kanban -->
+    @if (!leadActions()) {
+      <p class="count" aria-live="polite">
+        {{ visibleRows().length }} {{ visibleRows().length === 1 ? 'elemento' : 'elementi' }}
+      </p>
+    }
     @if (selectedRows().length > 0) {
       <div class="bulk" role="region" aria-label="Azioni sulla selezione">
         <span class="bulk__count" aria-live="polite">

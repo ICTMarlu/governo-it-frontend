@@ -1,4 +1,5 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -36,6 +37,14 @@ import { ExportTopic, agendaText, formatDay } from './models/management-export';
 import { isAuthorized, isAwaitingApproval, isOpen } from '../tickets/bi/bi.model';
 import { BiStore } from '../tickets/bi/bi-store.service';
 
+/** Tab della pagina, nell'ordine in cui compaiono (Riunioni solo per chi le gestisce). */
+const TABS = ['punti', 'azioni', 'riunioni'];
+const TAB_INTROS = [
+  'Restano qui finché non li chiudi o annulli. Apri la matita per aggiungere owner, priorità, progetto, note o per posticiparli a una data.',
+  'Chi fa cosa entro quando. Quando l’ultima azione di un punto discusso è fatta, il punto si chiude.',
+  'Apri una riunione per marcare i punti o per il riepilogo.',
+];
+
 /**
  * Direzione (D-17): la lista viva dei punti da portare alla direzione, con inserimento
  * veloce (titolo + Invio), le azioni nate dai punti e le riunioni.
@@ -43,6 +52,7 @@ import { BiStore } from '../tickets/bi/bi-store.service';
 @Component({
   selector: 'gov-management-page',
   imports: [
+    NgTemplateOutlet,
     FormsModule,
     PageHeader,
     CrudSection,
@@ -64,6 +74,24 @@ export class ManagementPage {
   private readonly router = inject(Router);
   private readonly currentUser = inject(AuthService).currentUser;
   private readonly tickets = inject(BiStore);
+
+  /** Tab aperta, dall'indirizzo (?tab=punti|azioni|riunioni): così "Indietro" da una riunione torna alla stessa tab. */
+  readonly tab = input<string | undefined>();
+  protected readonly tabIndex = computed(() => {
+    const index = TABS.indexOf(this.tab() ?? '');
+    return index < 0 || (TABS[index] === 'riunioni' && !this.seesAll()) ? 0 : index;
+  });
+
+  /** Spiegazione della tab aperta, sulla riga delle linguette. */
+  protected readonly tabIntro = computed(() => TAB_INTROS[this.tabIndex()] ?? '');
+
+  protected setTab(index: number): void {
+    void this.router.navigate([], {
+      queryParams: { tab: TABS[index] ?? null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
 
   protected readonly help = MANAGEMENT_HELP;
   protected readonly topics = TOPICS_CONFIG;

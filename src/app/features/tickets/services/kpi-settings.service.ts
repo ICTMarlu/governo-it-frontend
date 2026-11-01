@@ -63,6 +63,7 @@ export const KPI_GROUPS: readonly KpiGroup[] = [
       { id: 'bi.created', label: 'Ticket creati' },
       { id: 'bi.open', label: 'Aperti' },
       { id: 'bi.workable', label: 'Lavorabili' },
+      { id: 'bi.waiting', label: 'In attesa del cliente' },
       { id: 'bi.pending', label: 'Pending' },
       { id: 'bi.resolved', label: 'Risolti' },
     ],

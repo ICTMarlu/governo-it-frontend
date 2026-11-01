@@ -1,4 +1,7 @@
-<gov-back-link [target]="{ link: '/management', label: 'Direzione' }" />
+<button mat-button type="button" class="back" (click)="back()">
+  <mat-icon aria-hidden="true">arrow_back</mat-icon>
+  Indietro
+</button>
 
 @switch (state()) {
   @case ('loading') {

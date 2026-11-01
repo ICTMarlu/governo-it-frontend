@@ -66,6 +66,19 @@ import { BiStore } from './bi-store.service';
             <span class="gi-kpi__meta">{{ n.openWorkablePct }}%</span>
           </li>
           <li
+            *govKpi="'bi.waiting'"
+            class="gi-kpi gi-kpi--link gi-kpi--info"
+            role="link"
+            tabindex="0"
+            title="Aperti in attesa di risposta del cliente: non dipendono da noi, quindi non sono lavorabili"
+            (click)="open('created-waiting')"
+            (keydown.enter)="open('created-waiting')"
+          >
+            <span class="gi-kpi__value">{{ n.waiting }}</span
+            ><span class="gi-kpi__label">in attesa del cliente</span>
+            <span class="gi-kpi__meta">{{ n.waitingPct }}%</span>
+          </li>
+          <li
             *govKpi="'bi.pending'"
             class="gi-kpi gi-kpi--link gi-kpi--warning"
             role="link"

@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,11 +11,11 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { Observable, filter, finalize } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { canEdit } from '../../core/auth/permissions';
-import { BackLink } from '../../shared/components/back-link/back-link';
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { ConfirmDialog, ConfirmDialogData } from '../../shared/crud/confirm-dialog/confirm-dialog';
 import { CrudApiService, errorMessage } from '../../shared/crud/crud-api.service';
@@ -38,7 +39,6 @@ type LoadState = 'loading' | 'ready' | 'error';
   imports: [
     FormsModule,
     AgendaItem,
-    BackLink,
     PageHeader,
     MatButtonModule,
     MatDatepickerModule,
@@ -53,6 +53,8 @@ type LoadState = 'loading' | 'ready' | 'error';
   styleUrl: './meeting-detail-page.scss',
 })
 export class MeetingDetailPage {
+  private readonly location = inject(Location);
+  private readonly router = inject(Router);
   private readonly meetings = inject(MeetingsService);
   private readonly api = inject(CrudApiService);
   private readonly dialog = inject(MatDialog);
@@ -108,6 +110,15 @@ export class MeetingDetailPage {
         !inAgenda.has(topic.id) && topic.status !== 'CLOSED' && topic.status !== 'CANCELLED',
     );
   });
+
+  /** Torna alla pagina da cui sei arrivato (la tab Riunioni della Direzione); se la pagina è stata aperta direttamente, alla Direzione. */
+  protected back(): void {
+    if (window.history.length > 1) {
+      this.location.back();
+    } else {
+      void this.router.navigate(['/management'], { queryParams: { tab: 'riunioni' } });
+    }
+  }
 
   constructor() {
     effect(() => {

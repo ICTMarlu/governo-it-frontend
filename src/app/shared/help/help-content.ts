@@ -57,7 +57,7 @@ export const HOME_HELP: HelpContent = {
       title: 'Numeri flash',
       items: [
         'Ticket AMS: aperti oggi (i ticket in Pending non contano: sono in pausa, né aperti né chiusi) e saldo a settimana = (entrati − chiusi) degli ultimi 30 giorni, a settimana, come nella pagina Persone. Positivo: il backlog cresce; diventa un’allerta solo oltre il 2% degli aperti.',
-        'Piano da completare: guarda la settimana in corso e le 3 successive e segnala chi ha meno del 95% dell’orario standard pianificato (parametro PLAN_MIN_SATURATION_PCT). Ferie e festività contano come pianificate, le ore extra non alzano la soglia. Nella tua home vedi le tue settimane sotto soglia; da amministratore le persone da completare, con i nomi. Se è tutto sopra il 95% il box dice "Completo".',
+        'Piano da completare: guarda la settimana in corso e le 2 successive e segnala chi ha meno dell’orario standard pianificato: sotto il 90% nella settimana in corso (parametro PLAN_CURRENT_MIN_PCT), sotto il 95% nelle due successive (PLAN_MIN_SATURATION_PCT). Ferie e festività contano come pianificate, le ore extra non alzano la soglia. Nella tua home vedi le tue settimane sotto soglia; da amministratore le persone da completare, con i nomi. Se è tutto sopra soglia il box dice "Completo". Sulla settimana in corso c’è anche l’avviso di sovraccarico, solo sopra il 110% della capacità (PLAN_CURRENT_MAX_PCT).',
         'Non presi in carico (nella tua home "Da prendere in carico"): ticket aperti assegnati, o riassegnati, a una persona che da quel momento non ha avuto nessun movimento da oltre 8 ore lavorative (parametro TICKET_STALLED_HOURS). Un movimento è una modifica o un commento di una persona: le automazioni di Jira non contano. Se il ticket viene riassegnato il conteggio riparte dall’ultima assegnazione. Restano fuori i ticket in Pending e in attesa del cliente. Non sono i ticket "fermi" della pagina Operativa (quelli sono senza movimenti da più di 8 giorni). Il clic apre l’elenco.',
         'Orario di lavoro: le "ore lavorative" sono lunedì-venerdì dalle 8:30 alle 17, ora italiana, meno un’ora di pausa pranzo (13-14): 7,5 ore al giorno. Le attese lunghe sono dette in giorni lavorativi.',
         'Ticket da guardare oggi: scaduti, in scadenza e nuovi senza risposta, ognuno con il motivo sotto il titolo.',
@@ -67,7 +67,7 @@ export const HOME_HELP: HelpContent = {
     {
       title: 'Intuizioni e "il punto di oggi"',
       items: [
-        'Segnali incrociati: backlog che cresce o cala, la persona il cui backlog cresce di più (2 o più a settimana), ticket nuovi senza risposta, ticket assegnati non presi in carico, scadenze vicine, persone oltre il 100%, persone con il piano incompleto (sotto il 95%), persone senza giornate nel piano, la settimana più libera (sotto l’80%), task in ritardo, punti scaduti.',
+        'Segnali incrociati: backlog che cresce o cala, la persona il cui backlog cresce di più (2 o più a settimana), ticket nuovi senza risposta, ticket assegnati non presi in carico, scadenze vicine, persone oltre il 110% la settimana in corso, persone con il piano incompleto (sotto il 90% la settimana in corso, sotto il 95% le due successive), persone senza giornate nel piano, la settimana più libera (sotto l’80%), task in ritardo, punti scaduti.',
         'Piano dei progetti (solo progetti di tipo Project): il piano teorico è il piano settimanale stesso, quindi la percentuale è le giornate delle settimane già chiuse ÷ le giornate totali del progetto. Avvisi: piano esaurito ma progetto ancora aperto; soglie di controllo al 50, 75 e 90% ("verifica di essere in tempo"); To Start o Approved pianificato nella settimana corrente (lo stato va aggiornato; per i progetti da avviare non ci sono altre analisi); progetto chiuso con giornate ancora pianificate. Un avviso per tipo, con i progetti nominati; sotto 2 giornate totali non si avvisa.',
         'Prima gli urgenti, al massimo 2 per area (3 per i progetti) e 5 in tutto. "Il punto di oggi" riassume le prime tre.',
       ],
@@ -452,7 +452,7 @@ export const MANAGEMENT_HELP: HelpContent = {
       title: 'Stati del punto',
       items: [
         'Da discutere: entra nella prossima agenda.',
-        'Posticipato: torna in agenda dalla data "Riproponi dal".',
+        'Posticipato: se indichi la data "Riproponi dal" torna in agenda da quel giorno; la data è facoltativa, senza resta posticipato finché non cambi stato.',
         'Discusso, in corso: se n’è parlato e ci sono azioni da seguire; torna in agenda come aggiornamento.',
         'Chiuso: risolto o deciso. Annullato: non serve più.',
         '"Rinvii" conta le volte in cui il punto è stato posticipato o non discusso: da 2 rinvii in su viene evidenziato, perché va deciso, riassegnato o annullato.',
@@ -690,7 +690,7 @@ export const TICKETS_HELP: HelpContent = {
       items: [
         'Le linguette in alto portano alle pagine: Operativa (azioni consigliate e carico), Panoramica, Trend, Aperti, Pending ed Elenco.',
         'I filtri in alto valgono per tutte le pagine BI e restano passando dall’una all’altra: Progetto Marlù, Assegnatario, Anno e Mese di creazione. Clic su una barra di area o assegnatario filtra tutto su quel valore; un secondo clic lo toglie. Le combinazioni si salvano con "Vista".',
-        'Panoramica: ticket creati nel periodo, quanti sono ancora aperti (open lavorabili + pending) e quanti risolti, con le percentuali; creati e risolti per mese (i risolti nel mese di chiusura); ripartizione per area, assegnatario, stato e tipo di richiesta.',
+        'Panoramica: ticket creati nel periodo, quanti sono ancora aperti (lavorabili + in attesa di risposta del cliente + Pending) e quanti risolti, con le percentuali che sommano 100: i lavorabili sono gli aperti che toccano a noi, senza i ticket in attesa del cliente e senza i Pending; creati e risolti per mese (i risolti nel mese di chiusura); ripartizione per area, assegnatario, stato e tipo di richiesta.',
         'Trend: per settimana creati e risolti e, sotto, i lavorabili a fine settimana; "Includi i Pending" li conta o li esclude. Giorni di backlog, come la misura di Power BI = lavorabili di oggi ÷ risolti per giorno lavorativo nelle ultime 3 settimane complete (risolti ÷ 3 settimane ÷ 5 giorni; la settimana in corso non conta). Il risultato è in giorni lavorativi. Il Pending è lo stato di oggi (lo storico degli stati non si legge).',
         '"Considera chiusi i ticket in attesa del cliente" (Trend e Persone, stessa scelta): acceso, i ticket in attesa di risposta del cliente contano come chiusi dal giorno in cui sono entrati in quello stato: sommati ai risolti per settimana, ai chiusi al giorno e ai giorni di backlog, e tolti dai lavorabili. Spento (di partenza) restano aperti.',
         'Aperti e Pending: i ticket aperti oggi (di qualunque periodo; contano area e assegnatario) per anzianità, area, priorità, assegnatario, richiedente e stato.',

@@ -12,7 +12,12 @@ export interface PostponeDialogData {
   readonly title: string;
 }
 
-/** Data da cui riproporre un punto spostato in uno stato "posticipato" (risultato: aaaa-mm-gg). */
+export interface PostponeDialogResult {
+  /** Data da cui riproporre (aaaa-mm-gg); null = posticipato senza data. */
+  readonly date: string | null;
+}
+
+/** Data (facoltativa) da cui riproporre un punto spostato in uno stato "posticipato". */
 @Component({
   selector: 'gov-postpone-dialog',
   imports: [
@@ -27,13 +32,15 @@ export interface PostponeDialogData {
     <h2 mat-dialog-title>Posticipa il punto</h2>
     <form (ngSubmit)="confirm()">
       <mat-dialog-content class="content">
-        <p class="hint">“{{ data.title }}” rientra in agenda dalla data che scegli.</p>
+        <p class="hint">
+          “{{ data.title }}” rientra in agenda dalla data che scegli; senza data resta posticipato
+          finché non cambi stato.
+        </p>
         <mat-form-field appearance="outline">
           <mat-label>Riproponi dal</mat-label>
           <input
             matInput
             name="date"
-            required
             placeholder="gg/mm/aaaa"
             autocomplete="off"
             [matDatepicker]="picker"
@@ -46,7 +53,7 @@ export interface PostponeDialogData {
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button type="button" mat-dialog-close>Annulla</button>
-        <button mat-flat-button type="submit" [disabled]="!date()">Posticipa</button>
+        <button mat-flat-button type="submit">Posticipa</button>
       </mat-dialog-actions>
     </form>
   `,
@@ -63,21 +70,14 @@ export interface PostponeDialogData {
   `,
 })
 export class PostponeDialog {
-  private readonly dialogRef = inject<MatDialogRef<PostponeDialog, string>>(MatDialogRef);
+  private readonly dialogRef =
+    inject<MatDialogRef<PostponeDialog, PostponeDialogResult>>(MatDialogRef);
   protected readonly data = inject<PostponeDialogData>(MAT_DIALOG_DATA);
 
-  protected readonly date = signal<Date | null>(this.nextWeek());
+  protected readonly date = signal<Date | null>(null);
 
   protected confirm(): void {
     const date = this.date();
-    if (date) {
-      this.dialogRef.close(toIsoDate(date));
-    }
-  }
-
-  private nextWeek(): Date {
-    const date = new Date();
-    date.setDate(date.getDate() + 7);
-    return date;
+    this.dialogRef.close({ date: date ? toIsoDate(date) : null });
   }
 }

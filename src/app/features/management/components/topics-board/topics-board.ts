@@ -17,7 +17,11 @@ import {
   EntityFormDialogData,
 } from '../../../../shared/crud/entity-form-dialog/entity-form-dialog';
 import { TOPICS_CONFIG } from '../../management.configs';
-import { PostponeDialog, PostponeDialogData } from '../postpone-dialog/postpone-dialog';
+import {
+  PostponeDialog,
+  PostponeDialogData,
+  PostponeDialogResult,
+} from '../postpone-dialog/postpone-dialog';
 
 /** Stato configurabile (colonna), come arriva da /lookups/management-states. */
 interface State {
@@ -354,14 +358,14 @@ export class TopicsBoard {
     }
     if (target.behavior === 'POSTPONED') {
       this.dialog
-        .open<PostponeDialog, PostponeDialogData, string>(PostponeDialog, {
+        .open<PostponeDialog, PostponeDialogData, PostponeDialogResult>(PostponeDialog, {
           data: { title: topic.title },
           width: '420px',
           maxWidth: '100vw',
         })
         .afterClosed()
-        .pipe(filter((date): date is string => !!date))
-        .subscribe((date) => this.move(topic, target, date));
+        .pipe(filter((result): result is PostponeDialogResult => !!result))
+        .subscribe((result) => this.move(topic, target, result.date));
       return;
     }
     this.move(topic, target, null);

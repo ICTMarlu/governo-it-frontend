@@ -37,10 +37,32 @@
   }
 }
 
+// Riga sopra i filtri: a sinistra il contenuto proiettato (es. Elenco/Kanban), a destra Vista, Colonne e Nuovo
+.lead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-block-end: 0.5rem;
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-inline-start: auto;
+  }
+}
+
 .count {
   margin: 0 0 0.5rem;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-small);
+
+  // Nella riga in alto, di fianco a Elenco/Kanban: la riga ha già il suo stacco
+  &--lead {
+    margin: 0;
+  }
 }
 
 .state {
