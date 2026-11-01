@@ -97,7 +97,8 @@ const SCOPE_LABELS: Readonly<Record<Scope, string>> = {
   'impact-significant': 'ticket aperti con impatto Significant / Large',
   'awaiting-approval': 'ticket in attesa di approvazione (Awaiting approval)',
   authorized: 'ticket autorizzati (Authorize)',
-  stalled: 'ticket assegnati senza movimenti da oltre 8 ore lavorative',
+  stalled:
+    'ticket assegnati (o riassegnati) e non presi in carico: nessun movimento di una persona da oltre 8 ore lavorative',
 };
 const PRIORITY_RANK = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
 

@@ -124,21 +124,21 @@
         [queryParams]="{
           scope: 'stalled',
           keys: data.tickets.stalledKeys.join(','),
-          title: team ? 'Ticket fermi' : 'I tuoi ticket fermi',
+          title: team ? 'Assegnati, non presi in carico' : 'Da prendere in carico',
         }"
       >
         <span class="gi-kpi__eyebrow"
           ><mat-icon aria-hidden="true">hourglass_empty</mat-icon>
-          {{ team ? 'Ticket fermi' : 'I tuoi ticket fermi' }}</span
+          {{ team ? 'Non presi in carico' : 'Da prendere in carico' }}</span
         >
         @if (data.tickets.configured) {
           <span class="gi-kpi__value">{{ data.tickets.stalled }}</span>
           <span
             class="gi-kpi__meta"
             [class.gi-kpi__meta--bad]="data.tickets.stalled > 0"
-            title="Ticket aperti e assegnati, senza alcun movimento di una persona dopo l’assegnazione da oltre 8 ore lavorative (lun-ven, 8:30-17). Un movimento è una modifica o un commento di una persona; non contano le automazioni di Jira. Se il ticket è stato riassegnato, si parte dall’ultima assegnazione. Non contano i ticket in attesa del cliente o in Pending. Clic per vedere l’elenco."
+            title="Ticket aperti assegnati (o riassegnati) a una persona che da quel momento, da oltre 8 ore lavorative (lun-ven, 8:30-17), non ha avuto nessun movimento: né una modifica né un commento di una persona. Non contano le automazioni di Jira. Se il ticket è stato riassegnato si parte dall’ultima assegnazione. Non contano i ticket in attesa del cliente o in Pending. Non sono i ticket “fermi” della pagina Operativa (quelli sono senza movimenti da oltre 8 giorni). Clic per vedere l’elenco."
           >
-            assegnati, senza movimenti
+            assegnati, nessun movimento
           </span>
         } @else {
           <span class="gi-kpi__value">—</span>
