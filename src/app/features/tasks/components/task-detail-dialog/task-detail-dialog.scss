@@ -36,6 +36,11 @@
   margin-bottom: 1rem;
 }
 
+// Promemoria: la nota sotto cresce in altezza, poi stesso stacco degli altri campi
+.side .remind {
+  margin-bottom: 0.75rem;
+}
+
 .section {
   display: flex;
   flex-direction: column;

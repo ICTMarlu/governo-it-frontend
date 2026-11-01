@@ -172,6 +172,51 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline">
+          <mat-label>Priorità</mat-label>
+          <mat-select
+            name="priority"
+            [disabled]="readOnly()"
+            [ngModel]="priorityLevelId()"
+            (ngModelChange)="priorityLevelId.set($event)"
+          >
+            <mat-option [value]="null">—</mat-option>
+            @for (priority of priorities(); track priority.id) {
+              <mat-option [value]="priority.id">{{ priority['label'] }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Scadenza</mat-label>
+          <input
+            matInput
+            name="due"
+            [readonly]="readOnly()"
+            [matDatepicker]="duePicker"
+            [ngModel]="dueDate()"
+            (ngModelChange)="dueDate.set($event)"
+          />
+          <mat-datepicker-toggle matIconSuffix [for]="duePicker" [disabled]="readOnly()" />
+          <mat-datepicker #duePicker />
+        </mat-form-field>
+
+        <!-- dynamic: la nota può andare su due righe senza coprire il campo sotto -->
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="remind">
+          <mat-label>Promemoria il</mat-label>
+          <input
+            matInput
+            name="remind"
+            [readonly]="readOnly()"
+            [matDatepicker]="remindPicker"
+            [ngModel]="remindOn()"
+            (ngModelChange)="remindOn.set($event)"
+          />
+          <mat-datepicker-toggle matIconSuffix [for]="remindPicker" [disabled]="readOnly()" />
+          <mat-datepicker #remindPicker />
+          <mat-hint>Compare nella campanella e nell'e-mail</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
           <mat-label>Progetto</mat-label>
           <input
             matInput
@@ -191,50 +236,6 @@
           @if (inCell()) {
             <mat-hint>Dalla riga del piano</mat-hint>
           }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Scadenza</mat-label>
-          <input
-            matInput
-            name="due"
-            [readonly]="readOnly()"
-            [matDatepicker]="duePicker"
-            [ngModel]="dueDate()"
-            (ngModelChange)="dueDate.set($event)"
-          />
-          <mat-datepicker-toggle matIconSuffix [for]="duePicker" [disabled]="readOnly()" />
-          <mat-datepicker #duePicker />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Promemoria il</mat-label>
-          <input
-            matInput
-            name="remind"
-            [readonly]="readOnly()"
-            [matDatepicker]="remindPicker"
-            [ngModel]="remindOn()"
-            (ngModelChange)="remindOn.set($event)"
-          />
-          <mat-datepicker-toggle matIconSuffix [for]="remindPicker" [disabled]="readOnly()" />
-          <mat-datepicker #remindPicker />
-          <mat-hint>Compare nella campanella e nell'e-mail</mat-hint>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Priorità</mat-label>
-          <mat-select
-            name="priority"
-            [disabled]="readOnly()"
-            [ngModel]="priorityLevelId()"
-            (ngModelChange)="priorityLevelId.set($event)"
-          >
-            <mat-option [value]="null">—</mat-option>
-            @for (priority of priorities(); track priority.id) {
-              <mat-option [value]="priority.id">{{ priority['label'] }}</mat-option>
-            }
-          </mat-select>
         </mat-form-field>
 
         @if (detail()!.events.length > 0) {
