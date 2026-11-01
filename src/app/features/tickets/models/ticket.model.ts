@@ -20,6 +20,8 @@ export interface TicketKpis {
   readonly unassignedLate: number;
   readonly unassignedHours: number;
   readonly overdue: number;
+  /** Tra quelli con la scadenza passata, i ticket in attesa di risposta del cliente. */
+  readonly overdueWaiting: number;
   readonly stale: number;
   /** Soglia dei fermi: senza aggiornamenti da oltre questi giorni. */
   readonly staleDays: number;
@@ -32,6 +34,8 @@ export interface TicketKpis {
   readonly high: number;
   readonly extensive: number;
   readonly significant: number;
+  /** Risolti negli ultimi 7 giorni senza assegnatario: da sistemare in Jira. */
+  readonly resolvedUnassigned: number;
 }
 
 export interface WeekFlow {

@@ -1,9 +1,11 @@
 <header class="hero">
-  <div>
+  <div class="hero__main">
     <p class="hero__date">{{ today | date: 'EEEE d MMMM' }} · settimana {{ week }}</p>
     <h1 class="hero__title">{{ hello }}, {{ firstName() }}</h1>
     @if (home(); as data) {
-      <p class="hero__headline"><strong>Il punto di oggi:</strong> {{ headline() }}</p>
+      <p class="hero__headline" [title]="headline()">
+        <strong>Il punto di oggi:</strong> {{ headline() }}
+      </p>
     }
   </div>
   <div class="hero__side">
@@ -70,11 +72,11 @@
           </span>
           <span
             class="gi-kpi__meta"
-            [class.gi-kpi__meta--bad]="data.tickets.backlogPerWeek >= 0.5"
+            [class.gi-kpi__meta--bad]="backlogWorse(data.tickets)"
             [class.gi-kpi__meta--good]="data.tickets.backlogPerWeek <= -0.5"
           >
             <mat-icon aria-hidden="true">{{
-              data.tickets.backlogPerWeek >= 0.5
+              backlogWorse(data.tickets)
                 ? 'trending_up'
                 : data.tickets.backlogPerWeek <= -0.5
                   ? 'trending_down'
@@ -92,20 +94,56 @@
       <a class="gi-kpi" routerLink="/plan">
         <span class="gi-kpi__eyebrow"
           ><mat-icon aria-hidden="true">view_week</mat-icon>
-          {{ team ? 'Piano, questa settimana' : 'Il tuo piano' }}</span
+          {{ team ? 'Piano da completare' : 'Il tuo piano' }}</span
         >
-        <span class="gi-kpi__value">{{
-          data.plan.saturationPct === null ? '—' : data.plan.saturationPct + '%'
-        }}</span>
-        <span class="gi-kpi__meta" [class.gi-kpi__meta--bad]="data.plan.overloaded.length > 0">
-          @if (data.plan.overloaded.length > 0) {
-            {{ team ? data.plan.overloaded.length + ' oltre il 100%' : 'oltre la tua capacità' }}
-          } @else if (team) {
-            {{ data.plan.plannedPeople }} di {{ data.plan.activePeople }} persone pianificate
-          } @else {
-            caricato ÷ capacità
+        @let under = data.plan.underPlanned;
+        @if (under.length === 0) {
+          <span class="gi-kpi__value">Completo</span>
+          <span class="gi-kpi__meta gi-kpi__meta--good">
+            settimana corrente e prossime 3 oltre il 95%
+          </span>
+        } @else {
+          <span class="gi-kpi__value">{{
+            team ? underPlannedPeople(under).length + ' persone' : under.length + ' settimane'
+          }}</span>
+          <span class="gi-kpi__meta gi-kpi__meta--bad">
+            sotto il 95% in {{ underPlannedWeeks(under) }}
+          </span>
+          @if (team) {
+            <span class="gi-kpi__meta" [title]="underPlannedPeople(under).join(', ')">
+              {{ underPlannedPeople(under).join(', ') }}
+            </span>
           }
-        </span>
+        }
+      </a>
+    </li>
+    <li>
+      <a
+        class="gi-kpi"
+        routerLink="/tickets/dettaglio"
+        [queryParams]="{
+          scope: 'stalled',
+          keys: data.tickets.stalledKeys.join(','),
+          title: team ? 'Ticket fermi' : 'I tuoi ticket fermi',
+        }"
+      >
+        <span class="gi-kpi__eyebrow"
+          ><mat-icon aria-hidden="true">hourglass_empty</mat-icon>
+          {{ team ? 'Ticket fermi' : 'I tuoi ticket fermi' }}</span
+        >
+        @if (data.tickets.configured) {
+          <span class="gi-kpi__value">{{ data.tickets.stalled }}</span>
+          <span
+            class="gi-kpi__meta"
+            [class.gi-kpi__meta--bad]="data.tickets.stalled > 0"
+            title="Ticket assegnati e aperti, senza alcun movimento in Jira da oltre 8 ore lavorative (lun-ven, 8:30-17). Non contano quelli in attesa del cliente o in Pending."
+          >
+            assegnati, senza movimenti
+          </span>
+        } @else {
+          <span class="gi-kpi__value">—</span>
+          <span class="gi-kpi__meta">Jira non è collegato</span>
+        }
       </a>
     </li>
     <li>
@@ -139,63 +177,65 @@
   </ul>
 
   <!-- Intuizioni: segnali incrociati dalle diverse aree -->
-  <section class="card" aria-labelledby="insights-title">
-    <h2 id="insights-title" class="card__title">
-      <mat-icon aria-hidden="true">lightbulb</mat-icon> Intuizioni
-    </h2>
-    @if (data.insights.length === 0) {
-      <p class="muted">Nessun segnale da anticipare: tutto sotto controllo.</p>
-    } @else {
-      <ul class="insights">
-        @for (insight of data.insights; track insight.kind) {
-          <li class="insight insight--{{ insight.severity }}">
-            <mat-icon class="insight__icon" aria-hidden="true">{{
-              severities[insight.severity].icon
-            }}</mat-icon>
-            <span>
-              <span class="insight__tag">{{ severities[insight.severity].label }}</span>
-              {{ insight.text }}
-              <a [routerLink]="insight.link">{{ insight.linkLabel }}</a>
-            </span>
-          </li>
-        }
-      </ul>
-    }
-  </section>
-
-  @if (data.todayTickets.items.length > 0) {
-    <section class="card" aria-labelledby="today-title">
-      <h2 id="today-title" class="card__title">
-        <mat-icon aria-hidden="true">today</mat-icon> Ticket da guardare oggi
+  <div class="columns columns--signals">
+    <section class="card" aria-labelledby="insights-title">
+      <h2 id="insights-title" class="card__title">
+        <mat-icon aria-hidden="true">lightbulb</mat-icon> Intuizioni
       </h2>
-      <ul class="items">
-        @for (ticket of data.todayTickets.items; track ticket.key) {
-          <li class="item">
-            <span class="item__when" [class.item__when--late]="ticket.overdue">{{
-              ticket.reason
-            }}</span>
-            <span class="item__text">
-              @if (ticket.url) {
-                <a [href]="ticket.url" target="_blank" rel="noopener">{{ ticket.key }}</a>
-              } @else {
-                <strong>{{ ticket.key }}</strong>
-              }
-              {{ ticket.summary }}
-              @if (team && ticket.assignee) {
-                <span class="muted"> · {{ ticket.assignee }}</span>
-              }
-            </span>
-          </li>
-        }
-      </ul>
-      @if (data.todayTickets.total > data.todayTickets.items.length) {
-        <p class="muted">
-          e altri {{ data.todayTickets.total - data.todayTickets.items.length }} ·
-          <a routerLink="/tickets">Apri i ticket</a>
-        </p>
+      @if (data.insights.length === 0) {
+        <p class="muted">Nessun segnale da anticipare: tutto sotto controllo.</p>
+      } @else {
+        <ul class="insights">
+          @for (insight of data.insights; track insight.kind) {
+            <li class="insight insight--{{ insight.severity }}">
+              <mat-icon class="insight__icon" aria-hidden="true">{{
+                severities[insight.severity].icon
+              }}</mat-icon>
+              <span class="insight__text" [title]="insight.text">
+                <span class="insight__tag">{{ severities[insight.severity].label }}</span>
+                {{ insight.text }}
+                <a [routerLink]="insight.link">{{ insight.linkLabel }}</a>
+              </span>
+            </li>
+          }
+        </ul>
       }
     </section>
-  }
+
+    @if (data.todayTickets.items.length > 0) {
+      <section class="card" aria-labelledby="today-title">
+        <h2 id="today-title" class="card__title">
+          <mat-icon aria-hidden="true">today</mat-icon> Ticket da guardare oggi
+        </h2>
+        <ul class="items">
+          @for (ticket of data.todayTickets.items; track ticket.key) {
+            <li class="item">
+              <span class="item__when" [class.item__when--late]="ticket.overdue">{{
+                ticket.reason
+              }}</span>
+              <span class="item__text" [title]="ticket.key + ' ' + ticket.summary">
+                @if (ticket.url) {
+                  <a [href]="ticket.url" target="_blank" rel="noopener">{{ ticket.key }}</a>
+                } @else {
+                  <strong>{{ ticket.key }}</strong>
+                }
+                {{ ticket.summary }}
+                @if (team && ticket.assignee) {
+                  <span class="muted"> · {{ ticket.assignee }}</span>
+                }
+              </span>
+            </li>
+          }
+        </ul>
+        @if (data.todayTickets.total > data.todayTickets.items.length) {
+          <p class="muted">
+            e altri {{ data.todayTickets.total - data.todayTickets.items.length }} ·
+            <a routerLink="/tickets">Apri i ticket</a>
+          </p>
+        }
+      </section>
+    }
+  </div>
 
   <div class="columns">
     <section class="card" aria-labelledby="mine-title">
@@ -416,7 +456,7 @@
   <p class="note">
     {{
       team
-        ? 'Quadro generale: tutti i ticket, il carico di tutto il team, tutti i task e i punti per la direzione. Saturazione sulle persone con giornate nel piano; saldo ticket = (entrati − chiusi) delle ultime 4 settimane complete ÷ 4.'
+        ? 'Quadro generale: tutti i ticket, il carico di tutto il team, tutti i task e i punti per la direzione. Saturazione sulle persone con giornate nel piano; saldo ticket = (entrati − chiusi) degli ultimi 30 giorni, a settimana; è in rosso solo se supera il 2% degli aperti.'
         : 'Numeri tuoi: i ticket assegnati a te, il tuo piano, i tuoi task e i punti per la direzione. Il team si guarda nelle pagine Ticket AMS e Piano settimanale.'
     }}
   </p>

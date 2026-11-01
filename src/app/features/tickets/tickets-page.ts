@@ -179,6 +179,16 @@ export class TicketsPage {
   protected readonly confirmIdleDays = CONFIRM_IDLE_DAYS;
 
   /** Nome dell'ultimo giorno lavorativo mostrato: "ieri", oppure il giorno della settimana (es. dopo il fine settimana). */
+  /** Parametri del flash del servizio: il periodo cliccato e, se c'è, la persona scelta. */
+  protected serviceParams(period: string, day?: string): Record<string, string> {
+    const id = this.personId();
+    return {
+      period,
+      ...(day ? { day } : {}),
+      ...(id !== null ? { resource: String(id), title: this.personName() ?? '' } : {}),
+    };
+  }
+
   protected previousLabel(day: string): string {
     const date = new Date(`${day}T00:00:00`);
     const yesterday = new Date();
@@ -345,7 +355,7 @@ export class TicketsPage {
       title: person.name ?? 'Senza assegnatario',
     };
     if (scope === 'stale') {
-      base['days'] = String(this.dashboard()?.kpis.staleDays ?? 9);
+      base['days'] = String(this.dashboard()?.kpis.staleDays ?? 8);
     }
     if (person.resourceId !== null) {
       base['resource'] = String(person.resourceId);

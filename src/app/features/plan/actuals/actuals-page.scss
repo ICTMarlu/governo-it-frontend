@@ -1,5 +1,6 @@
 // Consuntivo ore (D-37), mobile first
 :host {
+  --ok-color: light-dark(#2e7d32, #7cc683);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -107,8 +108,9 @@
     color: var(--mat-sys-on-primary-container);
   }
 
+  // Ore extra: solo informativo, non un allarme
   &--over &__hours {
-    color: var(--mat-sys-error);
+    color: var(--mat-sys-primary);
   }
 
   &__name {
@@ -142,8 +144,19 @@
   margin: 0;
 
   &--over {
-    color: var(--mat-sys-error);
+    color: var(--mat-sys-primary);
   }
+
+  mat-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 1.25rem;
+  }
+}
+
+.cell--extra {
+  color: var(--mat-sys-primary);
+  font-weight: 600;
 }
 
 .table-wrap {
@@ -263,10 +276,14 @@
   }
 }
 
-// Scarti: oltre il piano o indietro a fine settimana, con icona (mai solo colore)
-.cell--over,
-.cell--under {
+// Delta: sforato (rosso) o risparmio (verde) oltre la tolleranza, con segno e icona (mai solo colore)
+.cell--over {
   color: var(--mat-sys-error);
+  font-weight: 500;
+}
+
+.cell--saving {
+  color: var(--ok-color);
   font-weight: 500;
 }
 

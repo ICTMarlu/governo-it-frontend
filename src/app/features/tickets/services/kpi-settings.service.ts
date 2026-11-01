@@ -34,6 +34,7 @@ export const KPI_GROUPS: readonly KpiGroup[] = [
       { id: 'ops.stale', label: 'Fermi senza aggiornamenti' },
       { id: 'ops.age', label: 'Età media degli aperti' },
       { id: 'ops.withProject', label: 'Aperti con codice progetto' },
+      { id: 'ops.resolvedUnassigned', label: 'Controllo: risolti senza assegnatario (7 giorni)' },
     ],
   },
   {

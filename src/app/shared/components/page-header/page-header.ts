@@ -8,7 +8,7 @@ import { HelpContent } from '../../help/help.model';
   selector: 'gov-page-header',
   imports: [HelpButton],
   template: `
-    <header class="page-header">
+    <header class="page-header" [class.page-header--compact]="compact()">
       <div class="page-header__row">
         <h1 class="page-header__title">{{ title() }}</h1>
         <div class="page-header__actions">
@@ -26,6 +26,10 @@ import { HelpContent } from '../../help/help.model';
   styles: `
     .page-header {
       margin-block-end: 1.5rem;
+    }
+
+    .page-header--compact {
+      margin-block-end: 0;
     }
 
     .page-header__row {
@@ -69,4 +73,6 @@ export class PageHeader {
   readonly subtitle = input<string>();
   /** Guida della pagina: se presente compare il pulsante Guida. */
   readonly help = input<HelpContent>();
+  /** Meno spazio sotto l'intestazione, per le pagine che vogliono i numeri subito sotto. */
+  readonly compact = input(false);
 }

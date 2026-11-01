@@ -209,6 +209,12 @@ export const routes: Routes = [
               import('./features/tickets/bi/bi-detail-page').then((m) => m.BiDetailPage),
           },
           {
+            path: 'servizio',
+            title: 'Servizio erogato · Governo IT',
+            loadComponent: () =>
+              import('./features/tickets/bi/bi-service-page').then((m) => m.BiServicePage),
+          },
+          {
             path: 'elenco',
             title: 'Elenco ticket · Governo IT',
             loadComponent: () =>

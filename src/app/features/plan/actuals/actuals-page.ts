@@ -20,6 +20,7 @@ import { API_BASE_URL } from '../../../core/config/api.config';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { ROLES } from '../../../shared/crud/crud.model';
 import { errorMessage } from '../../../shared/crud/crud-api.service';
+import { HelpButton } from '../../../shared/help/help-button';
 import { ACTUALS_HELP } from '../../../shared/help/help-content';
 import { SavedViews } from '../../../shared/views/saved-views';
 import {
@@ -29,6 +30,7 @@ import {
   ActualSortKey,
   ActualWeek,
   DEFAULT_COLUMNS,
+  DEFAULT_DELTA_TOLERANCE,
   addDays,
   addWeeks,
   dayLabel,
@@ -38,6 +40,7 @@ import {
   isoDate,
   mondayOf,
   parseHours,
+  remainingHours,
   signedHours,
 } from './actuals.model';
 import { ActualsService } from './actuals.service';
@@ -56,6 +59,7 @@ interface Option {
   selector: 'gov-actuals-page',
   imports: [
     FormsModule,
+    HelpButton,
     MatAutocompleteModule,
     MatButtonModule,
     MatCheckboxModule,
@@ -86,6 +90,7 @@ export class ActualsPage {
   protected readonly dayLabel = dayLabel;
   protected readonly hoursText = hoursText;
   protected readonly signedHours = signedHours;
+  protected readonly remainingHours = remainingHours;
 
   protected readonly isAdmin = computed(() => this.currentUser()?.role === ROLES.admin);
   protected readonly today = isoDate(new Date());
@@ -110,6 +115,14 @@ export class ActualsPage {
     sort: this.sort(),
     showAll: this.showAll(),
   }));
+
+  /** Tolleranza del delta, in % del pianificato: parametro generale ACTUALS_DELTA_TOLERANCE_PERCENT. */
+  protected readonly tolerance = signal(DEFAULT_DELTA_TOLERANCE);
+  protected readonly deltaHint = computed(
+    () =>
+      `Consuntivo meno pianificato. Entro ±${this.tolerance()}% del pianificato non si colora; ` +
+      'oltre è rosso se si sfora, verde se si risparmia (a fine settimana)',
+  );
 
   protected readonly people = signal<Option[]>([]);
   protected readonly projects = signal<Option[]>([]);
@@ -161,11 +174,24 @@ export class ActualsPage {
           ? row.plannedHours
           : sort.key === 'actual'
             ? row.actualHours
-            : row.deltaHours;
+            : sort.key === 'remaining'
+              ? remainingHours(row)
+              : row.deltaHours;
     return [...visible].sort((a, b) => {
       const order = value(a) < value(b) ? -1 : value(a) > value(b) ? 1 : 0;
       return (sort.desc ? -order : order) || Number(a.automatic) - Number(b.automatic);
     });
+  });
+  /** Colore del delta della settimana intera, con la stessa regola delle righe. */
+  protected readonly totalsLevel = computed(() => {
+    const totals = this.week()?.totals;
+    return totals
+      ? deltaLevel(
+          { plannedHours: totals.plannedHours, actualHours: totals.actualHours, automatic: false },
+          this.lateInWeek(),
+          this.tolerance(),
+        )
+      : 'none';
   });
   protected readonly hiddenRows = computed(
     () => (this.week()?.rows.length ?? 0) - this.rows().length,
@@ -194,6 +220,17 @@ export class ActualsPage {
       if (this.isAdmin()) {
         untracked(() => this.loadPeople());
       }
+    });
+    this.http.get<{ code: string; value: string | null }[]>(`${this.api}/parameters`).subscribe({
+      next: (parameters) => {
+        const value = Number(
+          parameters.find((p) => p.code === 'ACTUALS_DELTA_TOLERANCE_PERCENT')?.value,
+        );
+        if (Number.isFinite(value) && value >= 0) {
+          this.tolerance.set(value);
+        }
+      },
+      error: () => undefined,
     });
     this.http
       .get<{ id: number; code: string | null; name: string; active: boolean }[]>(
@@ -379,8 +416,8 @@ export class ActualsPage {
     this.showAll.set(view.showAll ?? false);
   }
 
-  protected level(row: ActualRow): 'over' | 'under' | 'none' {
-    return deltaLevel(row, this.lateInWeek());
+  protected level(row: ActualRow): 'over' | 'saving' | 'none' {
+    return deltaLevel(row, this.lateInWeek(), this.tolerance());
   }
 
   // ---------------------------------------------------------------- supporto

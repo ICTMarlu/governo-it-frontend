@@ -1,7 +1,6 @@
 <gov-page-header
   title="Consuntivo ore"
   subtitle="Le ore lavorate giorno per giorno sui progetti del tuo piano: pianificato, già consuntivato e da inserire."
-  [help]="help"
 />
 
 <div class="toolbar">
@@ -55,6 +54,7 @@
       </button>
     }
   </mat-menu>
+  <gov-help-button [help]="help" />
 </div>
 
 @if (error(); as message) {
@@ -121,11 +121,11 @@
     </li>
     <li
       class="gi-kpi"
-      [class.gi-kpi--critical]="w.totals.deltaHours > 0.005"
-      [class.total--under]="lateInWeek() && w.totals.deltaHours < -4"
+      [class.gi-kpi--critical]="totalsLevel() === 'over'"
+      [class.gi-kpi--ok]="totalsLevel() === 'saving'"
     >
       <span class="gi-kpi__value">{{ signedHours(w.totals.deltaHours) }} h</span>
-      <span class="gi-kpi__label">scarto sul piano</span>
+      <span class="gi-kpi__label">Δ delta sul piano</span>
     </li>
     <li class="gi-kpi">
       <span class="gi-kpi__value">{{ hoursText(w.totals.theoreticalHours, false) }} h</span>
@@ -152,7 +152,7 @@
             : d.holidayName
               ? 'Festività: ' + d.holidayName
               : d.over
-                ? 'Oltre l\'orario: ' +
+                ? 'Ore extra: ' +
                   hoursText(d.loggedHours, false) +
                   ' su ' +
                   hoursText(d.theoreticalHours, false) +
@@ -164,7 +164,7 @@
         <span class="day__name">{{ dayLabel(d.date) }}</span>
         <span class="day__hours">
           @if (d.over) {
-            <mat-icon aria-hidden="true">warning</mat-icon>
+            <mat-icon aria-hidden="true">more_time</mat-icon>
           }
           {{ hoursText(d.loggedHours)
           }}{{ d.theoreticalHours > 0 ? ' / ' + hoursText(d.theoreticalHours, false) : '' }}
@@ -187,8 +187,8 @@
       >: {{ hoursText(dayTotal(), false) }} h inserite su
       {{ hoursText(d.theoreticalHours, false) }} h di orario.
       @if (dayTotal() > d.theoreticalHours + 0.005 && d.theoreticalHours > 0) {
-        <mat-icon aria-hidden="true">warning</mat-icon> Oltre l'orario: va bene se hai fatto
-        straordinari.
+        <mat-icon aria-hidden="true">more_time</mat-icon> Ore extra rispetto all'orario standard
+        (informativo).
       }
     </p>
   }
@@ -223,10 +223,25 @@
               <span class="th-sub">{{ dayLabel(d.date) }}</span>
             }
           </th>
+          <th scope="col">
+            <button
+              type="button"
+              class="sort"
+              matTooltip="Ore ancora da fare: pianificate meno consuntivate, mai sotto zero"
+              (click)="toggleSort('remaining')"
+            >
+              Residuo <mat-icon aria-hidden="true">{{ sortIcon('remaining') }}</mat-icon>
+            </button>
+          </th>
           @if (columns().has('delta')) {
             <th scope="col">
-              <button type="button" class="sort" (click)="toggleSort('delta')">
-                Scarto <mat-icon aria-hidden="true">{{ sortIcon('delta') }}</mat-icon>
+              <button
+                type="button"
+                class="sort"
+                [matTooltip]="deltaHint()"
+                (click)="toggleSort('delta')"
+              >
+                Δ Delta <mat-icon aria-hidden="true">{{ sortIcon('delta') }}</mat-icon>
               </button>
             </th>
           }
@@ -267,7 +282,7 @@
               <td>{{ row.workType ?? '' }}</td>
             }
             <td>{{ hoursText(row.plannedHours) }}</td>
-            <td [class.cell--over]="lv === 'over'" [class.cell--under]="lv === 'under'">
+            <td [class.cell--over]="lv === 'over'" [class.cell--saving]="lv === 'saving'">
               @if (row.automatic) {
                 <span
                   class="auto-value"
@@ -279,10 +294,8 @@
               }
               @if (lv === 'over') {
                 <mat-icon class="flag" aria-label="Oltre il pianificato">north_east</mat-icon>
-              } @else if (lv === 'under') {
-                <mat-icon class="flag" aria-label="Indietro rispetto al pianificato"
-                  >south_east</mat-icon
-                >
+              } @else if (lv === 'saving') {
+                <mat-icon class="flag" aria-label="Sotto il pianificato">south_east</mat-icon>
               }
             </td>
             <td class="c-input">
@@ -321,8 +334,9 @@
                 <span class="muted">{{ hoursText(row.hoursByDay[selectedDay() ?? ''] ?? 0) }}</span>
               }
             </td>
+            <td>{{ hoursText(remainingHours(row), false) }}</td>
             @if (columns().has('delta')) {
-              <td [class.cell--over]="lv === 'over'" [class.cell--under]="lv === 'under'">
+              <td [class.cell--over]="lv === 'over'" [class.cell--saving]="lv === 'saving'">
                 {{ row.automatic ? '0' : signedHours(row.deltaHours) }}
               </td>
             }
@@ -356,12 +370,18 @@
           <td>{{ hoursText(w.totals.plannedHours, false) }}</td>
           <td>{{ hoursText(w.totals.actualHours, false) }}</td>
           <td class="c-input">{{ hoursText(dayTotal(), false) }}</td>
+          <td></td>
           @if (columns().has('delta')) {
-            <td>{{ signedHours(w.totals.deltaHours) }}</td>
+            <td
+              [class.cell--over]="totalsLevel() === 'over'"
+              [class.cell--saving]="totalsLevel() === 'saving'"
+            >
+              {{ signedHours(w.totals.deltaHours) }}
+            </td>
           }
           @if (columns().has('days')) {
             @for (d of w.days; track d.date) {
-              <td class="c-day" [class.cell--over]="d.over">{{ hoursText(d.loggedHours) }}</td>
+              <td class="c-day" [class.cell--extra]="d.over">{{ hoursText(d.loggedHours) }}</td>
             }
           }
         </tr>

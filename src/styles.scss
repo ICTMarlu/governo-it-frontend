@@ -153,6 +153,12 @@ a:not([class]),
     background: var(--mat-sys-surface-container);
     color: var(--mat-sys-on-surface-variant);
   }
+
+  // Ore extra usate dentro la capacità extra: informativo, non un allarme
+  &--extra {
+    background: light-dark(#e3eefc, #1c2f4a);
+    color: light-dark(#0b4a9c, #a9c8f5);
+  }
 }
 
 // Pallino dei task nella casella del piano (D-23): numero dei task aperti nell'angolo in alto a
@@ -211,6 +217,38 @@ a:not([class]),
     height: 0.875rem;
     font-size: 0.875rem;
   }
+}
+
+// Task della casella: simbolo in basso a sinistra, la nota (se c'è) gli sta accanto
+.task-mark {
+  position: absolute;
+  bottom: 1px;
+  left: 1px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.875rem;
+  height: 0.875rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: light-dark(#0b57d0, #a8c7fa);
+  cursor: pointer;
+
+  &--closed {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  mat-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    font-size: 0.875rem;
+  }
+}
+
+.note-dot--after-task {
+  left: 1.0625rem;
 }
 
 // Tooltip con il testo delle note: più note una sotto l'altra, a capo come scritte

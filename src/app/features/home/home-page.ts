@@ -18,11 +18,13 @@ import {
   Home,
   ProjectsOverview,
   SEVERITIES,
+  UnderPlannedWeek,
   WorkGrouping,
   greeting,
   groupWork,
   headline,
   isoWeek,
+  underPlannedPeople,
 } from './home.model';
 import { formatNumber } from '../../shared/util/number-format';
 
@@ -199,6 +201,17 @@ export class HomePage {
 
   protected days(value: number): string {
     return value === 0 ? '' : formatNumber(value, 2);
+  }
+
+  protected readonly underPlannedPeople = underPlannedPeople;
+
+  protected underPlannedWeeks(weeks: readonly UnderPlannedWeek[]): string {
+    return weeks.map((week) => `W${week.isoWeek}`).join(', ');
+  }
+
+  /** Il backlog peggiora solo se in 30 giorni cresce di più del 2% degli aperti. */
+  protected backlogWorse(tickets: { backlogPerWeek: number; open: number }): boolean {
+    return (tickets.backlogPerWeek * 30) / 7 > tickets.open * 0.02;
   }
 
   protected signed(value: number): string {

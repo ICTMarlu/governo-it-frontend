@@ -68,22 +68,21 @@
   </button>
 </form>
 
-<mat-button-toggle-group
-  class="view-toggle"
-  aria-label="Vista"
-  hideSingleSelectionIndicator
-  [value]="view()"
-  (change)="setView($event.value)"
->
-  <mat-button-toggle value="list">
-    <mat-icon aria-hidden="true">table_rows</mat-icon> Elenco
-  </mat-button-toggle>
-  <mat-button-toggle value="board">
-    <mat-icon aria-hidden="true">view_kanban</mat-icon> Kanban
-  </mat-button-toggle>
-</mat-button-toggle-group>
-
 <div class="filters" role="search" aria-label="Filtri dei task">
+  <mat-button-toggle-group
+    class="view-toggle"
+    aria-label="Vista"
+    hideSingleSelectionIndicator
+    [value]="view()"
+    (change)="setView($event.value)"
+  >
+    <mat-button-toggle value="list">
+      <mat-icon aria-hidden="true">table_rows</mat-icon> Elenco
+    </mat-button-toggle>
+    <mat-button-toggle value="board">
+      <mat-icon aria-hidden="true">view_kanban</mat-icon> Kanban
+    </mat-button-toggle>
+  </mat-button-toggle-group>
   <label class="inline-search">
     <mat-icon aria-hidden="true">search</mat-icon>
     <input
@@ -154,21 +153,26 @@
     </mat-select>
   </mat-form-field>
   @if (view() === 'list') {
-    <mat-slide-toggle [checked]="includeDone()" (change)="includeDone.set($event.checked)">
+    <mat-slide-toggle
+      class="filters__closed"
+      [checked]="includeDone()"
+      (change)="includeDone.set($event.checked)"
+    >
       Mostra chiusi
     </mat-slide-toggle>
   }
-  <span class="spacer"></span>
-  <gov-saved-views page="tasks" [state]="viewState()" (apply)="applyView($event)" />
 </div>
 
-<p class="summary" role="status">
-  {{ visible().length }} {{ visible().length === 1 ? 'elemento' : 'elementi' }} ·
-  {{ openCount() }} aperti
-  @if (overdueCount() > 0) {
-    · <strong class="late">{{ overdueCount() }} in ritardo</strong>
-  }
-</p>
+<div class="summary-row">
+  <p class="summary" role="status">
+    {{ visible().length }} {{ visible().length === 1 ? 'elemento' : 'elementi' }} ·
+    {{ openCount() }} aperti
+    @if (overdueCount() > 0) {
+      · <strong class="late">{{ overdueCount() }} in ritardo</strong>
+    }
+  </p>
+  <gov-saved-views page="tasks" [state]="viewState()" (apply)="applyView($event)" />
+</div>
 
 @if (tasks() === null) {
   <div class="state" role="status">

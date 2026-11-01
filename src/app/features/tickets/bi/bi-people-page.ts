@@ -30,6 +30,8 @@ import { formatNumber } from '../../../shared/util/number-format';
 const CHART_WEEKS = 8;
 const DATA_WEEKS = 20;
 
+type SortKey = 'openBefore' | 'open' | 'created' | 'resolved';
+
 const DIRECTIONS: Readonly<
   Record<PersonTrend['direction'], { readonly icon: string; readonly label: string }>
 > = {
@@ -113,15 +115,35 @@ const DIRECTIONS: Readonly<
                   <thead>
                     <tr>
                       <th scope="col">Persona</th>
-                      <th scope="col">Aperti al {{ since() }}</th>
-                      <th scope="col">Aperti ad oggi</th>
-                      <th scope="col">Entrati dal {{ since() }}</th>
-                      <th scope="col">Chiusi dal {{ since() }}</th>
+                      <th scope="col" [attr.aria-sort]="ariaSort('openBefore')">
+                        <button type="button" class="sort-btn" (click)="sortBy('openBefore')">
+                          Aperti al {{ since() }}
+                          <mat-icon aria-hidden="true">{{ sortIcon('openBefore') }}</mat-icon>
+                        </button>
+                      </th>
+                      <th scope="col" [attr.aria-sort]="ariaSort('open')">
+                        <button type="button" class="sort-btn" (click)="sortBy('open')">
+                          Aperti ad oggi
+                          <mat-icon aria-hidden="true">{{ sortIcon('open') }}</mat-icon>
+                        </button>
+                      </th>
+                      <th scope="col" [attr.aria-sort]="ariaSort('created')">
+                        <button type="button" class="sort-btn" (click)="sortBy('created')">
+                          Entrati dal {{ since() }}
+                          <mat-icon aria-hidden="true">{{ sortIcon('created') }}</mat-icon>
+                        </button>
+                      </th>
+                      <th scope="col" [attr.aria-sort]="ariaSort('resolved')">
+                        <button type="button" class="sort-btn" (click)="sortBy('resolved')">
+                          Chiusi dal {{ since() }}
+                          <mat-icon aria-hidden="true">{{ sortIcon('resolved') }}</mat-icon>
+                        </button>
+                      </th>
                       <th scope="col">Saldo del periodo</th>
                     </tr>
                   </thead>
                   <tbody>
-                    @for (row of trends(); track row.name) {
+                    @for (row of sortedTrends(); track row.name) {
                       <tr
                         class="pick"
                         [class.selected]="row.name === selected()"
@@ -345,6 +367,56 @@ const DIRECTIONS: Readonly<
       }
     }
 
+    // Come l'intestazione ordinabile di Material: la freccia sta fuori dal testo (non sposta il
+    // centro della colonna), si vede al passaggio del mouse e resta sulla colonna ordinata
+    .sort-btn {
+      position: relative;
+      display: inline-block;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      font: inherit;
+      line-height: inherit;
+      text-align: center;
+      cursor: pointer;
+
+      mat-icon {
+        position: absolute;
+        inset-inline-start: 100%;
+        top: 50%;
+        width: 1rem;
+        height: 1rem;
+        margin-inline-start: 0.125rem;
+        font-size: 1rem;
+        line-height: 1rem;
+        transform: translateY(-50%);
+        opacity: 0;
+        transition: opacity 120ms;
+      }
+
+      &:hover mat-icon,
+      &:focus-visible mat-icon {
+        opacity: 0.45;
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--mat-sys-primary);
+        outline-offset: 2px;
+      }
+    }
+
+    th[aria-sort='ascending'] .sort-btn,
+    th[aria-sort='descending'] .sort-btn {
+      color: var(--mat-sys-on-surface);
+      font-weight: 700;
+
+      mat-icon {
+        color: var(--mat-sys-primary);
+        opacity: 1;
+      }
+    }
+
     .link-btn {
       padding: 0;
       border: 0;
@@ -442,6 +514,36 @@ export class BiPeoplePage {
   protected readonly trends = computed(() =>
     this.allTrends().filter((row) => !this.isInactive(row)),
   );
+
+  /** Ordine della tabella: di partenza gli aperti alla data iniziale, dal più grande; resta se cambiano i filtri. */
+  protected readonly sort = signal<{ key: SortKey; desc: boolean }>({
+    key: 'openBefore',
+    desc: true,
+  });
+
+  protected readonly sortedTrends = computed(() => {
+    const { key, desc } = this.sort();
+    const sign = desc ? -1 : 1;
+    return [...this.trends()].sort(
+      (a, b) => sign * (a[key] - b[key]) || a.name.localeCompare(b.name, 'it'),
+    );
+  });
+
+  /** Clic su una colonna: la ordina dal più grande; un secondo clic inverte. */
+  protected sortBy(key: SortKey): void {
+    const current = this.sort();
+    this.sort.set({ key, desc: current.key === key ? !current.desc : true });
+  }
+
+  protected sortIcon(key: SortKey): string {
+    const current = this.sort();
+    return current.key === key && current.desc ? 'arrow_downward' : 'arrow_upward';
+  }
+
+  protected ariaSort(key: SortKey): 'ascending' | 'descending' | 'none' {
+    const current = this.sort();
+    return current.key !== key ? 'none' : current.desc ? 'descending' : 'ascending';
+  }
 
   /** Persona scelta (filtro in alto o clic nella tabella); di partenza quella con il saldo peggiore. */
   protected readonly selection = signal<string | null>(null);

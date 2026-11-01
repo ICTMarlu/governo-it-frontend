@@ -278,11 +278,27 @@
               ✓
             }
           </button>
+          @if (tasks && tasks.total > 0) {
+            <!-- Task della casella: stessa posizione della nota, spostata se ci sono entrambi -->
+            <button
+              type="button"
+              class="task-mark"
+              [class.task-mark--closed]="tasks.open === 0"
+              [matTooltip]="taskCountLabel(tasks)"
+              [attr.aria-label]="taskCountLabel(tasks)"
+              (click)="openTasks(group, gridRow, week.weekStart)"
+            >
+              <mat-icon aria-hidden="true">{{
+                tasks.open === 0 ? 'task_alt' : 'checklist'
+              }}</mat-icon>
+            </button>
+          }
           @if (tasks && tasks.notes.length > 0) {
             <!-- Note della casella: il testo compare al passaggio del mouse -->
             <button
               type="button"
               class="note-dot"
+              [class.note-dot--after-task]="tasks.total > 0"
               matTooltipClass="note-tooltip"
               [matTooltip]="tasks.notes.join('\n\n')"
               [attr.aria-label]="
@@ -824,13 +840,20 @@
                       >{{ group.resource.name }}</a
                     >
                     @if (infoColumns().length === 0) {
-                      <span class="sat-label"> · Saturazione</span>
+                      <span class="sat-label">
+                        · Saturazione{{ group.hasExtra ? ' standard' : '' }}</span
+                      >
                     }
                   </th>
                   @if (infoColumns().length > 0) {
                     <td class="sticky info-span" [attr.colspan]="infoColumns().length">
                       <span class="sat-label">
-                        <strong>Saturazione</strong> · caricato ÷ capacità della settimana
+                        @if (group.hasExtra) {
+                          <strong>Saturazione standard</strong> · 100% = orario standard della
+                          settimana
+                        } @else {
+                          <strong>Saturazione</strong> · caricato ÷ capacità della settimana
+                        }
                       </span>
                     </td>
                   }
@@ -848,20 +871,23 @@
                   @for (total of group.totals; track total.weekStart) {
                     <td class="c-week" [class.current]="weekIsCurrent(total.weekStart)">
                       <span
-                        class="sat-pill sat-pill--{{ total.level }}"
+                        class="sat-pill sat-pill--{{ total.standardLevel }}"
                         [matTooltip]="
-                          'Caricato ' +
-                          (format(total.allocated) || '0') +
+                          (group.hasExtra ? 'Orario standard: caricato ' : 'Caricato ') +
+                          (format(
+                            group.hasExtra ? total.allocated - total.extraUsed : total.allocated
+                          ) || '0') +
                           ' su ' +
-                          (format(total.capacity) || '0') +
+                          (format(group.hasExtra ? total.standard : total.capacity) || '0') +
                           (unit() === 'hours' ? ' ore di capacità' : ' giornate di capacità')
                         "
                       >
-                        {{ total.percent === null ? '—' : total.percent + '%' }}
+                        {{ total.standardPercent === null ? '—' : total.standardPercent + '%' }}
                       </span>
                     </td>
                   }
                 </tr>
+                <ng-container *ngTemplateOutlet="extraTpl; context: { $implicit: group }" />
               }
             </tbody>
           } @else {
@@ -1031,20 +1057,23 @@
                   @for (total of group.totals; track total.weekStart) {
                     <td class="c-week" [class.current]="weekIsCurrent(total.weekStart)">
                       <span
-                        class="sat-pill sat-pill--{{ total.level }}"
+                        class="sat-pill sat-pill--{{ total.standardLevel }}"
                         [matTooltip]="
-                          'Caricato ' +
-                          (format(total.allocated) || '0') +
+                          (group.hasExtra ? 'Orario standard: caricato ' : 'Caricato ') +
+                          (format(
+                            group.hasExtra ? total.allocated - total.extraUsed : total.allocated
+                          ) || '0') +
                           ' su ' +
-                          (format(total.capacity) || '0') +
+                          (format(group.hasExtra ? total.standard : total.capacity) || '0') +
                           (unit() === 'hours' ? ' ore di capacità' : ' giornate di capacità')
                         "
                       >
-                        {{ total.percent === null ? '—' : total.percent + '%' }}
+                        {{ total.standardPercent === null ? '—' : total.standardPercent + '%' }}
                       </span>
                     </td>
                   }
                 </tr>
+                <ng-container *ngTemplateOutlet="extraTpl; context: { $implicit: group }" />
               </tbody>
             }
           }
@@ -1065,3 +1094,45 @@
     }
   }
 }
+
+<!-- Riga Extra: ore oltre l'orario standard, usate su disponibili (da Anagrafiche > Risorse) -->
+<ng-template #extraTpl let-group>
+  @if (group.hasExtra) {
+    <tr class="person person--extra">
+      <td class="c-menu sticky"></td>
+      <th scope="row" class="c-code c-person sticky" colspan="2">
+        <span class="sat-label"> Extra</span>
+        @if (infoColumns().length === 0) {
+          <span class="sat-label"> · usate / disponibili</span>
+        }
+      </th>
+      @if (infoColumns().length > 0) {
+        <td class="sticky info-span" [attr.colspan]="infoColumns().length">
+          <span class="sat-label">
+            <strong>Extra</strong> · ore oltre l'orario standard, usate / disponibili
+          </span>
+        </td>
+      }
+      <td class="c-total sticky"></td>
+      @for (total of group.totals; track total.weekStart) {
+        <td class="c-week" [class.current]="weekIsCurrent(total.weekStart)">
+          @if (total.extra > 0) {
+            <span
+              class="sat-pill sat-pill--{{ total.extraLevel }}"
+              [matTooltip]="
+                'Ore extra: ' +
+                (format(total.extraUsed) || '0') +
+                ' usate su ' +
+                format(total.extra) +
+                (unit() === 'hours' ? ' ore' : ' giornate') +
+                ' disponibili'
+              "
+            >
+              {{ format(total.extraUsed) || '0' }} / {{ format(total.extra) }}
+            </span>
+          }
+        </td>
+      }
+    </tr>
+  }
+</ng-template>

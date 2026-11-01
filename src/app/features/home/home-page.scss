@@ -11,6 +11,11 @@
   justify-content: space-between;
   gap: 0.75rem 1rem;
 
+  &__main {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
   &__date {
     margin: 0;
     color: var(--mat-sys-on-surface-variant);
@@ -26,10 +31,13 @@
     font: var(--mat-sys-headline-medium);
   }
 
+  // Il punto di oggi sta sempre su una riga: se è più lungo dello spazio si tronca
   &__headline {
-    max-width: 48rem;
     margin: 0;
+    overflow: hidden;
     font: var(--mat-sys-body-large);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__side {
@@ -310,5 +318,21 @@
 
 .item__text {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Intuizioni e ticket di oggi affiancati: il testo lungo si tronca (il titolo mostra l'intero)
+.insight__text {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.columns--signals > .card:only-child {
+  grid-column: 1 / -1;
 }

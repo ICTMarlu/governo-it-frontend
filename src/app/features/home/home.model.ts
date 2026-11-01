@@ -37,6 +37,18 @@ export interface TodayTickets {
   readonly items: readonly TodayTicket[];
 }
 
+export interface UnderPlannedWeek {
+  readonly weekStart: string;
+  readonly isoWeek: number;
+  readonly saturationPct: number | null;
+  readonly people: readonly string[];
+}
+
+/** Le persone sotto soglia in almeno una delle settimane, senza ripetizioni. */
+export function underPlannedPeople(weeks: readonly UnderPlannedWeek[]): string[] {
+  return [...new Set(weeks.flatMap((week) => week.people))];
+}
+
 export interface Home {
   readonly scope: HomeScope;
   readonly resourceName: string | null;
@@ -49,6 +61,10 @@ export interface Home {
     readonly dueSoon: number;
     readonly dueSoonDays: number;
     readonly noResponse: number;
+    /** Assegnati e aperti, senza alcun movimento da oltre 8 ore lavorative. */
+    readonly stalled: number;
+    /** Chiavi dei ticket fermi, per aprire l'elenco. */
+    readonly stalledKeys: readonly string[];
   };
   readonly plan: {
     readonly weekStart: string;
@@ -57,6 +73,8 @@ export interface Home {
     readonly activePeople: number;
     readonly overloaded: readonly string[];
     readonly unplanned: readonly string[];
+    /** Settimane (corrente e prossime 3) con persone sotto il 95% dell'orario standard pianificato. */
+    readonly underPlanned: readonly UnderPlannedWeek[];
   };
   readonly tasks: { readonly overdue: number; readonly dueSoon: number };
   readonly management: {

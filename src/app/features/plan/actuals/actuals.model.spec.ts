@@ -7,6 +7,7 @@ import {
   dayLabel,
   defaultDay,
   deltaLevel,
+  remainingHours,
   parseHours,
   signedHours,
 } from './actuals.model';
@@ -64,15 +65,30 @@ describe('consuntivo (D-37)', () => {
     expect(defaultDay(last, '2026-10-28')).toBe('2026-10-23');
   });
 
-  it('segnala oltre il piano e, a fine settimana, i progetti indietro', () => {
-    expect(deltaLevel({ plannedHours: 7.5, actualHours: 9, automatic: false }, false)).toBe('over');
-    expect(deltaLevel({ plannedHours: 15, actualHours: 7.5, automatic: false }, false)).toBe(
-      'none',
-    );
-    expect(deltaLevel({ plannedHours: 15, actualHours: 7.5, automatic: false }, true)).toBe(
-      'under',
-    );
-    expect(deltaLevel({ plannedHours: 7.5, actualHours: 7.5, automatic: true }, true)).toBe('none');
+  it('colora il delta solo oltre la tolleranza: rosso se si sfora, verde se si risparmia', () => {
+    const row = (plannedHours: number, actualHours: number, automatic = false) => ({
+      plannedHours,
+      actualHours,
+      automatic,
+    });
+    // entro ±25%: niente colore
+    expect(deltaLevel(row(8, 9.5), true, 25)).toBe('none');
+    expect(deltaLevel(row(8, 6), true, 25)).toBe('none');
+    // oltre: rosso sempre, verde solo a fine settimana
+    expect(deltaLevel(row(7.5, 10.5), false, 25)).toBe('over');
+    expect(deltaLevel(row(15, 7.5), false, 25)).toBe('none');
+    expect(deltaLevel(row(15, 7.5), true, 25)).toBe('saving');
+    // non pianificato ma consuntivato: sforamento; niente in entrambi: nessun colore
+    expect(deltaLevel(row(0, 2), false, 25)).toBe('over');
+    expect(deltaLevel(row(0, 0), true, 25)).toBe('none');
+    // tolleranza zero: ogni differenza conta; ferie e festività mai
+    expect(deltaLevel(row(8, 8.5), false, 0)).toBe('over');
+    expect(deltaLevel(row(7.5, 7.5, true), true, 25)).toBe('none');
+  });
+
+  it('il residuo è pianificato meno consuntivato e non va sotto zero', () => {
+    expect(remainingHours({ plannedHours: 7, actualHours: 3 })).toBe(4);
+    expect(remainingHours({ plannedHours: 7, actualHours: 9 })).toBe(0);
   });
 
   it('legge le ore scritte con la virgola e scarta quelle impossibili', () => {

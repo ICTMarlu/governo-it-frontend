@@ -56,7 +56,7 @@ export const HOME_HELP: HelpContent = {
     {
       title: 'Numeri flash',
       items: [
-        'Ticket AMS: aperti oggi e saldo a settimana = (entrati − chiusi) delle ultime 4 settimane complete ÷ 4. Positivo: il backlog cresce.',
+        'Ticket AMS: aperti oggi e saldo a settimana = (entrati − chiusi) degli ultimi 30 giorni, a settimana, come nella pagina Persone. Positivo: il backlog cresce; diventa un’allerta solo oltre il 2% degli aperti.',
         'Piano: caricato ÷ capacità della settimana corrente (ferie e festività comprese), contando solo chi ha giornate nel piano delle prossime 5 settimane; chi ha solo le festività non abbassa la media.',
         'Task: i tuoi in ritardo e in scadenza (come la campanella). Direzione: punti aperti e, per l’Admin, la prossima riunione.',
       ],
@@ -889,7 +889,9 @@ export const ACTUALS_HELP: HelpContent = {
       title: 'Come si usa',
       items: [
         'Scegli il giorno (in alto, oggi è già selezionato), scrivi le ore nella colonna «Da inserire» e premi Invio: si salva e si passa alla riga sotto.',
-        'Per ogni progetto vedi le ore pianificate nella settimana (giornate del piano × 7,5), quelle già consuntivate e lo scarto. Oltre il piano il numero diventa rosso con una freccia; da giovedì si segnalano anche i progetti molto indietro (4 ore o più).',
+        'Per ogni progetto vedi le ore pianificate nella settimana (giornate del piano × 7,5), quelle già consuntivate, il residuo e il delta.',
+        'Residuo: le ore che ti restano da fare sul progetto (pianificate − consuntivate). Quando le finisci va a zero e ci resta, non diventa mai negativo.',
+        'Δ Delta: consuntivate − pianificate, con il segno (può essere negativo). Entro ±25% del pianificato non si colora; oltre, è rosso con una freccia se hai sforato e verde se hai risparmiato (il verde compare da giovedì, perché prima è normale essere indietro). La percentuale si cambia in Anagrafiche e liste › Parametri generali (ACTUALS_DELTA_TOLERANCE_PERCENT).',
         'Se hai lavorato su un progetto non pianificato, cercalo in fondo: si aggiunge la riga e il progetto entra anche nel piano settimanale con zero giornate.',
         'Colonne, ordinamento e "mostra anche gli altri progetti" si salvano nelle viste.',
       ],

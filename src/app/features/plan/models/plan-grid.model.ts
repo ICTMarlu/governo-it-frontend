@@ -27,6 +27,14 @@ export interface GridWeekTotal {
   readonly capacity: number;
   readonly level: SaturationLevel;
   readonly percent: number | null;
+  /** Orario standard della settimana e saturazione su di esso (al massimo 100% se ci sono ore extra). */
+  readonly standard: number;
+  readonly standardLevel: SaturationLevel;
+  readonly standardPercent: number | null;
+  /** Ore extra disponibili (in giornate) e quante ne usa il caricato oltre l'orario standard. */
+  readonly extra: number;
+  readonly extraUsed: number;
+  readonly extraLevel: SaturationLevel | 'extra';
 }
 
 export interface GridGroup {
@@ -35,6 +43,8 @@ export interface GridGroup {
   readonly totals: readonly GridWeekTotal[];
   /** Giornate della persona nell'anno solare (tutte le righe). */
   readonly yearAllocated: number;
+  /** La persona ha ore extra in almeno una settimana: sotto la saturazione c'è la riga Extra. */
+  readonly hasExtra: boolean;
 }
 
 /** Riga con la persona a cui appartiene (le azioni sulla cella usano la persona). */

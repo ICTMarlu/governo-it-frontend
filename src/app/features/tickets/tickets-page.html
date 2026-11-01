@@ -2,6 +2,7 @@
   title="Ticket AMS"
   subtitle="Il carico del service desk Jira su ogni persona, come scorrono i ticket e cosa conviene fare adesso."
   [help]="help"
+  [compact]="true"
 >
   @if (dashboard(); as data) {
     <mat-form-field class="person-filter" appearance="outline" subscriptSizing="dynamic">
@@ -92,7 +93,13 @@
         >{{ data.kpis.toDo }} da fare · {{ data.kpis.inProgress }} in corso</span
       >
     </li>
-    <li *govKpi="'ops.flow7'" class="gi-kpi">
+    <li *govKpi="'ops.flow7'" class="gi-kpi gi-kpi--link">
+      <a
+        class="gi-kpi__cover"
+        routerLink="/tickets/servizio"
+        [queryParams]="serviceParams('7')"
+        aria-label="Apri il flash del servizio: ultimi 7 giorni"
+      ></a>
       <span class="gi-kpi__value"
         >{{ data.kpis.createdLast7Days }} / {{ data.kpis.resolvedLast7Days }}</span
       >
@@ -106,7 +113,13 @@
       </span>
     </li>
     @if (data.daily; as daily) {
-      <li *govKpi="'ops.today'" class="gi-kpi">
+      <li *govKpi="'ops.today'" class="gi-kpi gi-kpi--link">
+        <a
+          class="gi-kpi__cover"
+          routerLink="/tickets/servizio"
+          [queryParams]="serviceParams('today')"
+          aria-label="Apri il flash del servizio: oggi"
+        ></a>
         <span class="gi-kpi__value">{{ daily.today.created }} / {{ daily.today.resolved }}</span>
         <span class="gi-kpi__label">entrati / chiusi oggi</span>
         <span
@@ -137,7 +150,13 @@
           · giornata in corso
         </span>
       </li>
-      <li *govKpi="'ops.previous'" class="gi-kpi">
+      <li *govKpi="'ops.previous'" class="gi-kpi gi-kpi--link">
+        <a
+          class="gi-kpi__cover"
+          routerLink="/tickets/servizio"
+          [queryParams]="serviceParams('previous', daily.previous.day)"
+          [attr.aria-label]="'Apri il flash del servizio: ' + previousLabel(daily.previous.day)"
+        ></a>
         <span class="gi-kpi__value"
           >{{ daily.previous.created }} / {{ daily.previous.resolved }}</span
         >
@@ -264,6 +283,11 @@
     >
       <span class="gi-kpi__value">{{ data.kpis.overdue }}</span>
       <span class="gi-kpi__label">con la scadenza passata</span>
+      @if (data.kpis.overdueWaiting > 0) {
+        <span class="gi-kpi__meta">
+          di cui {{ data.kpis.overdueWaiting }} in attesa del cliente
+        </span>
+      }
     </li>
     <li *govKpi="'ops.waiting'" class="gi-kpi">
       <span class="gi-kpi__value">{{ data.kpis.waitingCustomer }}</span>
@@ -298,6 +322,20 @@
     <li *govKpi="'ops.withProject'" class="gi-kpi">
       <span class="gi-kpi__value">{{ ratio(data.kpis.withProject, data.kpis.open) }}%</span>
       <span class="gi-kpi__label">aperti con codice progetto</span>
+    </li>
+    <!-- Controllo: ticket chiusi senza nessuno a cui attribuirli, da sistemare in Jira -->
+    <li
+      *govKpi="'ops.resolvedUnassigned'"
+      class="gi-kpi gi-kpi--link"
+      [class.gi-kpi--critical]="data.kpis.resolvedUnassigned > 0"
+      role="link"
+      tabindex="0"
+      title="Vedi i ticket risolti negli ultimi 7 giorni senza assegnatario"
+      (click)="openPriority('resolved-unassigned')"
+      (keydown.enter)="openPriority('resolved-unassigned')"
+    >
+      <span class="gi-kpi__value">{{ data.kpis.resolvedUnassigned }}</span>
+      <span class="gi-kpi__label">risolti in 7 giorni senza assegnatario</span>
     </li>
   </ul>
 

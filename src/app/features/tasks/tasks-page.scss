@@ -182,19 +182,35 @@
   }
 }
 
+// Vista, ricerca e filtri stanno su una riga sola (a capo solo se lo spazio non basta)
 .view-toggle {
-  margin-bottom: 0.75rem;
+  --mat-button-toggle-height: 2.5rem;
 }
 
 .filters {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem 0.75rem;
+  gap: 0.5rem;
   margin-bottom: 0.5rem;
 
   &__field {
-    width: 11rem;
+    width: 8rem;
+    --mat-form-field-container-height: 2.5rem;
+    --mat-form-field-container-vertical-padding: 0.5rem;
+  }
+
+  // Interruttore piu' piccolo, per stare in fondo alla riga dei filtri
+  &__closed {
+    --mat-slide-toggle-state-layer-size: 1.5rem;
+    transform: scale(0.85);
+    transform-origin: left center;
+    white-space: nowrap;
+  }
+
+  .inline-search {
+    flex: 0 1 12rem;
+    min-width: 9rem;
   }
 }
 
@@ -325,5 +341,18 @@ a.link {
 
   &__delete {
     color: var(--mat-sys-error);
+  }
+}
+
+// Elementi e aperti a sinistra, la vista salvata tutta a destra sulla stessa riga
+.summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+
+  .summary {
+    margin: 0;
   }
 }

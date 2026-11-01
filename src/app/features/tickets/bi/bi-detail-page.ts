@@ -24,6 +24,7 @@ import {
 } from './bi.model';
 import { CONFIRM_IDLE_DAYS, isConfirmStatus } from '../models/ticket.model';
 import { BiStore } from './bi-store.service';
+import { reporterOf } from './service-flash.model';
 
 /** Quali ticket parte dalla pagina di origine: aperti, pending, creati nel periodo, chiusi di recente… */
 type Scope =
@@ -47,6 +48,8 @@ type Scope =
   | 'overdue'
   | 'stale'
   | 'resolved-year'
+  | 'resolved-unassigned'
+  | 'flash'
   | 'prio-high'
   | 'prio-highest'
   | 'prio-high-only'
@@ -54,7 +57,8 @@ type Scope =
   | 'impact-extensive'
   | 'impact-significant'
   | 'awaiting-approval'
-  | 'authorized';
+  | 'authorized'
+  | 'stalled';
 type SortKey = 'key' | 'priority' | 'due' | 'created' | 'age' | 'updated';
 
 const SCOPE_LABELS: Readonly<Record<Scope, string>> = {
@@ -80,6 +84,9 @@ const SCOPE_LABELS: Readonly<Record<Scope, string>> = {
   stale:
     'ticket aperti fermi: nessun aggiornamento oltre la soglia (esclusi quelli in attesa del cliente)',
   'resolved-year': 'ticket risolti nell’anno solare in corso',
+  'resolved-unassigned':
+    'ticket risolti negli ultimi 7 giorni senza assegnatario (da sistemare in Jira)',
+  flash: '',
   'confirm-idle': `ticket in attesa del cliente o in UAT da oltre ${CONFIRM_IDLE_DAYS} giorni`,
   'prio-high': 'ticket aperti con priorità Highest o High',
   'prio-highest': 'ticket aperti con priorità Highest',
@@ -89,6 +96,7 @@ const SCOPE_LABELS: Readonly<Record<Scope, string>> = {
   'impact-significant': 'ticket aperti con impatto Significant / Large',
   'awaiting-approval': 'ticket in attesa di approvazione (Awaiting approval)',
   authorized: 'ticket autorizzati (Authorize)',
+  stalled: 'ticket assegnati senza movimenti da oltre 8 ore lavorative',
 };
 const PRIORITY_RANK = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
 
@@ -312,6 +320,18 @@ export class BiDetailPage {
   readonly period = input('30');
   /** "1" dalla pagina Persone: i ticket in attesa del cliente contano come chiusi. */
   readonly waiting = input('');
+  /** Dal Servizio erogato: "created", "resolved" o "both"; finestra in millisecondi e filtri della barra scelta. */
+  readonly kind = input('resolved');
+  readonly from = input('');
+  readonly to = input('');
+  readonly assignee = input('');
+  readonly reporter = input('');
+  readonly area = input('');
+  readonly hour = input('');
+  /** "1": solo i chiusi entro 24 ore dall'apertura. */
+  readonly fast = input('');
+  /** Chiavi dei ticket (separate da virgola) per l'elenco dei ticket fermi della Home. */
+  readonly keys = input('');
 
   protected readonly search = signal('');
   protected readonly sort = signal<{ key: SortKey; desc: boolean }>({ key: 'age', desc: true });
@@ -324,6 +344,12 @@ export class BiDetailPage {
     const scope = this.scope();
     if (scope === 'created4w') {
       return `ticket entrati negli ultimi ${this.periodDays()} giorni`;
+    }
+    if (scope === 'flash') {
+      const what = { created: 'entrati', resolved: 'chiusi', both: 'entrati o chiusi' }[
+        this.kind()
+      ];
+      return `ticket ${what ?? 'chiusi'} nel periodo scelto${this.fast() === '1' ? ', entro 24 ore dall’apertura' : ''}`;
     }
     if (scope === 'resolved4w') {
       return `ticket chiusi negli ultimi ${this.periodDays()} giorni`;
@@ -449,10 +475,64 @@ export class BiDetailPage {
         );
       case 'resolved-year':
         return resolvedThisYear(scoped, now);
+      case 'resolved-unassigned':
+        // Come il numero della pagina operativa: tutti i ticket, senza i filtri della BI
+        return this.store
+          .tickets()
+          .filter(
+            (t) =>
+              !isOpen(t) &&
+              t.assignee === null &&
+              t.resolved !== null &&
+              now.getTime() - new Date(t.resolved).getTime() <= 7 * 86_400_000,
+          );
+      case 'flash':
+        return this.flashTickets();
+      case 'stalled': {
+        // Gli stessi ticket contati dal backend nella Home (non si ricalcolano qui)
+        const keys = new Set(this.keys().split(',').filter(Boolean));
+        return this.store.tickets().filter((t) => keys.has(t.key));
+      }
       case 'unassigned':
         // Come il numero della pagina operativa: tutti gli aperti, senza i filtri della BI
         return this.store.tickets().filter((t) => isOpen(t) && !t.pending && t.assignee === null);
     }
+  }
+
+  /** Ticket del Servizio erogato: nella finestra scelta, con i filtri della barra cliccata. */
+  private flashTickets(): readonly BiTicket[] {
+    const from = Number(this.from());
+    const to = Number(this.to());
+    const kind = this.kind();
+    const inWindow = (iso: string | null): boolean => {
+      if (!iso) {
+        return false;
+      }
+      const time = new Date(iso).getTime();
+      return time >= from && time < to;
+    };
+    const hourOk = (iso: string | null): boolean =>
+      !this.hour() || (iso !== null && new Date(iso).getHours() === Number(this.hour()));
+    return this.store.tickets().filter((t) => {
+      const created = kind !== 'resolved' && inWindow(t.created) && hourOk(t.created);
+      const resolved = kind !== 'created' && inWindow(t.resolved) && hourOk(t.resolved);
+      if (!created && !resolved) {
+        return false;
+      }
+      if (this.assignee() && assigneeOf(t) !== this.assignee()) {
+        return false;
+      }
+      if (this.reporter() && reporterOf(t) !== this.reporter()) {
+        return false;
+      }
+      if (this.area() && areaOf(t) !== this.area()) {
+        return false;
+      }
+      return (
+        this.fast() !== '1' ||
+        new Date(t.resolved ?? t.created).getTime() - new Date(t.created).getTime() <= 86_400_000
+      );
+    });
   }
 
   protected back(): void {

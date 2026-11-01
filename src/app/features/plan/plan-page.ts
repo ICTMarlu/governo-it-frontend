@@ -304,7 +304,9 @@ export class PlanPage {
   protected readonly unitName = computed(() => (this.unit() === 'hours' ? 'ore' : 'giornate'));
 
   protected readonly legendText =
-    'Saturazione = caricato (progetti, ferie, festività) ÷ capacità teorica + ore extra. ' +
+    'Saturazione = caricato (progetti, ferie, festività) ÷ orario standard (100%). ' +
+    'Se la persona ha ore extra in anagrafica, il di più va nella riga Extra: ore usate / ore extra disponibili ' +
+    '(azzurro se rientra, rosso se le supera). ' +
     'Verde sotto il 90%, giallo dal 90 al 100%, rosso oltre il 100%. ' +
     'Il piano si legge e si scrive a giornate (da 7,5 ore) o a ore: la percentuale non cambia.';
 
@@ -573,6 +575,11 @@ export class PlanPage {
               week.holidays,
             ]);
             const level = saturationLevel(allocated, week.capacity);
+            // Con ore extra la saturazione si spacca: l'orario standard arriva al massimo al 100%,
+            // il di più si legge nella riga Extra (ore usate su ore extra disponibili)
+            const standard = week.theoretical;
+            const standardAllocated = week.extra > 0 ? Math.min(allocated, standard) : allocated;
+            const extraUsed = week.extra > 0 ? sumDays([Math.max(0, allocated - standard)]) : 0;
             return {
               weekStart: week.weekStart,
               holidays: week.holidays,
@@ -581,10 +588,25 @@ export class PlanPage {
               capacity: week.capacity,
               level,
               percent: week.capacity > 0 ? Math.round((allocated / week.capacity) * 100) : null,
+              standard,
+              standardLevel: saturationLevel(standardAllocated, standard),
+              standardPercent:
+                standard > 0 ? Math.round((standardAllocated / standard) * 100) : null,
+              extra: week.extra,
+              extraUsed,
+              extraLevel:
+                week.extra <= 0
+                  ? ('none' as const)
+                  : extraUsed <= 0
+                    ? ('none' as const)
+                    : extraUsed > week.extra + 0.0001
+                      ? ('over' as const)
+                      : ('extra' as const),
             };
           });
           const yearAllocated = sumDays(resource.rows.map((row) => row.yearTotal));
-          return { resource, rows, totals, yearAllocated };
+          const hasExtra = totals.some((total) => total.extra > 0);
+          return { resource, rows, totals, yearAllocated, hasExtra };
         })
         // Filtrando, le persone senza righe trovate spariscono (come le righe nascoste di Excel)
         .filter((group) => !narrowing || group.rows.length > 0)

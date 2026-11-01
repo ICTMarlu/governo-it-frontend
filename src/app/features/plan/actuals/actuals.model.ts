@@ -60,13 +60,16 @@ export const ACTUAL_COLUMNS: readonly { readonly id: ActualColumn; readonly labe
   { id: 'code', label: 'Codice progetto' },
   { id: 'workType', label: 'Tipo' },
   { id: 'note', label: 'Nota della riga' },
-  { id: 'delta', label: 'Scarto (consuntivo − piano)' },
+  { id: 'delta', label: 'Δ Delta (consuntivo − piano)' },
   { id: 'days', label: 'Ore giorno per giorno' },
 ];
 
 export const DEFAULT_COLUMNS: readonly ActualColumn[] = ['code', 'delta'];
 
-export type ActualSortKey = 'project' | 'planned' | 'actual' | 'delta';
+export type ActualSortKey = 'project' | 'planned' | 'actual' | 'remaining' | 'delta';
+
+/** Tolleranza di partenza del delta, in % del pianificato (parametro ACTUALS_DELTA_TOLERANCE_PERCENT). */
+export const DEFAULT_DELTA_TOLERANCE = 25;
 
 const WEEKDAYS = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
 
@@ -110,21 +113,32 @@ export function defaultDay(week: ActualWeek, today: string): string {
   return (workdays.at(-1) ?? editable.at(-1) ?? week.days[0]).date;
 }
 
+/** Ore ancora da fare su una riga: pianificate meno consuntivate, mai sotto zero. */
+export function remainingHours(row: Pick<ActualRow, 'plannedHours' | 'actualHours'>): number {
+  return Math.max(0, row.plannedHours - row.actualHours);
+}
+
 /**
- * Livello dello scarto di una riga: "over" se il consuntivo supera il piano, "under" se a fine
- * settimana (da giovedì in poi, o settimana passata) manca ancora molto, altrimenti niente.
+ * Colore del delta (consuntivo − piano): niente entro la tolleranza (± % del pianificato), "over"
+ * (rosso) se si sfora oltre, "saving" (verde) se si risparmia oltre. Il risparmio conta solo a
+ * fine settimana (da giovedì in poi, o settimana passata): prima è normale essere indietro.
  */
 export function deltaLevel(
   row: Pick<ActualRow, 'plannedHours' | 'actualHours' | 'automatic'>,
   lateInWeek: boolean,
-): 'over' | 'under' | 'none' {
+  tolerancePercent: number = DEFAULT_DELTA_TOLERANCE,
+): 'over' | 'saving' | 'none' {
   if (row.automatic) {
     return 'none';
   }
-  if (row.actualHours > row.plannedHours + 0.001) {
+  const delta = row.actualHours - row.plannedHours;
+  if (Math.abs(delta) <= (row.plannedHours * tolerancePercent) / 100 + 0.001) {
+    return 'none';
+  }
+  if (delta > 0) {
     return 'over';
   }
-  return lateInWeek && row.plannedHours - row.actualHours >= 4 ? 'under' : 'none';
+  return lateInWeek ? 'saving' : 'none';
 }
 
 /** Ore leggibili: "7,5" o "—" se zero. */
