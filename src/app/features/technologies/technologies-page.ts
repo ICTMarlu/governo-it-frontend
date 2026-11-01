@@ -190,7 +190,8 @@ import { TechnologyPriorityList } from './technology-priority-list';
 
       h3 {
         margin: 0 0 0.25rem;
-        color: var(--prio-color);
+        // Colore della priorità schiarito/scurito col testo del tema: leggibile in chiaro e in scuro
+        color: color-mix(in srgb, var(--prio-color) 65%, var(--mat-sys-on-surface));
         font: var(--mat-sys-title-medium);
       }
 

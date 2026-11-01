@@ -132,7 +132,8 @@ import { EntityRow } from '../../shared/crud/crud.model';
       border: 1px solid var(--prio-color);
       border-radius: var(--gi-radius-pill);
       background: color-mix(in srgb, var(--prio-color) 14%, transparent);
-      color: var(--prio-color);
+      // Testo: colore della priorità mescolato al testo del tema (contrasto AA anche nel tema scuro)
+      color: color-mix(in srgb, var(--prio-color) 65%, var(--mat-sys-on-surface));
       font: var(--mat-sys-label-medium);
       font-weight: 700;
     }

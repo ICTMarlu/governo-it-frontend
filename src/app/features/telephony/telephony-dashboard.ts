@@ -288,8 +288,9 @@ const ALL = '';
         text-align: center;
         font-variant-numeric: tabular-nums;
 
+        // Zeri meno in vista dei valori, ma leggibili (contrasto AA)
         &--zero {
-          color: var(--mat-sys-outline);
+          color: var(--mat-sys-on-surface-variant);
         }
 
         &--total {

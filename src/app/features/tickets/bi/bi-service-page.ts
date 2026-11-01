@@ -712,7 +712,7 @@ interface Column {
       }
 
       &--muted &__label {
-        opacity: 0.6;
+        opacity: 0.8; // attenuata ma leggibile (contrasto AA)
       }
     }
 

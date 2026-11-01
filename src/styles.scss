@@ -100,6 +100,39 @@ a:not([class]),
   border-block-color: transparent !important;
 }
 
+// Smartphone e schermi touch: bersagli da toccare almeno 24x24px (WCAG 2.2, criterio 2.5.8).
+// Numeri cliccabili nelle tabelle, barre dei grafici, intestazioni da ordinare, link-bottone;
+// con il mouse restano compatti come prima.
+@media (max-width: 599.98px), (pointer: coarse) {
+  // I bottoni centrano già il contenuto: basta la misura minima (l'allineamento del testo resta)
+  :is(
+    button.count-btn,
+    button.link-btn,
+    button.bars__label,
+    button.bars__value,
+    button.sort,
+    button.sort-btn,
+    button.link
+  ) {
+    min-width: 24px;
+    min-height: 24px;
+  }
+
+  // Numero-link nelle tabelle (es. portafoglio in Home): casella da 24px centrata
+  a.count-link {
+    display: inline-block;
+    min-width: 24px;
+    line-height: 24px;
+    text-align: center;
+  }
+
+  // Caselle di selezione native (es. righe dei Task): più grandi da toccare
+  input[type='checkbox']:not(.mdc-checkbox__native-control) {
+    width: 20px;
+    height: 20px;
+  }
+}
+
 // Barra filtri: campi Material alti come bottoni e interruttori (--gi-control-h), su tutte le pagine.
 // Va sul contenitore della barra o sul singolo campo filtro.
 .gi-filter-bar {
@@ -381,10 +414,10 @@ td:focus-within > .task-dot--empty {
   color: var(--mat-sys-primary);
   font-weight: 700;
 
+  // Spenta (grigia e sottile, l'attiva è blu e in grassetto) ma leggibile: contrasto AA
   &--off {
     color: var(--mat-sys-on-surface-variant);
     font-weight: 400;
-    opacity: 0.55;
   }
 }
 
