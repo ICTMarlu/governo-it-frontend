@@ -136,7 +136,7 @@
           <span
             class="gi-kpi__meta"
             [class.gi-kpi__meta--bad]="data.tickets.stalled > 0"
-            title="Ticket assegnati e aperti, senza alcun movimento in Jira da oltre 8 ore lavorative (lun-ven, 8:30-17). Non contano quelli in attesa del cliente o in Pending."
+            title="Ticket aperti e assegnati, senza alcun movimento di una persona dopo l’assegnazione da oltre 8 ore lavorative (lun-ven, 8:30-17). Un movimento è una modifica o un commento di una persona; non contano le automazioni di Jira. Se il ticket è stato riassegnato, si parte dall’ultima assegnazione. Non contano i ticket in attesa del cliente o in Pending. Clic per vedere l’elenco."
           >
             assegnati, senza movimenti
           </span>

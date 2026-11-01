@@ -36,6 +36,7 @@ function ticket(changes: Partial<BiTicket>): BiTicket {
     due: null,
     impact: null,
     statusChanged: null,
+    lastMovement: at(30, 11),
     ...changes,
   };
 }

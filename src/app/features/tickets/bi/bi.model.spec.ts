@@ -39,6 +39,7 @@ function ticket(changes: Partial<BiTicket>): BiTicket {
     due: null,
     impact: null,
     statusChanged: null,
+    lastMovement: new Date(2026, 9, 1).toISOString(),
     ...changes,
   };
 }

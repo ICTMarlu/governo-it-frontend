@@ -467,7 +467,7 @@ export class BiDetailPage {
         return this.openWhere(
           (t) =>
             !t.waitingCustomer &&
-            now.getTime() - new Date(t.updated).getTime() > Number(this.days()) * 86_400_000,
+            now.getTime() - new Date(t.lastMovement).getTime() > Number(this.days()) * 86_400_000,
         );
       case 'resolved-year':
         return resolvedThisYear(scoped, now);

@@ -310,13 +310,19 @@
       class="gi-kpi gi-kpi--link"
       role="link"
       tabindex="0"
-      title="Vedi i ticket fermi"
+      [title]="
+        'Ticket fermi: aperti, né in attesa del cliente né in Pending, senza movimenti di una persona da più di ' +
+        data.kpis.staleDays +
+        ' giorni di calendario (a ' +
+        data.kpis.staleDays +
+        ' giorni esatti non è fermo). Un movimento è una modifica (stato, assegnatario, priorità…) o un commento di una persona; non contano le modifiche delle automazioni di Jira. Clic per vedere l’elenco.'
+      "
       (click)="openStale(data.kpis.staleDays)"
       (keydown.enter)="openStale(data.kpis.staleDays)"
     >
       <span class="gi-kpi__value">{{ data.kpis.stale }}</span>
       <span class="gi-kpi__label"
-        >fermi: nessun aggiornamento da oltre {{ data.kpis.staleDays }} giorni</span
+        >fermi: nessun movimento da oltre {{ data.kpis.staleDays }} giorni</span
       >
     </li>
     <li *govKpi="'ops.age'" class="gi-kpi">
@@ -466,7 +472,11 @@
             <th scope="col">Sca-<br />duti</th>
             <th
               scope="col"
-              [title]="'Senza aggiornamenti da oltre ' + data.kpis.staleDays + ' giorni'"
+              [title]="
+                'Senza movimenti (modifiche o commenti di una persona) da oltre ' +
+                data.kpis.staleDays +
+                ' giorni'
+              "
             >
               Fermi<br />&gt; {{ data.kpis.staleDays }} gg
             </th>
@@ -757,7 +767,9 @@
                     <span
                       class="badge"
                       [matTooltip]="
-                        'Nessun aggiornamento da oltre ' + data.kpis.staleDays + ' giorni'
+                        'Nessun movimento di una persona da oltre ' +
+                        data.kpis.staleDays +
+                        ' giorni'
                       "
                       >fermo</span
                     >

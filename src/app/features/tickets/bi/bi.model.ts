@@ -26,6 +26,8 @@ export interface BiTicket {
   readonly impact: string | null;
   /** Quando il ticket è entrato nello stato attuale (cambio di categoria di stato in Jira). */
   readonly statusChanged: string | null;
+  /** Ultimo movimento di una persona (modifica o commento, non le automazioni di Jira). */
+  readonly lastMovement: string;
 }
 
 export interface BiData {
