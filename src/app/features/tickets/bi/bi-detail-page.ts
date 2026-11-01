@@ -34,6 +34,7 @@ type Scope =
   | 'all-todo'
   | 'all-progress'
   | 'all-waiting'
+  | 'all-pending'
   | 'workable'
   | 'pending'
   | 'created'
@@ -64,10 +65,11 @@ type SortKey = 'key' | 'priority' | 'due' | 'created' | 'age' | 'updated';
 
 const SCOPE_LABELS: Readonly<Record<Scope, string>> = {
   open: 'ticket aperti',
-  'all-open': 'ticket aperti (compresi quelli in Pending)',
-  'all-todo': 'ticket aperti ancora da fare',
-  'all-progress': 'ticket aperti in corso (esclusi quelli in attesa del cliente)',
+  'all-open': 'ticket aperti (senza Pending)',
+  'all-todo': 'ticket aperti ancora da fare (senza Pending)',
+  'all-progress': 'ticket aperti in corso (senza Pending e quelli in attesa del cliente)',
   'all-waiting': 'ticket aperti in attesa del cliente (senza Pending)',
+  'all-pending': 'ticket in Pending (in pausa)',
   workable: 'ticket lavorabili (aperti, senza Pending)',
   pending: 'ticket in Pending',
   created: 'ticket creati nel periodo',
@@ -407,16 +409,17 @@ export class BiDetailPage {
       case 'open':
         return scoped.filter(isOpen);
       // Numeri del carico per persona: tutti gli aperti, senza i filtri della BI
+      // Pending è uno stato morto, né aperto né chiuso: non compare tra aperti, da fare e in corso
       case 'all-open':
-        return this.store.tickets().filter(isOpen);
+        return this.openWhere(() => true);
       case 'all-todo':
-        return this.store.tickets().filter((t) => isOpen(t) && t.category === 'NEW');
+        return this.openWhere((t) => t.category === 'NEW');
       case 'all-progress':
-        return this.store
-          .tickets()
-          .filter((t) => isOpen(t) && t.category === 'INDETERMINATE' && !t.waitingCustomer);
+        return this.openWhere((t) => t.category === 'INDETERMINATE' && !t.waitingCustomer);
       case 'all-waiting':
         return this.openWhere((t) => t.waitingCustomer);
+      case 'all-pending':
+        return this.store.tickets().filter((t) => isOpen(t) && t.pending);
       case 'workable':
         return scoped.filter((t) => isOpen(t) && !t.pending);
       case 'pending':

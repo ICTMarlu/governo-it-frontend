@@ -96,6 +96,28 @@ describe('BiDetailPage — ticket fermi della Home', () => {
   });
 });
 
+describe('BiDetailPage — i Pending non sono aperti', () => {
+  const tickets = [
+    ticket({ key: 'MRLIT-1', category: 'INDETERMINATE', resolved: null, status: 'In corso' }),
+    ticket({
+      key: 'MRLIT-2',
+      category: 'INDETERMINATE',
+      resolved: null,
+      status: 'Pending',
+      pending: true,
+    }),
+    ticket({ key: 'MRLIT-3', category: 'NEW', resolved: null, status: 'Aperto' }),
+    ticket({ key: 'MRLIT-4', category: 'NEW', resolved: null, status: 'Pending', pending: true }),
+  ];
+
+  it('aperti, da fare e in corso non mostrano i Pending; la colonna Pending sì', () => {
+    expect(render({ scope: 'all-open' }, tickets)).toBe(2);
+    expect(render({ scope: 'all-todo' }, tickets)).toBe(1);
+    expect(render({ scope: 'all-progress' }, tickets)).toBe(1);
+    expect(render({ scope: 'all-pending' }, tickets)).toBe(2);
+  });
+});
+
 describe('BiDetailPage — dal router', () => {
   it('legge i parametri dell’indirizzo e mostra i ticket del flash', async () => {
     const tickets = [ticket({ key: 'MRLIT-1' }), ticket({ key: 'MRLIT-2', assignee: 'Bruno' })];

@@ -469,6 +469,12 @@
             <th scope="col">Da<br />fare</th>
             <th scope="col">In<br />corso</th>
             <th scope="col">In<br />attesa</th>
+            <th
+              scope="col"
+              title="Ticket in Pending (in pausa): non sono né aperti né chiusi, contano solo in questa colonna"
+            >
+              Pending
+            </th>
             <th scope="col">Sca-<br />duti</th>
             <th
               scope="col"
@@ -569,6 +575,19 @@
                   </button>
                 } @else {
                   {{ person.waitingCustomer }}
+                }
+              </td>
+              <td class="num">
+                @if (person.pending > 0) {
+                  <button
+                    type="button"
+                    class="count-btn"
+                    (click)="openPersonCount(person, 'all-pending')"
+                  >
+                    {{ person.pending }}
+                  </button>
+                } @else {
+                  {{ person.pending }}
                 }
               </td>
               <td class="num" [class.late]="person.overdue > 0">

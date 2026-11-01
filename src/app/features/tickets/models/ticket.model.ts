@@ -52,6 +52,8 @@ export interface PersonLoad {
   readonly toDo: number;
   readonly inProgress: number;
   readonly waitingCustomer: number;
+  /** Ticket in Pending (in pausa): contano solo in questa colonna. */
+  readonly pending: number;
   readonly overdue: number;
   readonly stale: number;
   readonly oldestDays: number;

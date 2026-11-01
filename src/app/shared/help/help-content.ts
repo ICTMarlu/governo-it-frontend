@@ -41,7 +41,7 @@ export const HOME_HELP: HelpContent = {
       items: [
         'Solo i progetti di tipo Project: AMS, Continuous e Admin non contano. Admin e PM vedono tutto il portafoglio, gli altri i progetti di cui sono owner o su cui hanno giornate.',
         'Fotografia di oggi: quanti progetti ci sono in ogni stato.',
-        'Stato e piano non tornano: in corso senza giornate nella settimana in corso e nelle 4 successive; da avviare o approvati che hanno già giornate; chiusi, abortiti o respinti con giornate ancora nel piano. Apri la riga per vedere i progetti.',
+        'Stato e piano non tornano: in corso senza giornate nella settimana in corso e nelle 4 successive; To Start o Approved con giornate nella settimana in corso (lo stato va aggiornato: un progetto da avviare pianificato più avanti è normale); chiusi, abortiti o respinti con giornate ancora nel piano. Apri la riga per vedere i progetti.',
         'In parallelo: per persona, i progetti In Progress, To Start o Approved con giornate nelle prossime 5 settimane; oltre la soglia (parametro PROJECT_WIP_LIMIT, di partenza 3) la barra diventa rossa.',
         'Movimento nel tempo: per settimana o mese, aperti (creati), avviati (passati a In Progress), chiusi (Completed), messi in Pending, abortiti o respinti, e gli in corso a fine periodo. Lo storico parte dal 27/10/2026 (parametro PROJECT_HISTORY_SINCE): i cambi di stato fatti prima non ci sono.',
       ],
@@ -56,15 +56,18 @@ export const HOME_HELP: HelpContent = {
     {
       title: 'Numeri flash',
       items: [
-        'Ticket AMS: aperti oggi e saldo a settimana = (entrati − chiusi) degli ultimi 30 giorni, a settimana, come nella pagina Persone. Positivo: il backlog cresce; diventa un’allerta solo oltre il 2% degli aperti.',
-        'Piano: caricato ÷ capacità della settimana corrente (ferie e festività comprese), contando solo chi ha giornate nel piano delle prossime 5 settimane; chi ha solo le festività non abbassa la media.',
+        'Ticket AMS: aperti oggi (i ticket in Pending non contano: sono in pausa, né aperti né chiusi) e saldo a settimana = (entrati − chiusi) degli ultimi 30 giorni, a settimana, come nella pagina Persone. Positivo: il backlog cresce; diventa un’allerta solo oltre il 2% degli aperti.',
+        'Piano da completare: guarda la settimana in corso e le 3 successive e segnala chi ha meno del 95% dell’orario standard pianificato (parametro PLAN_MIN_SATURATION_PCT). Ferie e festività contano come pianificate, le ore extra non alzano la soglia. Nella tua home vedi le tue settimane sotto soglia; da amministratore le persone da completare, con i nomi. Se è tutto sopra il 95% il box dice "Completo".',
+        'Non presi in carico (nella tua home "Da prendere in carico"): ticket aperti assegnati, o riassegnati, a una persona che da quel momento non ha avuto nessun movimento da oltre 8 ore lavorative (parametro TICKET_STALLED_HOURS). Un movimento è una modifica o un commento di una persona: le automazioni di Jira non contano. Se il ticket viene riassegnato il conteggio riparte dall’ultima assegnazione. Restano fuori i ticket in Pending e in attesa del cliente. Non sono i ticket "fermi" della pagina Operativa (quelli sono senza movimenti da più di 8 giorni). Il clic apre l’elenco.',
+        'Orario di lavoro: le "ore lavorative" sono lunedì-venerdì dalle 8:30 alle 17, ora italiana, meno un’ora di pausa pranzo (13-14): 7,5 ore al giorno. Le attese lunghe sono dette in giorni lavorativi.',
+        'Ticket da guardare oggi: scaduti, in scadenza e nuovi senza risposta, ognuno con il motivo sotto il titolo.',
         'Task: i tuoi in ritardo e in scadenza (come la campanella). Direzione: punti aperti e, per l’Admin, la prossima riunione.',
       ],
     },
     {
       title: 'Intuizioni e "il punto di oggi"',
       items: [
-        'Segnali incrociati: backlog che cresce o cala, la persona il cui backlog cresce di più (2 o più a settimana), ticket nuovi senza risposta, scadenze vicine, persone oltre il 100%, persone senza giornate nel piano, la settimana più libera (sotto l’80%), task in ritardo, punti scaduti.',
+        'Segnali incrociati: backlog che cresce o cala, la persona il cui backlog cresce di più (2 o più a settimana), ticket nuovi senza risposta, ticket assegnati non presi in carico, scadenze vicine, persone oltre il 100%, persone con il piano incompleto (sotto il 95%), persone senza giornate nel piano, la settimana più libera (sotto l’80%), task in ritardo, punti scaduti.',
         'Piano dei progetti (solo progetti di tipo Project): il piano teorico è il piano settimanale stesso, quindi la percentuale è le giornate delle settimane già chiuse ÷ le giornate totali del progetto. Avvisi: piano esaurito ma progetto ancora aperto; soglie di controllo al 50, 75 e 90% ("verifica di essere in tempo"); To Start o Approved pianificato nella settimana corrente (lo stato va aggiornato; per i progetti da avviare non ci sono altre analisi); progetto chiuso con giornate ancora pianificate. Un avviso per tipo, con i progetti nominati; sotto 2 giornate totali non si avvisa.',
         'Prima gli urgenti, al massimo 2 per area (3 per i progetti) e 5 in tutto. "Il punto di oggi" riassume le prime tre.',
       ],
@@ -698,9 +701,9 @@ export const TICKETS_HELP: HelpContent = {
     {
       title: 'Come si legge il carico',
       items: [
-        'In Jira non ci sono ore registrate: il carico si misura con i conteggi (aperti, da fare, in corso, in attesa del cliente) e con i flussi (entrati e chiusi per settimana).',
+        'In Jira non ci sono ore registrate: il carico si misura con i conteggi (aperti, da fare, in corso, in attesa del cliente, Pending) e con i flussi (entrati e chiusi per settimana).',
         '"Chiusi a settimana" sono i chiusi degli ultimi 30 giorni ÷ 4,3 settimane (finestra mobile, oggi compreso, come nella pagina Persone): dice quanti ticket la persona riesce a chiudere. Se negli ultimi 30 giorni il saldo entrati − chiusi è di almeno mezzo ticket a settimana e i lavorabili sono aumentati il backlog è "in crescita".',
-        '"Ultimi 7 gg" conta entrati e chiusi negli ultimi 7 giorni di calendario (da oggi indietro); "Ultimi 30 gg" negli ultimi 30 giorni, oggi compreso. In attesa, scaduti, fermi e più vecchio non contano i ticket in Pending (hanno la loro vista).',
+        '"Ultimi 7 gg" conta entrati e chiusi negli ultimi 7 giorni di calendario (da oggi indietro); "Ultimi 30 gg" negli ultimi 30 giorni, oggi compreso. Pending è uno stato morto, né aperto né chiuso: i ticket in Pending non contano in nessuna colonna (aperti, da fare, in corso, in attesa, scaduti, fermi, più vecchio) e stanno solo nella colonna «Pending».',
         '"AMS pianificate" sono le giornate della settimana corrente sulle righe AMS del piano settimanale: confrontale con il numero di ticket aperti e con quanti ne arrivano.',
         'Il grafico mostra entrati e chiusi per settimana (barre) e gli aperti a fine settimana (linea); passandoci sopra vedi i numeri, "Dati" apre la tabella.',
       ],
@@ -709,7 +712,7 @@ export const TICKETS_HELP: HelpContent = {
       title: 'Azioni consigliate',
       items: [
         'Urgenti: ticket senza assegnatario da più di 4 ore; ticket con la scadenza passata.',
-        'Da fare: ticket in attesa del cliente da più di 5 giorni (sollecitare o chiudere), fermi da più di 7 giorni, riaperti; backlog in crescita; ticket aperti ma nessuna giornata AMS nel piano.',
+        'Da fare: ticket in attesa del cliente da più di 5 giorni (sollecitare o chiudere), fermi (senza movimenti di una persona da più di 8 giorni di calendario), riaperti; backlog in crescita; ticket aperti ma nessuna giornata AMS nel piano.',
         'Suggerimenti: utenti Jira non collegati a una risorsa, persone con più del doppio dei ticket della mediana del team, ticket senza codice progetto.',
         'Viste salvate: con "Vista" salvi con un nome azioni mostrate e filtro dell’elenco attuali e li richiami dal menu; una vista può essere la predefinita e si apre da sola. Il pallino accanto al nome dice che hai cambiato qualcosa: "Aggiorna" la salva. "Vista standard" torna ai filtri di partenza. Le viste sono tue, per ogni pagina.',
         '"Per chi coordina" e "Per le persone" filtrano le azioni; "Apri in Jira" apre i ticket interessati, "Vedi i ticket" li elenca qui sotto. Le soglie sono nei parametri generali (TICKET_…).',
@@ -726,10 +729,10 @@ export const PERSON_LOAD_HELP: HelpContent = {
     {
       title: 'Ticket aperti oggi',
       items: [
-        'Aperti = da fare + in corso + in attesa (cioè tutti i ticket non chiusi).',
+        'Aperti = da fare + in corso + in attesa (tutti i ticket non chiusi e non in Pending). I ticket in Pending hanno una colonna a parte: sono in pausa, né aperti né chiusi, e non contano in nessun altro numero della riga.',
         'Da fare: stato "da completare" di Jira (Aperto, Nuovo). In corso: stati in lavorazione, esclusa l’attesa del cliente. In attesa: stato "In attesa di risposta dal cliente".',
-        'Scaduti: con la data di scadenza passata. Fermi: non in attesa del cliente e senza nessun aggiornamento in Jira da oltre i giorni indicati (parametro TICKET_STALE_DAYS).',
-        'Più vecchio: giorni dalla creazione del suo ticket aperto più vecchio.',
+        'Scaduti: con la data di scadenza passata. Fermi: non in attesa del cliente e senza nessun movimento di una persona (modifica o commento; le automazioni di Jira non contano) da più dei giorni di calendario indicati, 8 di partenza (parametro TICKET_STALE_DAYS).',
+        'Più vecchio: giorni dalla creazione del suo ticket aperto più vecchio (i Pending non contano). Pending: i suoi ticket in pausa; il clic li elenca.',
       ],
     },
     {
