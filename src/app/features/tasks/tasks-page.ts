@@ -40,6 +40,7 @@ import {
 } from './models/task.model';
 import { TaskCommands } from './services/task-commands.service';
 import { TasksService } from './services/tasks.service';
+import { SearchField } from '../../shared/components/search-field/search-field';
 
 type TaskView = 'list' | 'board';
 type SortKey =
@@ -57,6 +58,7 @@ const VIEW_PREFERENCE = 'tasks.view';
 @Component({
   selector: 'gov-tasks-page',
   imports: [
+    SearchField,
     DragDropModule,
     FormsModule,
     MatButtonModule,

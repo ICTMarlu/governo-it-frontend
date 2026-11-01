@@ -108,6 +108,7 @@ import {
 import { CellTaskCount, cellKey } from '../tasks/models/task.model';
 import { TasksService } from '../tasks/services/tasks.service';
 import { ActualsService } from './actuals/actuals.service';
+import { SearchField } from '../../shared/components/search-field/search-field';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -167,6 +168,7 @@ function defaultStart(): string {
 @Component({
   selector: 'gov-plan-page',
   imports: [
+    SearchField,
     FormsModule,
     NgTemplateOutlet,
     ExcelFilter,

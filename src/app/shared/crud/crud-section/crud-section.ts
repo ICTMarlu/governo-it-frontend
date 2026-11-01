@@ -1,13 +1,11 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -30,6 +28,7 @@ import { BulkActionConfig, EntityConfig, EntityRow, readPath } from '../crud.mod
 import { EntityFormDialog, EntityFormDialogData } from '../entity-form-dialog/entity-form-dialog';
 import { EntityTable, SortState } from '../entity-table/entity-table';
 import { SavedViews } from '../../views/saved-views';
+import { SearchField } from '../../components/search-field/search-field';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -40,14 +39,13 @@ type LoadState = 'loading' | 'ready' | 'error';
 @Component({
   selector: 'gov-crud-section',
   imports: [
-    FormsModule,
     EntityTable,
     SavedViews,
+    SearchField,
     MatButtonModule,
     MatButtonToggleModule,
     MatIconModule,
     MatFormFieldModule,
-    MatInputModule,
     MatSelectModule,
     MatSlideToggleModule,
     MatProgressSpinnerModule,

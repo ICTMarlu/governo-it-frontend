@@ -275,12 +275,16 @@ td:focus-within > .task-dot--empty {
 }
 
 // Casella di ricerca compatta e dal vivo, alta come bottoni e filtri (es. piano settimanale)
+// (componente gov-search-field; larghezza con --gi-search-w o dal contenitore)
 .inline-search {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   box-sizing: border-box;
+  width: var(--gi-search-w, 18rem);
+  max-width: 100%;
   height: var(--gi-control-h);
+  cursor: text;
   padding: 0 0.5rem;
   border: 1px solid var(--mat-sys-outline);
   border-radius: var(--gi-radius-md);
@@ -299,12 +303,37 @@ td:focus-within > .task-dot--empty {
   }
 
   &__input {
-    width: 15rem;
+    flex: 1;
+    min-width: 0;
     border: 0;
     outline: none;
     background: transparent;
     color: var(--mat-sys-on-surface);
     font: var(--mat-sys-body-medium);
+    text-overflow: ellipsis;
+
+    // La ✕ è la nostra (__clear): niente quella del browser
+    &::-webkit-search-cancel-button {
+      appearance: none;
+    }
+  }
+
+  &__clear {
+    display: inline-flex;
+    padding: 0.125rem;
+    border: 0;
+    border-radius: var(--gi-radius-pill);
+    background: none;
+    color: var(--mat-sys-on-surface-variant);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--mat-sys-surface-container-high);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--mat-sys-primary);
+    }
   }
 }
 

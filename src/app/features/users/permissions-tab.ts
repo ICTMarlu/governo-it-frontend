@@ -12,11 +12,13 @@ import { errorMessage } from '../../shared/crud/crud-api.service';
 import { matchesTerms, searchTerms } from '../../shared/util/text-search';
 import { PermissionsService, Profile, UserPermissions } from './permissions.service';
 import { UserPermissionsDialog, UserPermissionsDialogData } from './user-permissions-dialog';
+import { SearchField } from '../../shared/components/search-field/search-field';
 
 /** Chi può cosa: una riga per utente, una colonna per modulo. Clic su una riga per modificarla. */
 @Component({
   selector: 'gov-permissions-tab',
   imports: [
+    SearchField,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
@@ -25,17 +27,7 @@ import { UserPermissionsDialog, UserPermissionsDialogData } from './user-permiss
   ],
   template: `
     <div class="tools">
-      <label class="inline-search">
-        <mat-icon aria-hidden="true">search</mat-icon>
-        <input
-          class="inline-search__input"
-          type="search"
-          placeholder="Cerca un utente…"
-          aria-label="Cerca un utente"
-          [value]="search()"
-          (input)="search.set($any($event.target).value)"
-        />
-      </label>
+      <gov-search-field [(value)]="search" placeholder="Cerca un utente…" label="Cerca un utente" />
       <mat-slide-toggle [checked]="onlyExceptions()" (change)="onlyExceptions.set($event.checked)">
         Solo chi ha eccezioni
       </mat-slide-toggle>

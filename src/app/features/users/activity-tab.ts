@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { API_BASE_URL } from '../../core/config/api.config';
 import { errorMessage } from '../../shared/crud/crud-api.service';
 import { matchesTerms, searchTerms } from '../../shared/util/text-search';
+import { SearchField } from '../../shared/components/search-field/search-field';
 
 type Kind = 'LOGIN' | 'LOGIN_FAILED' | 'CREATE' | 'DELETE';
 
@@ -49,7 +50,7 @@ const PERIODS: readonly { readonly days: number; readonly label: string }[] = [
  */
 @Component({
   selector: 'gov-activity-tab',
-  imports: [DatePipe, MatButtonToggleModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [SearchField, DatePipe, MatButtonToggleModule, MatIconModule, MatProgressSpinnerModule],
   template: `
     <div class="bar">
       <mat-button-toggle-group
@@ -83,17 +84,11 @@ const PERIODS: readonly { readonly days: number; readonly label: string }[] = [
           <option [value]="name">{{ name }}</option>
         }
       </select>
-      <label class="inline-search">
-        <mat-icon aria-hidden="true">search</mat-icon>
-        <input
-          class="inline-search__input"
-          type="search"
-          placeholder="Cerca (progetto, task, utente…)"
-          aria-label="Cerca nel registro"
-          [value]="search()"
-          (input)="search.set($any($event.target).value)"
-        />
-      </label>
+      <gov-search-field
+        [(value)]="search"
+        placeholder="Cerca (progetto, task, utente…)"
+        label="Cerca nel registro"
+      />
       <span class="bar__count" role="status">{{ visible().length }} eventi</span>
     </div>
 

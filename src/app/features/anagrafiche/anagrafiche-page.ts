@@ -8,6 +8,7 @@ import { ModuleKey, canView } from '../../core/auth/permissions';
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { matchesTerms, searchTerms } from '../../shared/util/text-search';
 import { LOOKUP_CONFIGS } from '../master-data/master-data.configs';
+import { SearchField } from '../../shared/components/search-field/search-field';
 
 interface Card {
   readonly label: string;
@@ -153,24 +154,19 @@ const GROUPS: readonly Group[] = [
 /** Home delle anagrafiche: tutte, per gruppo, con una ricerca. */
 @Component({
   selector: 'gov-anagrafiche-page',
-  imports: [RouterLink, MatCardModule, MatIconModule, PageHeader],
+  imports: [SearchField, RouterLink, MatCardModule, MatIconModule, PageHeader],
   template: `
     <gov-page-header
       title="Anagrafiche"
       subtitle="Tutte le anagrafiche e le liste di base, per gruppo: cerca o scegli quale aprire."
     />
 
-    <label class="inline-search">
-      <mat-icon aria-hidden="true">search</mat-icon>
-      <input
-        class="inline-search__input"
-        type="search"
-        placeholder="Cerca un’anagrafica (es. fornitori, sedi, priorità)…"
-        aria-label="Cerca un’anagrafica"
-        [value]="search()"
-        (input)="search.set($any($event.target).value)"
-      />
-    </label>
+    <gov-search-field
+      [(value)]="search"
+      placeholder="Cerca un’anagrafica (es. fornitori, sedi, priorità)…"
+      label="Cerca un’anagrafica"
+      width="30rem"
+    />
 
     @for (group of groups(); track group.id) {
       <section class="group" [attr.aria-labelledby]="'group-' + group.id">

@@ -9,6 +9,7 @@ import { matchesTerms, searchTerms } from '../../../shared/util/text-search';
 import { BiFilters } from './bi-filters';
 import { BiTicket, ageDays, areaOf, assigneeOf, isOpen } from './bi.model';
 import { BiStore } from './bi-store.service';
+import { SearchField } from '../../../shared/components/search-field/search-field';
 
 type ListState = 'open' | 'pending' | 'done' | 'all';
 type SortKey = 'created' | 'age' | 'key';
@@ -22,6 +23,7 @@ const PAGE_SIZE = 200;
 @Component({
   selector: 'gov-bi-list-page',
   imports: [
+    SearchField,
     BiFilters,
     DatePipe,
     MatButtonModule,
@@ -41,17 +43,13 @@ const PAGE_SIZE = 200;
         </p>
       } @else {
         <div class="tools">
-          <label class="inline-search">
-            <mat-icon aria-hidden="true">search</mat-icon>
-            <input
-              class="inline-search__input"
-              type="search"
-              placeholder="Cerca chiave, titolo, persona, richiedente…"
-              aria-label="Cerca nei ticket"
-              [value]="search()"
-              (input)="search.set($any($event.target).value); shown.set(pageSize)"
-            />
-          </label>
+          <gov-search-field
+            [value]="search()"
+            (valueChange)="search.set($event); shown.set(pageSize)"
+            placeholder="Cerca chiave, titolo, persona, richiedente…"
+            label="Cerca nei ticket"
+            width="24rem"
+          />
           <mat-button-toggle-group
             aria-label="Stato"
             hideSingleSelectionIndicator

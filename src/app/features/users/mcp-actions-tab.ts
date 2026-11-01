@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { API_BASE_URL } from '../../core/config/api.config';
 import { errorMessage } from '../../shared/crud/crud-api.service';
 import { matchesTerms, searchTerms } from '../../shared/util/text-search';
+import { SearchField } from '../../shared/components/search-field/search-field';
 
 type Outcome = 'OK' | 'ERROR';
 
@@ -65,7 +66,7 @@ const TOOL_LABELS: Readonly<Record<string, string>> = {
  */
 @Component({
   selector: 'gov-mcp-actions-tab',
-  imports: [DatePipe, MatButtonToggleModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [SearchField, DatePipe, MatButtonToggleModule, MatIconModule, MatProgressSpinnerModule],
   template: `
     <p class="intro">
       Le modifiche fatte tramite Claude (connettore MCP), anche quelle non riuscite. Le letture e le
@@ -114,17 +115,11 @@ const TOOL_LABELS: Readonly<Record<string, string>> = {
           <option [value]="option">{{ label(option) }}</option>
         }
       </select>
-      <label class="inline-search">
-        <mat-icon aria-hidden="true">search</mat-icon>
-        <input
-          class="inline-search__input"
-          type="search"
-          placeholder="Cerca nei parametri e negli errori"
-          aria-label="Cerca nelle azioni da Claude"
-          [value]="search()"
-          (input)="search.set($any($event.target).value)"
-        />
-      </label>
+      <gov-search-field
+        [(value)]="search"
+        placeholder="Cerca nei parametri e negli errori"
+        label="Cerca nelle azioni da Claude"
+      />
       <span class="bar__count" role="status">{{ visible().length }} azioni</span>
     </div>
 

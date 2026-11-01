@@ -83,17 +83,11 @@
       <mat-icon aria-hidden="true">view_kanban</mat-icon> Kanban
     </mat-button-toggle>
   </mat-button-toggle-group>
-  <label class="inline-search">
-    <mat-icon aria-hidden="true">search</mat-icon>
-    <input
-      class="inline-search__input"
-      type="search"
-      placeholder="Cerca titolo, progetto, persona…"
-      aria-label="Cerca nei task"
-      [value]="search()"
-      (input)="search.set($any($event.target).value)"
-    />
-  </label>
+  <gov-search-field
+    [(value)]="search"
+    placeholder="Cerca titolo, progetto, persona…"
+    label="Cerca nei task"
+  />
   <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filters__field">
     <mat-label>Persona</mat-label>
     <mat-select [value]="personId()" (valueChange)="personId.set($event)">

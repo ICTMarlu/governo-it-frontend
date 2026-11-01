@@ -1,16 +1,11 @@
 <div class="toolbar gi-filter-bar">
   @if (config().searchKeys.length > 0) {
-    <mat-form-field appearance="outline" class="toolbar__search" subscriptSizing="dynamic">
-      <mat-label>Cerca</mat-label>
-      <mat-icon matPrefix aria-hidden="true">search</mat-icon>
-      <input
-        matInput
-        type="search"
-        [ngModel]="search()"
-        (ngModelChange)="search.set($event)"
-        autocomplete="off"
-      />
-    </mat-form-field>
+    <gov-search-field
+      class="toolbar__search"
+      [(value)]="search"
+      placeholder="Cerca…"
+      label="Cerca"
+    />
   }
 
   @if (config().closedWhen) {

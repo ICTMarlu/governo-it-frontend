@@ -420,17 +420,7 @@
   </div>
 
   <!-- Ricerca dal vivo: filtra la griglia a ogni lettera -->
-  <label class="inline-search">
-    <mat-icon aria-hidden="true">search</mat-icon>
-    <span class="visually-hidden">Cerca progetto, codice o nota</span>
-    <input
-      type="search"
-      class="inline-search__input"
-      placeholder="Cerca progetto, codice o nota"
-      [value]="search()"
-      (input)="search.set($any($event.target).value)"
-    />
-  </label>
+  <gov-search-field [(value)]="search" placeholder="Cerca progetto, codice o nota" />
 
   <gov-excel-filter
     label="Stato"

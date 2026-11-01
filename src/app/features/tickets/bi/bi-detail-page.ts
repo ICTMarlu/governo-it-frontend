@@ -25,6 +25,7 @@ import {
 import { CONFIRM_IDLE_DAYS, isConfirmStatus } from '../models/ticket.model';
 import { BiStore } from './bi-store.service';
 import { reporterOf } from './service-flash.model';
+import { SearchField } from '../../../shared/components/search-field/search-field';
 
 /** Quali ticket parte dalla pagina di origine: aperti, pending, creati nel periodo, chiusi di recente… */
 type Scope =
@@ -107,7 +108,7 @@ const PRIORITY_RANK = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
  */
 @Component({
   selector: 'gov-bi-detail-page',
-  imports: [DatePipe, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [SearchField, DatePipe, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   template: `
     <div class="bi-page">
       <div class="head">
@@ -136,17 +137,12 @@ const PRIORITY_RANK = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
         </p>
       } @else {
         <div class="tools">
-          <label class="inline-search">
-            <mat-icon aria-hidden="true">search</mat-icon>
-            <input
-              class="inline-search__input"
-              type="search"
-              placeholder="Cerca chiave, titolo, persona…"
-              aria-label="Cerca nei ticket"
-              [value]="search()"
-              (input)="search.set($any($event.target).value)"
-            />
-          </label>
+          <gov-search-field
+            [(value)]="search"
+            placeholder="Cerca chiave, titolo, persona…"
+            label="Cerca nei ticket"
+            width="20rem"
+          />
           <span class="count" role="status">{{ rows().length }} ticket</span>
         </div>
         @if (rows().length === 0) {
