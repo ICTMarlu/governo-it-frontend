@@ -183,10 +183,6 @@
 }
 
 // Vista, ricerca e filtri stanno su una riga sola (a capo solo se lo spazio non basta)
-.view-toggle {
-  --mat-button-toggle-height: 2.5rem;
-}
-
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -196,8 +192,6 @@
 
   &__field {
     width: 8rem;
-    --mat-form-field-container-height: 2.5rem;
-    --mat-form-field-container-vertical-padding: 0.5rem;
   }
 
   // Interruttore piu' piccolo, per stare in fondo alla riga dei filtri

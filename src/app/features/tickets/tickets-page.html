@@ -5,7 +5,11 @@
   [compact]="true"
 >
   @if (dashboard(); as data) {
-    <mat-form-field class="person-filter" appearance="outline" subscriptSizing="dynamic">
+    <mat-form-field
+      class="person-filter gi-filter-bar"
+      appearance="outline"
+      subscriptSizing="dynamic"
+    >
       <mat-label>Persona</mat-label>
       <mat-select
         [value]="personId()"

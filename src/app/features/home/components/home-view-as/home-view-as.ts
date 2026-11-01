@@ -46,7 +46,7 @@ interface ResourceRow {
   selector: 'gov-home-view-as',
   imports: [MatFormFieldModule, MatIconModule, MatSelectModule],
   template: `
-    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="view-as">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="view-as gi-filter-bar">
       <mat-label>Vedi la home come…</mat-label>
       <mat-icon matIconPrefix aria-hidden="true">visibility</mat-icon>
       <mat-select
@@ -97,9 +97,7 @@ interface ResourceRow {
     .view-as {
       width: min(22rem, 100%);
       --mat-form-field-outlined-container-shape: 1.5rem;
-      /* Alto come il pulsante Guida (2.5rem) */
-      --mat-form-field-container-height: 2.5rem;
-      --mat-form-field-container-vertical-padding: 0.5rem;
+      /* Alto come il pulsante Guida: gi-filter-bar */
       --mat-form-field-filled-with-label-container-padding-top: 0.5rem;
     }
 

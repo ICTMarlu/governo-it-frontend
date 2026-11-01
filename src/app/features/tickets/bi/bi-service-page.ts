@@ -60,7 +60,7 @@ interface Column {
             <span class="muted">· {{ name }}</span>
           }
         </h1>
-        <mat-form-field class="period" appearance="outline" subscriptSizing="dynamic">
+        <mat-form-field class="period gi-filter-bar" appearance="outline" subscriptSizing="dynamic">
           <mat-label>Periodo</mat-label>
           <mat-select
             [value]="period()"
@@ -436,8 +436,6 @@ interface Column {
 
     .period {
       width: 14rem;
-      --mat-form-field-container-height: 2.75rem;
-      --mat-form-field-container-vertical-padding: 0.625rem;
       --mat-form-field-outlined-container-shape: 1.5rem;
     }
 

@@ -46,6 +46,9 @@ html {
   --gi-info: light-dark(#2a78d6, #3987e5);
 
   --gi-control-h: 2.5rem; // bottoni, filtri e ricerche delle barre strumenti
+
+  // Interruttori a più scelte (Elenco/Kanban, Giornate/Ore…) alti quanto i bottoni, bordo compreso
+  --mat-button-toggle-height: calc(var(--gi-control-h) - 2px);
 }
 
 body {
@@ -83,11 +86,11 @@ a:not([class]),
   --mat-menu-item-icon-color: var(--gi-critical);
 }
 
-// Barra filtri: campi Material alti come bottoni e interruttori (--gi-control-h), su tutte le pagine
+// Barra filtri: campi Material alti come bottoni e interruttori (--gi-control-h), su tutte le pagine.
+// Va sul contenitore della barra o sul singolo campo filtro.
 .gi-filter-bar {
   --mat-form-field-container-height: var(--gi-control-h);
   --mat-form-field-container-vertical-padding: 0.5rem;
-  --mat-button-toggle-height: var(--gi-control-h);
 }
 
 // Trascinamento (colonne): l'anteprima vive fuori dai componenti
@@ -271,15 +274,16 @@ td:focus-within > .task-dot--empty {
   --mat-dialog-container-max-height: 100vh;
 }
 
-// Casella di ricerca compatta e dal vivo, alta come i filtri stile Excel (es. piano settimanale)
+// Casella di ricerca compatta e dal vivo, alta come bottoni e filtri (es. piano settimanale)
 .inline-search {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  height: 2rem;
+  box-sizing: border-box;
+  height: var(--gi-control-h);
   padding: 0 0.5rem;
   border: 1px solid var(--mat-sys-outline);
-  border-radius: 0.5rem;
+  border-radius: var(--gi-radius-md);
   background: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface-variant);
 
