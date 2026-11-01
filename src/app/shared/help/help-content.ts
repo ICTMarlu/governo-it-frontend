@@ -42,7 +42,7 @@ export const HOME_HELP: HelpContent = {
         'Solo i progetti di tipo Project: AMS, Continuous e Admin non contano. Admin e PM vedono tutto il portafoglio, gli altri i progetti di cui sono owner o su cui hanno giornate.',
         'Fotografia di oggi: quanti progetti ci sono in ogni stato.',
         'Stato e piano non tornano: in corso senza giornate nella settimana in corso e nelle 4 successive; da avviare o approvati che hanno già giornate; chiusi, abortiti o respinti con giornate ancora nel piano. Apri la riga per vedere i progetti.',
-        'In parallelo: per persona, i progetti In Progress con giornate nelle prossime 5 settimane; oltre la soglia (parametro PROJECT_WIP_LIMIT, di partenza 3) la barra diventa rossa.',
+        'In parallelo: per persona, i progetti In Progress, To Start o Approved con giornate nelle prossime 5 settimane; oltre la soglia (parametro PROJECT_WIP_LIMIT, di partenza 3) la barra diventa rossa.',
         'Movimento nel tempo: per settimana o mese, aperti (creati), avviati (passati a In Progress), chiusi (Completed), messi in Pending, abortiti o respinti, e gli in corso a fine periodo. Lo storico parte dal 27/10/2026 (parametro PROJECT_HISTORY_SINCE): i cambi di stato fatti prima non ci sono.',
       ],
     },
@@ -65,7 +65,7 @@ export const HOME_HELP: HelpContent = {
       title: 'Intuizioni e "il punto di oggi"',
       items: [
         'Segnali incrociati: backlog che cresce o cala, la persona il cui backlog cresce di più (2 o più a settimana), ticket nuovi senza risposta, scadenze vicine, persone oltre il 100%, persone senza giornate nel piano, la settimana più libera (sotto l’80%), task in ritardo, punti scaduti.',
-        'Piano dei progetti (solo progetti di tipo Project): il piano teorico è il piano settimanale stesso, quindi la percentuale è le giornate delle settimane già chiuse ÷ le giornate totali del progetto. Avvisi: piano esaurito ma progetto ancora aperto; soglie di controllo al 50, 75 e 90% ("verifica di essere in tempo"); oltre metà del piano ma ancora To Start o Approved; progetto chiuso con giornate ancora pianificate. Un avviso per tipo, con i progetti nominati; sotto 2 giornate totali non si avvisa.',
+        'Piano dei progetti (solo progetti di tipo Project): il piano teorico è il piano settimanale stesso, quindi la percentuale è le giornate delle settimane già chiuse ÷ le giornate totali del progetto. Avvisi: piano esaurito ma progetto ancora aperto; soglie di controllo al 50, 75 e 90% ("verifica di essere in tempo"); oltre metà del piano ma ancora Approved; To Start pianificato nella settimana corrente (lo stato va aggiornato; per i To Start non ci sono altre analisi); progetto chiuso con giornate ancora pianificate. Un avviso per tipo, con i progetti nominati; sotto 2 giornate totali non si avvisa.',
         'Prima gli urgenti, al massimo 2 per area (3 per i progetti) e 5 in tutto. "Il punto di oggi" riassume le prime tre.',
       ],
     },
