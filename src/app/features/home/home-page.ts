@@ -27,6 +27,7 @@ import {
   underPlannedPeople,
 } from './home.model';
 import { formatNumber } from '../../shared/util/number-format';
+import { FocusPersonService } from '../../core/focus/focus-person.service';
 
 /** Come funziona Governo IT: il giro dell'app in quattro passi (guida iniziale). */
 const STEPS = [
@@ -73,6 +74,7 @@ export class HomePage {
   protected readonly isAdmin = computed(() => this.currentUser()?.role === ROLES.admin);
   /** Nome di chi si sta guardando, dal menu (anche per un utente senza persona collegata). */
   protected readonly viewAsName = signal<string | null>(null);
+  private readonly focus = inject(FocusPersonService);
 
   protected readonly help = HOME_HELP;
   protected readonly currentUser = inject(AuthService).currentUser;
@@ -130,6 +132,25 @@ export class HomePage {
   });
 
   constructor() {
+    // Persona in vista scelta in un'altra pagina: l'Admin ritrova qui la home di quella persona.
+    // Una volta sola, a parametri dell'indirizzo già letti (un ?come= esplicito vince).
+    let synced = false;
+    effect(() => {
+      const come = this.come();
+      if (synced) {
+        return;
+      }
+      synced = true;
+      untracked(() => {
+        const focused = this.focus.resourceId();
+        if (this.isAdmin() && !come && focused !== null) {
+          void this.router.navigate([], {
+            queryParams: { come: `r${focused}` },
+            queryParamsHandling: 'merge',
+          });
+        }
+      });
+    });
     // A ogni cambio di "vedi come" si ricarica la home di chi si guarda
     effect(() => {
       const params = this.viewParams();
@@ -156,6 +177,12 @@ export class HomePage {
   /** Scelta dal menu: la porta nell'indirizzo (resta ricaricando la pagina). */
   protected chooseViewAs(option: ViewAsOption | null): void {
     this.viewAsName.set(option?.name ?? null);
+    // Una persona del team (r…) diventa quella in vista nelle altre pagine; la home generale = tutti
+    if (!option) {
+      this.focus.set(null);
+    } else if (option.key.startsWith('r')) {
+      this.focus.set(Number(option.key.slice(1)));
+    }
     void this.router.navigate([], {
       queryParams: { come: option?.key ?? null },
       queryParamsHandling: 'merge',

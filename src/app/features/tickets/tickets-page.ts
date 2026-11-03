@@ -10,11 +10,9 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
 
-import { AuthService } from '../../core/auth/auth.service';
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { SavedViews } from '../../shared/views/saved-views';
 import { errorMessage } from '../../shared/crud/crud-api.service';
-import { ROLES } from '../../shared/crud/crud.model';
 import { HelpButton } from '../../shared/help/help-button';
 import { ALERTS_HELP, PERSON_LOAD_HELP, TICKETS_HELP } from '../../shared/help/help-content';
 import { FlowChart } from './components/flow-chart/flow-chart';
@@ -44,6 +42,7 @@ import {
   sortPosition,
 } from '../../shared/util/multi-sort';
 import { formatNumber } from '../../shared/util/number-format';
+import { FocusPersonService } from '../../core/focus/focus-person.service';
 
 /** Colonne ordinabili dell'elenco dei ticket. */
 const LIST_COLUMNS: readonly {
@@ -150,11 +149,12 @@ export class TicketsPage {
     ),
   );
   /** Persona scelta in alto: indicatori, grafici e allerte riguardano solo lei (null = tutti). */
-  private readonly user = inject(AuthService).currentUser;
-  /** Chi non è Admin parte dai propri ticket (se ha una persona collegata); l'Admin da tutti. */
-  protected readonly personId = signal<number | null>(
-    this.user()?.role !== ROLES.admin ? (this.user()?.resourceId ?? null) : null,
-  );
+  /**
+   * Persona in vista condivisa con le altre pagine: Admin e PM la scelgono (null = tutti), gli altri
+   * vedono sempre i propri ticket.
+   */
+  protected readonly focus = inject(FocusPersonService);
+  protected readonly personId = signal<number | null>(this.focus.resourceId());
   protected readonly loadError = signal<string | null>(null);
   protected readonly adviceView = signal<AdviceView>('all');
   protected readonly filter = signal<TicketFilter | null>(null);
@@ -333,6 +333,7 @@ export class TicketsPage {
 
   protected selectResource(value: number | null): void {
     this.personId.set(value);
+    this.focus.set(value);
     this.load();
   }
 

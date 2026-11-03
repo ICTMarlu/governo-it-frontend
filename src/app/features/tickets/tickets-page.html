@@ -4,14 +4,16 @@
   [help]="help"
   [compact]="true"
 >
-  @if (dashboard(); as data) {
+  @if (dashboard() && focus.canChoose()) {
     <mat-form-field
       class="person-filter gi-filter-bar"
       appearance="outline"
       subscriptSizing="dynamic"
+      floatLabel="always"
     >
       <mat-label>Persona</mat-label>
       <mat-select
+        placeholder="Tutti"
         [value]="personId()"
         (valueChange)="selectResource($event)"
         aria-label="Mostra la pagina per una sola persona"

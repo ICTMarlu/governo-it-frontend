@@ -467,6 +467,58 @@ td:focus-within > .task-dot--empty {
   gap: 1rem;
 }
 
+// Progetti per stato ("Fotografia di oggi" in Home, "Per stato" nella Panoramica Progetti): un
+// riquadro per stato con numero e nome, cliccabile; il tono viene da statusTone() (shared/util).
+.gi-status-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: var(--gi-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gi-status-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  box-sizing: border-box;
+  padding: var(--gi-space-2);
+  border-radius: var(--gi-radius-md);
+  background: var(--mat-sys-surface-container);
+  color: inherit;
+  text-align: center;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: -2px;
+  }
+
+  &__value {
+    font: var(--mat-sys-headline-small);
+  }
+
+  &__label {
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-label-medium);
+  }
+
+  &--accent {
+    background: light-dark(#dceafb, #1d3147);
+  }
+
+  &--warn {
+    background: light-dark(#fdf1d3, #4a3b12);
+  }
+
+  &--good {
+    background: light-dark(#dcefe0, #1e3a25);
+  }
+}
+
 // Riquadri dei numeri (KPI): un solo aspetto in tutta l'app (Home, Consuntivo, Ticket e pagine BI,
 // Telefonia, Tecnologie). Dall'alto: area (facoltativa, con icona), numero, etichetta, note.
 // Lo stato si vede dalla barra colorata a sinistra; il numero diventa rosso solo se critico.

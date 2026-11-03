@@ -57,7 +57,7 @@ export const HOME_HELP: HelpContent = {
       title: 'Numeri flash',
       items: [
         'Ticket AMS: aperti oggi (i ticket in Pending non contano: sono in pausa, né aperti né chiusi) e saldo a settimana = (entrati − chiusi) degli ultimi 30 giorni, a settimana, come nella pagina Persone. Positivo: il backlog cresce; diventa un’allerta solo oltre il 2% degli aperti.',
-        'Piano da completare: guarda la settimana in corso e le 2 successive e segnala chi ha meno dell’orario standard pianificato: sotto il 90% nella settimana in corso (parametro PLAN_CURRENT_MIN_PCT), sotto il 95% nelle due successive (PLAN_MIN_SATURATION_PCT). Ferie e festività contano come pianificate, le ore extra non alzano la soglia. Nella tua home vedi le tue settimane sotto soglia; da amministratore le persone da completare, con i nomi. Se è tutto sopra soglia il box dice "Completo". Sulla settimana in corso c’è anche l’avviso di sovraccarico, solo sopra il 110% della capacità (PLAN_CURRENT_MAX_PCT).',
+        'Piano da completare: guarda la settimana in corso e le 2 successive e segnala chi ha meno dell’orario standard pianificato: sotto il 95% in tutte e tre le settimane (parametro PLAN_MIN_SATURATION_PCT). Ferie e festività contano come pianificate, le ore extra non alzano la soglia. Nella tua home vedi le tue settimane sotto soglia; da amministratore le persone da completare, con i nomi. Se è tutto sopra soglia il box dice "Completo". Sulla settimana in corso c’è anche l’avviso di sovraccarico, solo sopra il 110% della capacità (PLAN_CURRENT_MAX_PCT).',
         'Non presi in carico (nella tua home "Da prendere in carico"): ticket aperti assegnati, o riassegnati, a una persona che da quel momento non ha avuto nessun movimento da oltre 8 ore lavorative (parametro TICKET_STALLED_HOURS). Un movimento è una modifica o un commento di una persona: le automazioni di Jira non contano. Se il ticket viene riassegnato il conteggio riparte dall’ultima assegnazione. Restano fuori i ticket in Pending e in attesa del cliente. Non sono i ticket "fermi" della pagina Operativa (quelli sono senza movimenti da più di 8 giorni). Il clic apre l’elenco.',
         'Orario di lavoro: le "ore lavorative" sono lunedì-venerdì dalle 8:30 alle 17, ora italiana, meno un’ora di pausa pranzo (13-14): 7,5 ore al giorno. Le attese lunghe sono dette in giorni lavorativi.',
         'Ticket da guardare oggi: scaduti, in scadenza e nuovi senza risposta, ognuno con il motivo sotto il titolo.',
@@ -821,6 +821,42 @@ export const PEOPLE_TREND_HELP: HelpContent = {
         'Il grafico non cambia con il periodo della tabella. Clic sul nome: entrati e chiusi per settimana nelle ultime 8 settimane, con la linea degli aperti a fine settimana. L\u2019ultima barra è la settimana in corso: è parziale e si riconosce dall\u2019asterisco e dal colore più chiaro.',
         'L’interruttore dei Pending decide se contare negli aperti i ticket che oggi sono in Pending.',
         '“Considera chiusi i ticket in attesa del cliente”: acceso, i ticket in attesa di risposta del cliente contano come chiusi dal giorno in cui sono entrati in quello stato: sommati nella colonna Chiusi, nella barra arancione dei risolti e tolti dagli aperti. Spento (di partenza) restano aperti. Vale per tabella, grafico e liste che si aprono dai numeri.',
+      ],
+    },
+  ],
+};
+
+export const BOUNCES_HELP: HelpContent = {
+  title: 'Rimbalzi: come si leggono',
+  intro:
+    'Quante volte un ticket torna indietro dopo essere stato chiuso o messo in attesa del cliente. Molti rimbalzi per la stessa persona dicono che chiude in fretta, prima di aver davvero risolto: è lì che serve un confronto su come lavorare.',
+  sections: [
+    {
+      title: 'Cosa si conta',
+      items: [
+        'Riapertura: il ticket passa da uno stato completato (Risolta, Chiusa, Done, Declined) a uno non completato (Riaperta, Aperto, Work in progress…). Di solito è il cliente che risponde e l’automazione di Jira lo riapre. Da Risolta a Chiusa non è una riapertura.',
+        'Cliente ha risposto (rientro dall’attesa): il ticket esce da “In attesa di risposta dal cliente” e torna in lavorazione (Riaperta, Aperto, Work in progress). Se esce verso Chiusa, Risolta o Pending non è un rientro.',
+        'Ogni passaggio è attribuito a chi aveva il ticket in quel momento, letto dalla cronologia: per una riapertura, chi lo aveva alla chiusura; per un rientro, chi lo aveva quando è andato in attesa. Non conta l’assegnatario di oggi.',
+        'Un ticket che rimbalza più volte conta ogni volta (A→B→A→B = due riaperture).',
+      ],
+    },
+    {
+      title: 'Tabella per persona o richiedente',
+      items: [
+        'Attenzione: i numeri di questa pagina possono differire da quelli della Panoramica e delle altre pagine, ed è voluto. Qui ogni passaggio è attribuito a chi aveva il ticket in quel momento (non all’assegnatario di oggi) e anno e mese sono quelli del passaggio (non della creazione del ticket): così la responsabilità di una chiusura troppo frettolosa è puntuale. Si contano ticket distinti, non passaggi: un ticket chiuso, riaperto e richiuso è un ticket chiuso solo. Dopo la chiusura: Ticket chiusi (portati a Risolta o Chiusa nel periodo), Ticket rimbalzati (tra quelli, i ticket tornati aperti almeno una volta: il segnale da guardare), % rimbalzati (rimbalzati ÷ chiusi) e Riaperture (volte), cioè quante volte in tutto sono tornati aperti: un ticket riaperto tre volte ne vale tre. Il box “riaperti 2+ volte” in alto conta i ticket che hanno rimbalzato almeno due volte.',
+        'Attesa del cliente: Ticket messi in attesa (in “In attesa di risposta dal cliente”), Cliente ha risposto (tra quelli, i ticket tornati in lavorazione perché il cliente ha risposto) e % risposte. Qui rispondere è il flusso normale, non un errore: gli altri sono stati chiusi, messi in Pending o sono ancora in attesa.',
+        'Interruttore Persona / Richiedente sopra la tabella: lo stesso conteggio raggruppato per chi ha aperto la richiesta (il richiedente in Jira) invece che per chi aveva il ticket. Mostra quali richiedenti si trovano più spesso nel ping pong: ticket chiusi che riaprono, risposte tardive o richieste poco chiare. Nell’elenco dei ticket più riaperti in fondo c’è anche la colonna Richiedente.',
+        'Ordine di partenza: da chi ha più ticket rimbalzati. Clic sull’intestazione per ordinare, sul nome per vedere solo quella persona nel grafico. Vale anche il filtro Assegnatario.',
+      ],
+    },
+    {
+      title: 'Filtri e grafico',
+      items: [
+        'Progetto Marlù e Assegnatario filtrano per area del ticket e per persona che lo aveva. Anno e Mese contano sulla data del passaggio (quando è stato chiuso, riaperto o rientrato), non sulla data di creazione del ticket.',
+        'Il grafico mostra le ultime 12 settimane, indipendentemente da anno e mese. L’ultima barra è la settimana in corso: è parziale.',
+        'Il box “chiusi senza mai passare dall’attesa del cliente” conta i ticket chiusi nel periodo (con i filtri scelti) che in tutta la loro storia non sono mai stati in “In attesa di risposta dal cliente”, e la quota sui ticket chiusi: serve a vedere quante richieste si chiudono senza aver mai chiesto nulla al cliente. Il box accanto, “chiusi dopo almeno un’attesa del cliente”, è il complemento: gli stessi ticket chiusi che invece sono passati almeno una volta dall’attesa prima di essere chiusi, con la quota (le due quote sommano 100). L’attesa si guarda sull’intera storia del ticket, anche prima del periodo o con un’altra persona.',
+        'In fondo, i ticket riaperti più volte dopo la chiusura (dal più riaperto), con codice, titolo, chi li aveva e il richiedente, per andare a vedere cosa è successo. Le risposte del cliente in attesa non contano qui.',
+        'La cronologia parte da quando i ticket sono stati sincronizzati con la cronologia completa: i passaggi precedenti ad allora ci sono solo se Jira li conserva.',
       ],
     },
   ],

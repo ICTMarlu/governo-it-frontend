@@ -20,17 +20,17 @@
 
     <!-- 1. Fotografia di oggi -->
     <h3 class="block__title">Fotografia di oggi</h3>
-    <ul class="statuses" aria-label="Progetti per stato">
+    <ul class="gi-status-tiles" aria-label="Progetti per stato">
       @for (status of p.statuses; track status.statusId) {
-        <li class="status status--{{ highlight[status.code] ?? 'none' }}">
+        <li>
           <a
-            class="status__link"
-            routerLink="/projects"
+            class="gi-status-tile gi-status-tile--{{ tone(status.code) }}"
+            routerLink="/projects/elenco"
             [queryParams]="{ ids: status.projectIds.join(',') || '0' }"
             [title]="'Apri nei Progetti quelli in stato ' + status.label"
           >
-            <span class="status__value">{{ status.count }}</span>
-            <span class="status__label">{{ status.label }}</span>
+            <span class="gi-status-tile__value">{{ status.count }}</span>
+            <span class="gi-status-tile__label">{{ status.label }}</span>
           </a>
         </li>
       }
@@ -58,7 +58,7 @@
                     <mat-icon aria-hidden="true">{{ check.icon }}</mat-icon>
                     <a
                       class="count-link"
-                      routerLink="/projects"
+                      routerLink="/projects/elenco"
                       [queryParams]="{ ids: ids(check.list) }"
                       title="Apri questi progetti nell'elenco Progetti"
                       >{{ check.list.length }}</a
@@ -109,7 +109,7 @@
                     <span class="parallel__count" [class.parallel__count--over]="over">
                       <a
                         class="count-link"
-                        routerLink="/projects"
+                        routerLink="/projects/elenco"
                         [queryParams]="{ ids: ids(person.projects) }"
                         [title]="'Apri nei Progetti quelli di ' + person.name"
                         >{{ person.count }}</a

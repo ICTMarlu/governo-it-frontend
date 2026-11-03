@@ -167,7 +167,9 @@
 
 .table-wrapper {
   display: none;
-  overflow-x: auto;
+  // L'altezza la limita govFitViewport: la barra orizzontale resta in fondo allo schermo e con molte righe
+  // si scorre dentro la tabella, con l'intestazione ferma
+  overflow: auto;
 }
 
 .table {
@@ -186,6 +188,14 @@
     font: var(--mat-sys-title-small);
     color: var(--mat-sys-on-surface-variant);
     white-space: nowrap;
+  }
+
+  // Intestazione ferma mentre si scorrono le righe dentro la tabella
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--mat-sys-background);
   }
 
   .inactive td {

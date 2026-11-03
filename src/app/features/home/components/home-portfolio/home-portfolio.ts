@@ -16,18 +16,13 @@ import {
   movementPoints,
   movementTotals,
 } from '../../portfolio.model';
+import { statusTone } from '../../../../shared/util/status-tone';
 
 /** Misure del grafico del movimento (SVG in unità del viewBox). */
 const CHART = { width: 640, height: 180, left: 28, bottom: 22, top: 8 } as const;
 const LINE = { height: 120, top: 28, bottom: 24 } as const;
 
 /** Stati messi in evidenza nella fotografia (colore + etichetta, mai solo colore). */
-const HIGHLIGHT: Readonly<Record<string, string>> = {
-  IN_PROGRESS: 'accent',
-  PENDING: 'warn',
-  COMPLETED: 'good',
-};
-
 /**
  * Dashboard dei progetti di tipo Project nella home (D-34): fotografia per stato, coerenza tra
  * stato e piano, progetti in parallelo per persona e movimento nel tempo dallo storico degli stati.
@@ -53,7 +48,7 @@ export class HomePortfolio {
   protected readonly series = MOVEMENT_SERIES;
   protected readonly chart = CHART;
   protected readonly line = LINE;
-  protected readonly highlight = HIGHLIGHT;
+  protected readonly tone = statusTone;
 
   protected readonly data = signal<Portfolio | null>(null);
   protected readonly error = signal<string | null>(null);
@@ -92,7 +87,7 @@ export class HomePortfolio {
       {
         icon: 'event_busy',
         tone: 'bad',
-        label: 'chiusi, abortiti o respinti con giornate ancora nel piano',
+        label: 'in Pending con giornate ancora nel piano (i chiusi non contano)',
         list: coherence?.closedWithPlan ?? [],
       },
     ];

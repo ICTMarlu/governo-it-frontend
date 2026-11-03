@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 
 import { columnId } from '../column-layout';
+import { FitViewport } from './fit-viewport';
 import { ColumnConfig, EntityRow, readPath } from '../crud.model';
 import { RECORD_TASKS, RecordTaskCount, TaskSourceConfig } from '../record-tasks';
 import { numberFormat } from '../../util/number-format';
@@ -39,6 +40,7 @@ export interface SortState {
 @Component({
   selector: 'gov-entity-table',
   imports: [
+    FitViewport,
     RouterLink,
     NgTemplateOutlet,
     MatButtonModule,

@@ -44,6 +44,7 @@ import {
   signedHours,
 } from './actuals.model';
 import { ActualsService } from './actuals.service';
+import { FocusPersonService } from '../../../core/focus/focus-person.service';
 
 interface Option {
   readonly id: number;
@@ -95,8 +96,14 @@ export class ActualsPage {
   protected readonly isAdmin = computed(() => this.currentUser()?.role === ROLES.admin);
   protected readonly today = isoDate(new Date());
 
-  /** Persona scelta dall'Admin; null = la propria. */
-  protected readonly resourceId = signal<number | null>(null);
+  /**
+   * Persona scelta dall'Admin; null = la propria. Parte dalla persona in vista condivisa con le altre
+   * pagine (con "Tutti" scelto altrove, qui si parte dalla propria).
+   */
+  private readonly focus = inject(FocusPersonService);
+  protected readonly resourceId = signal<number | null>(
+    this.currentUser()?.role === ROLES.admin ? this.focus.resourceId() : null,
+  );
   protected readonly weekStart = signal(mondayOf(new Date()));
   protected readonly week = signal<ActualWeek | null>(null);
   protected readonly error = signal<string | null>(null);
@@ -263,6 +270,10 @@ export class ActualsPage {
 
   protected chooseResource(id: number | null): void {
     this.resourceId.set(id);
+    // Una persona scelta qui diventa quella in vista anche nelle altre pagine
+    if (id !== null) {
+      this.focus.set(id);
+    }
   }
 
   protected weekRange(week: ActualWeek): string {

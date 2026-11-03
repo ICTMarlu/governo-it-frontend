@@ -110,7 +110,7 @@
   </section>
 
   <!-- Totali della settimana -->
-  <ul class="gi-kpis" aria-label="Totali della settimana">
+  <ul class="gi-kpis totals" aria-label="Totali della settimana">
     <li class="gi-kpi">
       <span class="gi-kpi__value">{{ hoursText(w.totals.plannedHours, false) }} h</span>
       <span class="gi-kpi__label">pianificate</span>
@@ -168,12 +168,12 @@
           }
           {{ hoursText(d.loggedHours)
           }}{{ d.theoreticalHours > 0 ? ' / ' + hoursText(d.theoreticalHours, false) : '' }}
+          @if (d.holidayName) {
+            <span class="day__tag">· festività</span>
+          } @else if (d.future) {
+            <span class="day__tag">· futuro</span>
+          }
         </span>
-        @if (d.holidayName) {
-          <span class="day__tag">festività</span>
-        } @else if (d.future) {
-          <span class="day__tag">futuro</span>
-        }
       </button>
     }
   </div>

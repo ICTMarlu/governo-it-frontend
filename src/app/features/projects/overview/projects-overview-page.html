@@ -1,0 +1,472 @@
+<gov-page-header
+  title="Progetti"
+  subtitle="Il portafoglio in un colpo d'occhio: stato, priorità, cosa è pianificato nelle prossime 4 settimane e cosa resta da pianificare."
+  [help]="help"
+  [compact]="true"
+/>
+
+<!-- Filtri su una riga: persona, tipi di progetto, orizzonte -->
+<div class="toolbar gi-filter-bar">
+  <!-- Persona in vista: Admin e PM la scelgono (resta cambiando pagina), gli altri vedono i propri -->
+  @if (focus.canChoose()) {
+    <mat-form-field
+      appearance="outline"
+      subscriptSizing="dynamic"
+      floatLabel="always"
+      class="person"
+    >
+      <mat-label>Persona</mat-label>
+      <mat-select
+        placeholder="Tutti"
+        [value]="focus.resourceId()"
+        (valueChange)="focus.set($event)"
+      >
+        <mat-option [value]="null">Tutti</mat-option>
+        @for (person of people(); track person.id) {
+          <mat-option [value]="person.id">{{ person.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  } @else {
+    <span class="toolbar__fixed">
+      <mat-icon aria-hidden="true">person</mat-icon>
+      I tuoi progetti
+    </span>
+  }
+
+  @if (typeOptions().length > 1) {
+    <mat-button-toggle-group
+      multiple
+      aria-label="Tipi di progetto"
+      hideMultipleSelectionIndicator
+      [value]="types()"
+      (change)="setTypes($event.value)"
+    >
+      @for (type of typeOptions(); track type.code) {
+        <mat-button-toggle [value]="type.code">{{ type.label }}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+  }
+
+  @if (data(); as d) {
+    <span class="toolbar__note">
+      Pianificato = giornate nel piano da {{ d.weekStart.slice(8, 10) }}/{{
+        d.weekStart.slice(5, 7)
+      }}
+      per {{ d.aheadWeeks }} settimane
+    </span>
+  }
+</div>
+
+@if (error(); as message) {
+  <p class="state state--error" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    Non riesco a leggere i progetti: {{ message }}
+    <button type="button" class="state__retry" (click)="load()">Riprova</button>
+  </p>
+} @else if (!data()) {
+  <p class="state" role="status">
+    <mat-progress-spinner diameter="20" mode="indeterminate" aria-hidden="true" />
+    Carico la panoramica…
+  </p>
+} @else {
+  @let s = sum();
+
+  <!-- Numeri in evidenza: ognuno apre l'elenco con solo quei progetti -->
+  <ul class="gi-kpis kpis" aria-label="Numeri dei progetti">
+    <li>
+      <a class="gi-kpi" routerLink="/projects/elenco" [queryParams]="listParams(openIds())">
+        <span class="gi-kpi__value">{{ s.open }}</span>
+        <span class="gi-kpi__label">aperti</span>
+        <span class="gi-kpi__meta">di cui {{ s.inProgress }} In Progress</span>
+      </a>
+    </li>
+    <li>
+      <a
+        class="gi-kpi gi-kpi--ok"
+        routerLink="/projects/elenco"
+        [queryParams]="listParams(plannedIds())"
+      >
+        <span class="gi-kpi__value">{{ s.planned }}</span>
+        <span class="gi-kpi__label">pianificati</span>
+        <span class="gi-kpi__meta">giornate nelle prossime 4 settimane</span>
+      </a>
+    </li>
+    <li>
+      <a class="gi-kpi gi-kpi--info" routerLink="/plan">
+        <span class="gi-kpi__value">{{ days(s.daysAhead) }} gg</span>
+        <span class="gi-kpi__label">giornate in arrivo</span>
+        <span class="gi-kpi__meta">
+          prossime 4 settimane
+          @if (saturation(); as sat) {
+            · <strong>{{ sat.pct }}%</strong> della capacità
+            {{ focus.resourceId() === null ? 'del team' : 'della persona' }} ({{
+              days(sat.capacity)
+            }}
+            gg)
+          }
+        </span>
+      </a>
+    </li>
+    <li>
+      <a
+        class="gi-kpi"
+        [class.gi-kpi--critical]="s.toPlanTop > 0"
+        [class.gi-kpi--warning]="s.toPlanTop === 0 && s.toPlan > 0"
+        routerLink="/projects/elenco"
+        [queryParams]="listParams(toPlanIds())"
+      >
+        <span class="gi-kpi__value">{{ s.toPlan }}</span>
+        <span class="gi-kpi__label">da pianificare</span>
+        <span class="gi-kpi__meta" [class.gi-kpi__meta--bad]="s.toPlanTop > 0">
+          {{
+            s.toPlanTop === 0 ? 'nessuno in priorità 1' : 'di cui ' + s.toPlanTop + ' in priorità 1'
+          }}
+        </span>
+      </a>
+    </li>
+    <li>
+      <a
+        class="gi-kpi"
+        [class.gi-kpi--warning]="s.mismatches > 0"
+        routerLink="/projects/elenco"
+        [queryParams]="listParams(wrongIds())"
+      >
+        <span class="gi-kpi__value">{{ s.mismatches }}</span>
+        <span class="gi-kpi__label">stato e piano non tornano</span>
+        <span class="gi-kpi__meta">{{ s.mismatches === 0 ? 'tutto coerente' : wrongParts() }}</span>
+      </a>
+    </li>
+    <li>
+      <a class="gi-kpi" routerLink="/projects/elenco" [queryParams]="listParams(pendingIds())">
+        <span class="gi-kpi__value">{{ s.pending }}</span>
+        <span class="gi-kpi__label">in Pending</span>
+        <span class="gi-kpi__meta">in attesa: non si pianificano</span>
+      </a>
+    </li>
+    <li>
+      <a class="gi-kpi" routerLink="/projects/elenco" [queryParams]="listParams(completedIds())">
+        <span class="gi-kpi__value">{{ closures().items.length }}</span>
+        <span class="gi-kpi__label">completati</span>
+        <span class="gi-kpi__meta">
+          @if (closures().items[0]?.closedOn; as last) {
+            {{ closures().last30 }} negli ultimi 30 giorni · ultimo il {{ date(last) }}
+          } @else {
+            chiusi: solo statistica, nessun avviso
+          }
+        </span>
+      </a>
+    </li>
+  </ul>
+
+  <!-- Righe di riquadri affiancati e alti uguali: Dove va il lavoro | Priorità e piano, Per stato a
+       tutta riga, Ultimi completati | Stato e piano non tornano, Da pianificare a tutta riga.
+       Su smartphone una colonna nell'ordine logico (classi order-*). -->
+  <div class="grid">
+    <!-- Dove va il lavoro: giornate nelle prossime settimane -->
+    <section class="card order-3" aria-labelledby="work-title">
+      <div class="card__head">
+        <h2 id="work-title" class="card__title">
+          <mat-icon aria-hidden="true">engineering</mat-icon> Dove va il lavoro
+        </h2>
+        <mat-button-toggle-group
+          aria-label="Raggruppa le giornate"
+          hideSingleSelectionIndicator
+          [value]="workBy()"
+          (change)="workBy.set($event.value)"
+        >
+          <mat-button-toggle value="project">Progetti</mat-button-toggle>
+          <mat-button-toggle value="system">Sistemi</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+      @if (work().length === 0) {
+        <p class="muted">Nessuna giornata nel piano per le prossime 4 settimane.</p>
+      } @else {
+        <gov-hbar-chart
+          [title]="
+            workBy() === 'project'
+              ? 'Giornate nelle prossime 4 settimane, i 10 progetti più carichi'
+              : 'Giornate nelle prossime 4 settimane, per sistema'
+          "
+          [items]="work()"
+        />
+      }
+    </section>
+
+    <!-- Priorità × piano: per livello, pianificati e scoperti -->
+    <section class="card order-2" aria-labelledby="priority-title">
+      <h2 id="priority-title" class="card__title">
+        <mat-icon aria-hidden="true">priority_high</mat-icon> Priorità e piano
+      </h2>
+      <!-- Nota e legenda su una riga; sotto ogni barra lo stato dei da pianificare -->
+      <p class="card__hint matrix__legend">
+        Aperti senza Pending, per priorità IT:
+        <span class="matrix__key matrix__key--planned" aria-hidden="true"></span> pianificati
+        <span class="matrix__key matrix__key--missing" aria-hidden="true"></span> da pianificare ·
+        In Progress da pianificare in rosso
+      </p>
+      @if (matrix().length === 0) {
+        <p class="muted">Nessun progetto aperto con questi filtri.</p>
+      } @else {
+        <ul class="matrix">
+          @for (row of matrix(); track row.label) {
+            <li class="matrix__row">
+              <span class="matrix__label">{{ row.label }}</span>
+              <span
+                class="matrix__bar"
+                [style.width.%]="percent(row.planned.length + row.notPlanned.length, matrixMax())"
+              >
+                @if (row.planned.length > 0) {
+                  <a
+                    class="matrix__part matrix__part--planned"
+                    tabindex="-1"
+                    aria-hidden="true"
+                    [style.flex-grow]="row.planned.length"
+                    [title]="row.planned.length + ' pianificati'"
+                    routerLink="/projects/elenco"
+                    [queryParams]="listParams(row.planned)"
+                  ></a>
+                }
+                @if (row.notPlanned.length > 0) {
+                  <a
+                    class="matrix__part matrix__part--missing"
+                    tabindex="-1"
+                    aria-hidden="true"
+                    [class.matrix__part--top]="row.level === 1"
+                    [style.flex-grow]="row.notPlanned.length"
+                    [title]="row.notPlanned.length + ' da pianificare'"
+                    routerLink="/projects/elenco"
+                    [queryParams]="listParams(row.notPlanned)"
+                  ></a>
+                }
+              </span>
+              <span class="matrix__numbers">
+                <a routerLink="/projects/elenco" [queryParams]="listParams(row.planned)"
+                  >{{ row.planned.length }} pianificati</a
+                >
+                ·
+                <a
+                  routerLink="/projects/elenco"
+                  [queryParams]="listParams(row.notPlanned)"
+                  [class.matrix__missing]="row.notPlanned.length > 0"
+                  [class.matrix__missing--top]="row.level === 1 && row.notPlanned.length > 0"
+                  >{{ row.notPlanned.length }} da pianificare</a
+                >
+                <!-- In che stato sono i da pianificare: In Progress senza giornate è il caso da guardare -->
+                @for (slice of row.notPlannedByStatus; track slice.status.id; let first = $first) {
+                  {{ first ? ':' : '' }}
+                  <a
+                    class="state-chip"
+                    [class.state-chip--alert]="slice.status.code === 'IN_PROGRESS'"
+                    routerLink="/projects/elenco"
+                    [queryParams]="listParams(slice.ids)"
+                    [title]="slice.count + ' da pianificare in stato ' + slice.status.label"
+                  >
+                    <span
+                      class="state-chip__dot"
+                      [style.background]="statusColor(slice.status)"
+                      aria-hidden="true"
+                    ></span>
+                    {{ slice.status.label }} {{ slice.count }}
+                  </a>
+                }
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- Per stato a tutta riga: un riquadro per stato (come la "Fotografia di oggi" in Home) -->
+    <section class="card card--wide order-1" aria-labelledby="status-title">
+      <h2 id="status-title" class="card__title">
+        <mat-icon aria-hidden="true">donut_small</mat-icon> Per stato
+        <span class="card__count">{{ statusTotal() }}</span>
+      </h2>
+      @if (statusTotal() === 0) {
+        <p class="muted">Nessun progetto con questi filtri.</p>
+      } @else {
+        <ul class="gi-status-tiles" aria-label="Progetti per stato">
+          @for (slice of statuses(); track slice.status.id) {
+            <li>
+              <a
+                class="gi-status-tile gi-status-tile--{{ tone(slice.status.code) }}"
+                routerLink="/projects/elenco"
+                [queryParams]="listParams(slice.ids)"
+                [title]="statusTitle(slice)"
+              >
+                <span class="gi-status-tile__value">{{ slice.count }}</span>
+                <span class="gi-status-tile__label">{{ slice.status.label }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- Chiusure: i completati come statistica, con la data; non generano avvisi -->
+    @if (closures().items.length > 0) {
+      <section class="card order-5" aria-labelledby="closures-title">
+        <h2 id="closures-title" class="card__title">
+          <mat-icon aria-hidden="true">task_alt</mat-icon> Ultimi completati
+          <span class="card__count">{{ closures().items.length }}</span>
+        </h2>
+        <p class="card__hint">
+          Contano solo come chiusure: nessun avviso. Data di chiusura nota per
+          {{ closures().withDate }} su {{ closures().items.length }} (lo storico dei cambi di stato
+          parte dal 27/10/2026).
+        </p>
+        <ul class="closures">
+          @for (p of closuresShown(); track p.id) {
+            <li class="closures__item">
+              <a class="link" [routerLink]="['/projects', p.id]">{{ projectLabel(p) }}</a>
+              <span class="closures__date" [class.muted]="!p.closedOn">{{
+                p.closedOn ? date(p.closedOn) : 'data non registrata'
+              }}</span>
+            </li>
+          }
+        </ul>
+        @if (closures().items.length > closuresShown().length) {
+          <a class="more" routerLink="/projects/elenco" [queryParams]="listParams(completedIds())">
+            Vedi tutti i {{ closures().items.length }} completati nell'elenco
+            <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+          </a>
+        }
+      </section>
+    }
+
+    <!-- Stato e piano che non tornano -->
+    @if (wrongCount() > 0) {
+      @let w = wrong();
+      <section class="card order-4" aria-labelledby="wrong-title">
+        <h2 id="wrong-title" class="card__title">
+          <mat-icon aria-hidden="true">sync_problem</mat-icon> Stato e piano non tornano
+          <span class="card__count">{{ wrongCount() }}</span>
+        </h2>
+        <div class="wrong">
+          @if (w.inProgressWithoutPlan.length > 0) {
+            <div class="wrong__group">
+              <h3 class="wrong__title">In Progress ma senza giornate nelle prossime 4 settimane</h3>
+              <ul class="wrong__list">
+                @for (p of w.inProgressWithoutPlan; track p.id) {
+                  <li>
+                    <a class="link" [routerLink]="['/projects', p.id]">{{ projectLabel(p) }}</a>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+          @if (w.startedNotInProgress.length > 0) {
+            <div class="wrong__group">
+              <h3 class="wrong__title">Da avviare ma già pianificati questa settimana</h3>
+              <ul class="wrong__list">
+                @for (p of w.startedNotInProgress; track p.id) {
+                  <li>
+                    <a class="link" [routerLink]="['/projects', p.id]">{{ projectLabel(p) }}</a>
+                    <span class="muted"> · {{ p.statusLabel }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+          @if (w.pendingWithPlan.length > 0) {
+            <div class="wrong__group">
+              <h3 class="wrong__title">In Pending ma con giornate ancora nel piano</h3>
+              <ul class="wrong__list">
+                @for (p of w.pendingWithPlan; track p.id) {
+                  <li>
+                    <a class="link" [routerLink]="['/projects', p.id]">{{ projectLabel(p) }}</a>
+                    <span class="muted"> · {{ p.statusLabel }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Da pianificare a tutta larghezza: attivi senza giornate nelle prossime 4 settimane, ogni
+         informazione in colonna; di partenza dalla priorità più importante -->
+    <section class="card card--wide order-6" aria-labelledby="toplan-title">
+      <h2 id="toplan-title" class="card__title">
+        <mat-icon aria-hidden="true">event_busy</mat-icon> Da pianificare
+        <span class="card__count">{{ toPlan().length }}</span>
+      </h2>
+      <p class="card__hint">
+        Progetti aperti (né chiusi né in Pending) senza giornate nel piano nelle prossime 4
+        settimane.
+      </p>
+      @if (toPlan().length === 0) {
+        <p class="muted">Tutti i progetti aperti hanno giornate nelle prossime 4 settimane.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                @for (column of toPlanColumns; track column.key) {
+                  <th
+                    scope="col"
+                    [attr.aria-sort]="ariaSort(column.key)"
+                    [title]="column.hint ?? ''"
+                  >
+                    <button type="button" class="sort-head" (click)="sortToPlanBy(column.key)">
+                      {{ column.label }}
+                      <mat-icon aria-hidden="true">{{
+                        toPlanSort().key === column.key && toPlanSort().desc
+                          ? 'arrow_downward'
+                          : 'arrow_upward'
+                      }}</mat-icon>
+                    </button>
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of toPlanShown(); track p.id) {
+                <tr>
+                  <td class="table__name">
+                    <a class="link" [routerLink]="['/projects', p.id]">{{ projectLabel(p) }}</a>
+                  </td>
+                  <td class="table__owner">{{ p.owners ?? '—' }}</td>
+                  <td>
+                    @if (p.priorityLevel !== null) {
+                      <span
+                        class="prio"
+                        [class.prio--top]="p.priorityLevel === 1"
+                        [title]="p.priorityLabel ?? ''"
+                        >P{{ p.priorityLevel }}</span
+                      >
+                    } @else {
+                      —
+                    }
+                  </td>
+                  <td>
+                    {{ p.businessPriorityLevel !== null ? 'P' + p.businessPriorityLevel : '—' }}
+                  </td>
+                  <td>{{ p.ranking ?? '—' }}</td>
+                  <td>{{ p.statusLabel }}</td>
+                  <td>{{ p.systemLabel ?? '—' }}</td>
+                  <td>{{ p.workTypeLabel }}</td>
+                  <td>{{ p.daysPast > 0 ? days(p.daysPast) + ' gg' : '—' }}</td>
+                  <td [class.muted]="!p.daysLater">
+                    {{ planHint(p) }}
+                    @if (!p.daysLater && p.lastPlannedWeek) {
+                      <span class="table__sub">ultima settimana {{ date(p.lastPlannedWeek) }}</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (toPlan().length > toPlanShown().length) {
+          <a class="more" routerLink="/projects/elenco" [queryParams]="listParams(toPlanIds())">
+            Vedi tutti i {{ toPlan().length }} nell'elenco
+            <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+          </a>
+        }
+      }
+    </section>
+  </div>
+}

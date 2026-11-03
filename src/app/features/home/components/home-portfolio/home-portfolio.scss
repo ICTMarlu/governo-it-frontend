@@ -47,44 +47,6 @@ ul {
   list-style: none;
 }
 
-// Fotografia: un riquadro per stato, in evidenza In Progress, Pending, Completed
-.statuses {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
-  gap: 0.5rem;
-}
-
-.status {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0;
-  border-radius: var(--gi-radius-md);
-  background: var(--mat-sys-surface-container);
-  text-align: center;
-
-  &__value {
-    font: var(--mat-sys-headline-small);
-  }
-
-  &__label {
-    color: var(--mat-sys-on-surface-variant);
-    font: var(--mat-sys-label-medium);
-  }
-
-  &--accent {
-    background: light-dark(#dceafb, #1d3147);
-  }
-
-  &--warn {
-    background: light-dark(#fdf1d3, #4a3b12);
-  }
-
-  &--good {
-    background: light-dark(#dcefe0, #1e3a25);
-  }
-}
-
 .grid {
   display: grid;
   gap: 0 1.5rem;
@@ -273,24 +235,6 @@ $series: (
 @media (min-width: 1024px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-// Numeri cliccabili: aprono l'elenco Progetti già filtrato
-.status__link {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  padding: 0.5rem;
-  color: inherit;
-  text-decoration: none;
-  border-radius: inherit;
-
-  &:hover,
-  &:focus-visible {
-    outline: 2px solid var(--mat-sys-primary);
-    outline-offset: -2px;
   }
 }
 

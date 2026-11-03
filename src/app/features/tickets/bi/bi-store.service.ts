@@ -4,6 +4,7 @@ import { Injectable, computed, effect, inject, signal, untracked } from '@angula
 import { API_BASE_URL } from '../../../core/config/api.config';
 import { errorMessage } from '../../../shared/crud/crud-api.service';
 import { TicketSyncService } from '../services/ticket-sync.service';
+import { Bounce, filterBounces } from './bi-bounces';
 import {
   BiData,
   BiFilters,
@@ -48,6 +49,14 @@ export class BiStore {
 
   readonly tickets = computed<readonly BiTicket[]>(() => this.data()?.tickets ?? []);
 
+  /** Chiusure, riaperture e attese dalla cronologia (pagina Rimbalzi); null finché non arrivano. */
+  readonly bounces = signal<readonly Bounce[] | null>(null);
+  readonly bouncesError = signal<string | null>(null);
+  private bouncesLoading = false;
+
+  /** Passaggi di area e persona scelte (chi aveva il ticket) e dell'anno e mesi scelti (data del passaggio). */
+  readonly filteredBounces = computed(() => filterBounces(this.bounces() ?? [], this.filters()));
+
   /** Ticket di area e assegnatario scelti, di qualunque periodo (per trend e aperti di oggi). */
   readonly scoped = computed(() => {
     const filters = this.filters();
@@ -83,7 +92,33 @@ export class BiStore {
         first = false;
         return;
       }
-      untracked(() => this.data() && this.load(true));
+      untracked(() => {
+        if (this.data()) {
+          this.load(true);
+        }
+        if (this.bounces()) {
+          this.loadBounces(true);
+        }
+      });
+    });
+  }
+
+  /** Carica i rimbalzi se non ci sono già (o se richiesto). */
+  loadBounces(force = false): void {
+    if ((this.bounces() && !force) || this.bouncesLoading) {
+      return;
+    }
+    this.bouncesLoading = true;
+    this.http.get<Bounce[]>(`${this.url}/rimbalzi`).subscribe({
+      next: (bounces) => {
+        this.bounces.set(bounces);
+        this.bouncesError.set(null);
+        this.bouncesLoading = false;
+      },
+      error: (error: unknown) => {
+        this.bouncesError.set(errorMessage(error));
+        this.bouncesLoading = false;
+      },
     });
   }
 

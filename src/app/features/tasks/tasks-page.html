@@ -99,7 +99,7 @@
   />
   <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filters__field">
     <mat-label>Persona</mat-label>
-    <mat-select [value]="personId()" (valueChange)="personId.set($event)">
+    <mat-select [value]="personId()" (valueChange)="choosePerson($event)">
       <mat-option [value]="ALL">Tutte</mat-option>
       @for (person of people(); track person.id) {
         <mat-option [value]="person.id">{{ person.name }}</mat-option>

@@ -85,6 +85,12 @@
     >
   }
 
+  @if (!leadActions() && state() === 'ready') {
+    <span class="count count--lead" aria-live="polite">
+      {{ visibleRows().length }} {{ visibleRows().length === 1 ? 'elemento' : 'elementi' }}
+    </span>
+  }
+
   @if (hasActiveFilters() || search()) {
     <button mat-button type="button" (click)="clearFilters()">
       <mat-icon aria-hidden="true">filter_alt_off</mat-icon>
@@ -118,12 +124,7 @@
     </div>
   }
   @case ('ready') {
-    <!-- Con leadActions il conteggio sta nella riga in alto, accanto al selettore Elenco/Kanban -->
-    @if (!leadActions()) {
-      <p class="count" aria-live="polite">
-        {{ visibleRows().length }} {{ visibleRows().length === 1 ? 'elemento' : 'elementi' }}
-      </p>
-    }
+    <!-- Il conteggio sta nella barra dei filtri, o nella riga in alto accanto a Elenco/Kanban (leadActions) -->
     @if (selectedRows().length > 0) {
       <div class="bulk" role="region" aria-label="Azioni sulla selezione">
         <span class="bulk__count" aria-live="polite">

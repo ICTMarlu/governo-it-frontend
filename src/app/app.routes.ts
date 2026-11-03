@@ -59,7 +59,27 @@ export const routes: Routes = [
         title: 'Home · Governo IT',
         loadComponent: () => import('./features/home/home-page').then((m) => m.HomePage),
       },
-      crudRoute('projects', PROJECTS_CONFIG),
+      // Progetti: panoramica (stato, priorità, piano) ed elenco per creare e modificare
+      {
+        path: 'projects',
+        canActivate: [moduleGuard],
+        data: { module: 'PROJECTS' },
+        loadComponent: () =>
+          import('./features/projects/projects-section').then((m) => m.ProjectsSection),
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            title: 'Progetti · Panoramica · Governo IT',
+            loadComponent: () =>
+              import('./features/projects/overview/projects-overview-page').then(
+                (m) => m.ProjectsOverviewPage,
+              ),
+          },
+          // Dall'elenco (spesso aperto da un numero della panoramica) si torna con "← Panoramica"
+          crudRoute('elenco', PROJECTS_CONFIG, { link: '/projects', label: 'Panoramica' }),
+        ],
+      },
       {
         path: 'projects/:id',
         title: 'Progetto · Governo IT',
@@ -178,6 +198,12 @@ export const routes: Routes = [
             title: 'Ticket · Persone · Governo IT',
             loadComponent: () =>
               import('./features/tickets/bi/bi-people-page').then((m) => m.BiPeoplePage),
+          },
+          {
+            path: 'rimbalzi',
+            title: 'Ticket · Rimbalzi · Governo IT',
+            loadComponent: () =>
+              import('./features/tickets/bi/bi-bounces-page').then((m) => m.BiBouncesPage),
           },
           {
             path: 'aperti',

@@ -19,6 +19,7 @@ import { catchError, filter, forkJoin, of } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { UserPreferencesService } from '../../core/preferences/user-preferences.service';
+import { FocusPersonService } from '../../core/focus/focus-person.service';
 import { PageHeader } from '../../shared/components/page-header/page-header';
 import { SavedViews } from '../../shared/views/saved-views';
 import { ROLES } from '../../shared/crud/crud.model';
@@ -123,6 +124,7 @@ export class TasksPage {
   );
 
   protected readonly personId = signal<number>(ALL);
+  private readonly focus = inject(FocusPersonService);
   protected readonly includeDone = signal(false);
   protected readonly view = signal<TaskView>('list');
   protected readonly search = signal('');
@@ -254,14 +256,16 @@ export class TasksPage {
   );
 
   constructor() {
-    // Persona iniziale: dal link, altrimenti la propria risorsa, altrimenti tutti
+    // Persona iniziale: dal link, altrimenti la persona in vista (Admin e PM, condivisa con le altre
+    // pagine) o la propria risorsa, altrimenti tutti
     effect(() => {
       const fromLink = Number(this.resource());
       const mine = this.currentUser()?.resourceId ?? null;
       // Dal pannello di un record si vogliono i task di quel tipo di record, di chiunque siano
       const origin = this.origine();
       untracked(() => {
-        this.personId.set(fromLink > 0 ? fromLink : origin ? ALL : (mine ?? ALL));
+        const start = this.focus.canChoose() ? (this.focus.resourceId() ?? ALL) : (mine ?? ALL);
+        this.personId.set(fromLink > 0 ? fromLink : origin ? ALL : start);
         if (origin && origin in TASK_SOURCES) {
           this.sourceFilter.set(origin);
         }
@@ -311,7 +315,16 @@ export class TasksPage {
       source: string | null;
     }>;
     if (!(Number(this.resource()) > 0)) {
-      this.personId.set(saved.person ?? this.currentUser()?.resourceId ?? ALL);
+      // Una vista con una persona precisa vince (e diventa la persona in vista); con "Tutte" resta
+      // la persona in vista scelta altrove da Admin e PM
+      const fromView = saved.person && saved.person !== ALL ? saved.person : null;
+      const focused = this.focus.canChoose() ? this.focus.resourceId() : null;
+      this.personId.set(
+        fromView ?? focused ?? saved.person ?? this.currentUser()?.resourceId ?? ALL,
+      );
+      if (fromView !== null) {
+        this.focus.set(fromView);
+      }
     }
     this.includeDone.set(saved.includeDone ?? false);
     this.view.set(saved.view === 'board' ? 'board' : 'list');
@@ -540,5 +553,11 @@ export class TasksPage {
           this.loadError.set(true);
         },
       });
+  }
+
+  /** Persona scelta dal selettore: per Admin e PM diventa la persona in vista delle altre pagine. */
+  protected choosePerson(id: number): void {
+    this.personId.set(id);
+    this.focus.set(id === ALL ? null : id);
   }
 }
