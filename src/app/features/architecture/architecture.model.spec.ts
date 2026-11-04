@@ -34,18 +34,18 @@ function link(
   };
 }
 
-function app(id: number, layer: string, name: string, systemName: string | null = null): AppNode {
+function app(id: number, layer: string, name: string, typeLabel = 'ERP e gestionali'): AppNode {
   return {
     id,
+    systemId: id,
     name,
-    type: 'BUSINESS',
-    typeLabel: 'Gestionale',
+    type: 'ERP',
+    typeLabel,
     layer,
     layerLabel: layer,
     lifecycle: 'ACTIVE',
     lifecycleLabel: 'In uso',
     deploymentLabel: 'In sede',
-    systemName,
     vendorName: null,
     siteName: null,
     hosts: null,
@@ -103,16 +103,16 @@ describe('architettura IT: chi dipende da chi (D-38)', () => {
 });
 
 describe('architettura IT: disposizione della mappa', () => {
-  it('una colonna per livello presente, nell’ordine dei livelli, applicativi per sistema e nome', () => {
+  it('una colonna per livello presente, nell’ordine dei livelli, applicativi per tipologia e nome', () => {
     const map = layout([
       app(1, 'DATA', 'BI'),
-      app(2, 'CORE', 'WMS', 'WMS'),
-      app(3, 'CORE', 'ERP', 'ERP'),
+      app(2, 'CORE', 'WMS'),
+      app(3, 'CORE', 'FM3'),
       app(4, 'CHANNELS', 'Casse'),
     ]);
     expect(map.columns.map((column) => column.layer)).toEqual(['CHANNELS', 'CORE', 'DATA']);
     const core = map.nodes.filter((node) => node.app.layer === 'CORE').map((node) => node.app.name);
-    expect(core).toEqual(['ERP', 'WMS']);
+    expect(core).toEqual(['FM3', 'WMS']);
   });
 
   it('nello stesso livello la freccia esce e rientra a destra, la scritta sta sull’arco', () => {

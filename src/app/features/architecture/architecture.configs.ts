@@ -17,58 +17,6 @@ export const LAYERS: readonly SelectOption[] = [
   { value: 'INFRASTRUCTURE', label: 'Infrastruttura' },
 ];
 
-export const APP_TYPES: readonly (SelectOption & {
-  readonly layer: string;
-  readonly hint: string;
-})[] = [
-  {
-    value: 'STORE',
-    label: 'Negozi e casse',
-    layer: 'CHANNELS',
-    hint: 'POS, casse, retail in negozio',
-  },
-  {
-    value: 'ONLINE',
-    label: 'E-commerce e siti',
-    layer: 'CHANNELS',
-    hint: 'Shop online, siti, B2B',
-  },
-  { value: 'MOBILE', label: 'App mobile', layer: 'CHANNELS', hint: 'App agenti, app clienti' },
-  {
-    value: 'COLLABORATION',
-    label: 'Office e collaborazione',
-    layer: 'CHANNELS',
-    hint: 'Microsoft 365, posta, Teams',
-  },
-  { value: 'BUSINESS', label: 'Gestionale', layer: 'CORE', hint: 'ERP, WMS, PLM, HR, CRM' },
-  {
-    value: 'INTEGRATION',
-    label: 'Integrazione / middleware',
-    layer: 'INTEGRATION',
-    hint: 'Connettori, ESB, EDI, API gateway',
-  },
-  {
-    value: 'BATCH',
-    label: 'Job e schedulazioni',
-    layer: 'INTEGRATION',
-    hint: 'Import notturni, script',
-  },
-  { value: 'DATA', label: 'Database e dati', layer: 'DATA', hint: 'Database, data warehouse' },
-  { value: 'ANALYTICS', label: 'BI e reportistica', layer: 'DATA', hint: 'Power BI, report' },
-  {
-    value: 'EXTERNAL',
-    label: 'Sistema esterno / partner',
-    layer: 'EXTERNAL',
-    hint: 'Corrieri, banche, marketplace, fornitori',
-  },
-  {
-    value: 'INFRASTRUCTURE',
-    label: 'Infrastruttura e sicurezza',
-    layer: 'INFRASTRUCTURE',
-    hint: 'Active Directory, backup, firewall, posta',
-  },
-];
-
 export const DEPLOYMENTS: readonly SelectOption[] = [
   { value: 'ON_PREMISE', label: 'In sede (on-premise)' },
   { value: 'HOSTED', label: 'Hosting / datacenter esterno' },
@@ -117,7 +65,6 @@ export const APPLICATIONS_CONFIG: EntityConfig = {
   searchKeys: [
     'name',
     'typeLabel',
-    'systemName',
     'vendorName',
     'hosts',
     'ownerName',
@@ -129,7 +76,7 @@ export const APPLICATIONS_CONFIG: EntityConfig = {
   quickFilters: [
     // Quattro filtri: con ricerca e pulsanti stanno su una riga sola
     { key: 'layerLabel', label: 'Livello' },
-    { key: 'systemName', label: 'Sistema' },
+    { key: 'typeLabel', label: 'Tipologia' },
     { key: 'businessCriticalityLabel', label: 'Criticità' },
     { key: 'userAreaNames', label: 'Chi lo usa' },
   ],
@@ -139,26 +86,16 @@ export const APPLICATIONS_CONFIG: EntityConfig = {
       label: 'Nome',
       type: 'text',
       required: true,
-      maxLength: 150,
-      hint: 'Come lo chiamate in azienda, es. ERP, Casse negozi, Shop online',
+      maxLength: 100,
+      hint: 'Come lo chiamate in azienda, es. FM3, Sito Ordini. È la stessa voce che si sceglie nei progetti',
     },
     {
-      key: 'type',
-      label: 'Tipo',
+      key: 'systemTypeId',
+      label: 'Tipologia',
       type: 'select',
       required: true,
-      defaultValue: 'BUSINESS',
-      options: {
-        static: APP_TYPES.map((t) => ({ value: t.value, label: `${t.label} · ${t.hint}` })),
-      },
-      hint: 'Decide la colonna della mappa',
-    },
-    {
-      key: 'systemId',
-      label: 'Sistema',
-      type: 'select',
-      options: { endpoint: '/lookups/main-systems' },
-      hint: 'Lo stesso sistema dei progetti (ERP, POS, WMS…)',
+      options: { endpoint: '/lookups/system-types' },
+      hint: 'Decide la colonna della mappa. Le tipologie si modificano in Anagrafiche › Liste',
     },
     {
       key: 'lifecycle',
@@ -257,8 +194,7 @@ export const APPLICATIONS_CONFIG: EntityConfig = {
   ],
   columns: [
     { key: 'name', label: 'Applicativo', primary: true },
-    { key: 'typeLabel', label: 'Tipo' },
-    { key: 'systemName', label: 'Sistema', width: 'narrow' },
+    { key: 'typeLabel', label: 'Tipologia' },
     { key: 'lifecycleLabel', label: 'Stato', width: 'narrow' },
     { key: 'businessCriticalityLabel', label: 'Criticità', width: 'narrow' },
     {

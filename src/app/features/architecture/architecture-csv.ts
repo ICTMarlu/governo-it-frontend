@@ -11,6 +11,8 @@ interface CsvColumn {
   readonly key: string;
   /** Valore esportato dalla riga dell'elenco. */
   readonly read: (row: EntityRow) => unknown;
+  /** Altre intestazioni accettate in import (es. quella dei file di una versione precedente). */
+  readonly aliases?: readonly string[];
 }
 
 const list = (key: string) => (row: EntityRow) =>
@@ -19,10 +21,9 @@ const yesNo = (row: EntityRow) => (row['active'] === false ? 'No' : 'Sì');
 
 export const APPLICATION_COLUMNS: readonly CsvColumn[] = [
   { header: 'Nome', key: 'name', read: (r) => r['name'] },
-  { header: 'Tipo', key: 'type', read: (r) => r['typeLabel'] },
+  { header: 'Tipologia', key: 'type', read: (r) => r['typeLabel'], aliases: ['Tipo'] },
   { header: 'Stato', key: 'lifecycle', read: (r) => r['lifecycleLabel'] },
   { header: 'Dove gira', key: 'deployment', read: (r) => r['deploymentLabel'] },
-  { header: 'Sistema', key: 'system', read: (r) => r['systemName'] },
   { header: 'Fornitore', key: 'vendor', read: (r) => r['vendorName'] },
   { header: 'Sede', key: 'site', read: (r) => r['siteName'] },
   { header: 'Server', key: 'hosts', read: (r) => r['hosts'] },
@@ -137,7 +138,10 @@ export function toImportRows(kind: CsvKind, rows: readonly string[][]): Record<s
   }
   const columns = kind === 'applications' ? APPLICATION_COLUMNS : CONNECTION_COLUMNS;
   const keys = header.map(
-    (title) => columns.find((column) => plain(column.header) === plain(title))?.key ?? null,
+    (title) =>
+      columns.find((column) =>
+        [column.header, ...(column.aliases ?? [])].some((name) => plain(name) === plain(title)),
+      )?.key ?? null,
   );
   return data.map((cells, index) => {
     const row: Record<string, unknown> = { row: index + 2 };

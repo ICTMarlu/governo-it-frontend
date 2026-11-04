@@ -21,7 +21,7 @@ import { EntityConfig } from '../crud.model';
       [subtitle]="config().subtitle"
       [help]="config().help"
     />
-    <gov-crud-section [config]="config()" />
+    <gov-crud-section [config]="config()" [leadActions]="config().leadActions ?? false" />
   `,
 })
 export class CrudPage {

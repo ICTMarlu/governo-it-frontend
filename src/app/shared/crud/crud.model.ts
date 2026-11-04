@@ -160,6 +160,11 @@ export interface EntityConfig {
   readonly actionsFirst?: boolean;
   /** Etichette e valori centrati in tutte le colonne tranne il titolo (anche il trattino dei vuoti). */
   readonly centerValues?: boolean;
+  /**
+   * Vista, Colonne e Nuovo in una riga sopra i filtri: per le tabelle con più filtri, così la barra
+   * resta su una riga sola.
+   */
+  readonly leadActions?: boolean;
   /** Righe della tabella più basse (elenchi lunghi da scorrere a colpo d'occhio). */
   readonly compact?: boolean;
   /** Ordinamento iniziale dell'elenco. */

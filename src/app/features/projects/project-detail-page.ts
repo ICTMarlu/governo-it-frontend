@@ -84,7 +84,7 @@ export class ProjectDetailPage {
       value ? DATE.format(new Date(`${String(value)}T00:00:00`)) : '—';
     return [
       { label: 'Tipo', value: text(p['workTypeLabel']) },
-      { label: 'Sistema', value: text(p['mainSystemLabel']) },
+      { label: 'Applicativo', value: text(p['mainSystemLabel']) },
       { label: 'Stato', value: text(p['statusLabel']) },
       { label: 'Priorità IT', value: text(p['itPriorityLevel']) },
       { label: 'Priorità business', value: text(p['businessPriorityLevel']) },

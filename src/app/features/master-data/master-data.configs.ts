@@ -49,6 +49,10 @@ interface LookupDefinition {
   readonly fixed?: boolean;
   readonly extraFields?: readonly FieldConfig[];
   readonly extraColumns?: readonly ColumnConfig[];
+  /** Filtri rapidi (es. per tipologia o area), anche sugli attributi: "attributes.areaNames". */
+  readonly quickFilters?: EntityConfig['quickFilters'];
+  /** Campi in più per la ricerca testuale. */
+  readonly extraSearchKeys?: readonly string[];
 }
 
 /** Configurazione di una lista valori (ADM-02): campi comuni + campi propri della lista. */
@@ -61,7 +65,9 @@ function lookupConfig(definition: LookupDefinition): EntityConfig {
     writeRoles: [ROLES.admin],
     canCreate: !definition.fixed,
     canDelete: !definition.fixed,
-    searchKeys: ['label', 'code'],
+    searchKeys: ['label', 'code', ...(definition.extraSearchKeys ?? [])],
+    quickFilters: definition.quickFilters,
+    leadActions: (definition.quickFilters?.length ?? 0) > 0,
     sort: bySortOrder,
     help: lookupHelp(definition.title, definition.subtitle, LOOKUP_RULES[definition.slug]),
     fields: [
@@ -102,6 +108,16 @@ function lookupConfig(definition: LookupDefinition): EntityConfig {
     ],
   };
 }
+
+/** Colonne della mappa di Architettura IT (gli stessi codici di ArchCodes.Layer nel backend). */
+const MAP_LAYERS = [
+  { value: 'CHANNELS', label: 'Canali e postazioni' },
+  { value: 'CORE', label: 'Gestionali' },
+  { value: 'INTEGRATION', label: 'Integrazioni ed elaborazioni' },
+  { value: 'DATA', label: 'Dati e analisi' },
+  { value: 'EXTERNAL', label: 'Partner esterni' },
+  { value: 'INFRASTRUCTURE', label: 'Infrastruttura' },
+];
 
 /** Comportamenti di sistema degli stati della direzione. */
 const BEHAVIOR_OPTIONS = [
@@ -172,11 +188,40 @@ const LOOKUP_DEFINITIONS: readonly LookupDefinition[] = [
   },
   {
     slug: 'main-systems',
-    title: 'Sistemi',
-    singular: 'Sistema',
+    title: 'Applicativi e ambiti',
+    singular: 'Applicativo o ambito',
     subtitle:
-      'Sistemi e aree applicative. Il codice breve entra nel codice progetto (es. ICT26ERP001).',
+      'L’elenco unico dei sistemi: gli applicativi (FM3, Sito Ordini, Power BI…) e gli ambiti senza applicativo (Infrastruttura, Telefonia). Si scelgono nei progetti; gli applicativi compaiono nella mappa di Architettura IT. Il codice breve entra nel codice progetto (es. ICT26ERP001).',
+    extraSearchKeys: ['attributes.systemTypeLabel', 'attributes.areaNames'],
+    quickFilters: [
+      { key: 'attributes.systemTypeLabel', label: 'Tipologia' },
+      { key: 'attributes.areaNames', label: 'Chi lo usa' },
+    ],
     extraFields: [
+      {
+        key: 'systemTypeId',
+        label: 'Tipologia',
+        type: 'select',
+        attribute: true,
+        options: { endpoint: '/lookups/system-types' },
+        hint: 'Es. ERP e gestionali, Siti web ed e-commerce, Data e analytics',
+      },
+      {
+        key: 'application',
+        label: 'È un applicativo',
+        type: 'checkbox',
+        attribute: true,
+        defaultValue: true,
+        hint: 'Togli la spunta per un ambito senza applicativo (es. Infrastruttura, Telefonia): non va nella mappa',
+      },
+      {
+        key: 'areaIds',
+        label: 'Chi lo usa',
+        type: 'multiselect',
+        attribute: true,
+        options: { endpoint: '/lookups/business-areas' },
+        fullWidth: true,
+      },
       {
         key: 'shortCode',
         label: 'Codice breve',
@@ -188,9 +233,31 @@ const LOOKUP_DEFINITIONS: readonly LookupDefinition[] = [
       },
     ],
     extraColumns: [
-      { key: 'attributes.shortCode', label: 'Codice breve' },
-      { key: 'attributes.nextCode', label: 'Prossimo codice' },
+      { key: 'attributes.systemTypeLabel', label: 'Tipologia' },
+      { key: 'attributes.application', label: 'Applicativo', type: 'boolean', width: 'narrow' },
+      { key: 'attributes.areaNames', label: 'Chi lo usa', type: 'list', maxItems: 2 },
+      { key: 'attributes.shortCode', label: 'Codice breve', width: 'narrow' },
+      { key: 'attributes.nextCode', label: 'Prossimo codice', defaultHidden: true },
     ],
+  },
+  {
+    slug: 'system-types',
+    title: 'Tipologie di sistema',
+    singular: 'Tipologia',
+    subtitle:
+      'Come si raggruppano applicativi e ambiti: ERP e gestionali, Siti web ed e-commerce, App mobile, Data e analytics… Ogni tipologia dice in quale colonna della mappa di Architettura IT va.',
+    extraFields: [
+      {
+        key: 'mapLayer',
+        label: 'Colonna della mappa',
+        type: 'select',
+        required: true,
+        attribute: true,
+        defaultValue: 'CORE',
+        options: { static: MAP_LAYERS },
+      },
+    ],
+    extraColumns: [{ key: 'attributes.mapLayerLabel', label: 'Colonna della mappa' }],
   },
   {
     slug: 'priority-levels',
@@ -206,9 +273,10 @@ const LOOKUP_DEFINITIONS: readonly LookupDefinition[] = [
   },
   {
     slug: 'streams',
-    title: 'Stream',
-    singular: 'Stream',
-    subtitle: 'Categorie dei progetti (da definire).',
+    title: 'Tipi di sviluppo',
+    singular: 'Tipo di sviluppo',
+    subtitle:
+      'Come si fa il progetto, se non è un progetto normale: Vibe coding, Intelligenza artificiale, Sviluppo web.',
   },
   {
     slug: 'expense-types',

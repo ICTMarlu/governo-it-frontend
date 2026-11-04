@@ -33,7 +33,9 @@ export const PROJECTS_CONFIG: EntityConfig = {
   quickFilters: [
     { key: 'workTypeLabel', label: 'Tipo', orderKey: 'workTypeSortOrder' },
     { key: 'statusLabel', label: 'Stato', orderKey: 'statusSortOrder' },
-    { key: 'mainSystemLabel', label: 'Sistema' },
+    { key: 'mainSystemLabel', label: 'Applicativo' },
+    // Tipologia dell'applicativo; senza: Trasversale (AMS, Continuous, Admin) o Da assegnare (D-39)
+    { key: 'systemGroup', label: 'Tipologia' },
     { key: 'ownerNames', label: 'Owner' },
   ],
   fields: [
@@ -51,10 +53,17 @@ export const PROJECTS_CONFIG: EntityConfig = {
     },
     {
       key: 'mainSystemId',
-      label: 'Sistema',
+      label: 'Applicativo o ambito',
       type: 'select',
-      options: { endpoint: '/lookups/main-systems' },
-      hint: 'Vuoto se riguarda più sistemi (es. AMS). Il codice progetto usa il codice breve del sistema',
+      options: {
+        endpoint: '/lookups/main-systems',
+        labelKey: (row) => {
+          const type = (row['attributes'] as { systemTypeLabel?: string } | undefined)
+            ?.systemTypeLabel;
+          return type ? `${String(row['label'])} · ${type}` : String(row['label']);
+        },
+      },
+      hint: 'Facoltativo per AMS, ricorrenti e Admin (vuoto = vale per tutti). Il codice progetto usa il codice breve',
     },
     {
       key: 'statusId',
@@ -121,7 +130,13 @@ export const PROJECTS_CONFIG: EntityConfig = {
       options: { endpoint: '/legal-entities', labelKey: 'name' },
       visibleWhen: (value) => value['groupWide'] !== true,
     },
-    { key: 'streamId', label: 'Stream', type: 'select', options: { endpoint: '/lookups/streams' } },
+    {
+      key: 'streamId',
+      label: 'Tipo di sviluppo',
+      type: 'select',
+      options: { endpoint: '/lookups/streams' },
+      hint: 'Solo se non è un progetto normale: Vibe coding, Intelligenza artificiale, Sviluppo web',
+    },
     { key: 'plannedStartDate', label: 'Inizio pianificato', type: 'date' },
     { key: 'plannedEndDate', label: 'Fine pianificata', type: 'date' },
     {
@@ -183,7 +198,9 @@ export const PROJECTS_CONFIG: EntityConfig = {
     { key: 'name', label: 'Progetto', primary: true },
     { key: 'code', label: 'Codice', width: 'narrow' },
     // Stretta: un nome di sistema troppo lungo si tronca con i puntini (il tooltip lo mostra intero)
-    { key: 'mainSystemLabel', label: 'Sistema', width: 'narrow' },
+    { key: 'mainSystemLabel', label: 'Applicativo', width: 'narrow' },
+    { key: 'systemGroup', label: 'Tipologia', width: 'narrow', defaultHidden: true },
+    { key: 'streamLabel', label: 'Tipo di sviluppo', width: 'narrow', defaultHidden: true },
     {
       key: 'statusLabel',
       label: 'Stato',

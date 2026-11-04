@@ -10,7 +10,8 @@ export const ARCHITECTURE_HELP: HelpContent = {
       title: 'Come si compila',
       items: [
         'Applicativi: uno per ogni cosa che il business usa (ERP, casse, e-commerce, WMS, BI, posta…) e per ogni partner esterno con cui si scambiano dati (corrieri, banche, marketplace).',
-        'Il tipo decide la colonna della mappa: canali e postazioni, gestionali, integrazioni, dati e analisi, partner esterni, infrastruttura.',
+        'Gli applicativi sono le stesse voci che si scelgono nei progetti (Anagrafiche › Liste › Applicativi e ambiti): nome, tipologia e aree si modificano da una parte o dall’altra. Gli ambiti senza applicativo (es. Infrastruttura, Telefonia) non vanno nella mappa.',
+        'La tipologia decide la colonna della mappa: canali e postazioni, gestionali, integrazioni, dati e analisi, partner esterni, infrastruttura. Le tipologie si modificano in Anagrafiche › Liste › Tipologie di sistema.',
         '"Gira su" collega l’applicativo alle tecnologie dell’inventario: se una tecnologia va fuori supporto o ha una vulnerabilità, l’avviso compare sull’applicativo e nella mappa.',
         '"Chi lo usa" sono le aree aziendali: servono a capire chi chiamare se si ferma.',
         'Connessioni: una riga per ogni flusso, letta da sinistra a destra. “ERP invia a WMS ordini e articoli, ogni pochi minuti, via SFTP”. “BI legge da ERP”. “E-commerce sincronizza con ERP”.',
@@ -33,7 +34,7 @@ export const ARCHITECTURE_HELP: HelpContent = {
         'Esporta scarica due file CSV (Applicativi e Connessioni) che Excel apre direttamente: è anche il modello per compilare.',
         'Importa: scegli uno o entrambi i file. Prima vedi l’anteprima (cosa verrà creato, aggiornato o scartato e perché), poi confermi.',
         'Gli applicativi si riconoscono dal nome, le connessioni da partenza e arrivo. Una cella vuota lascia il valore com’è.',
-        'Tipo, stato, direzione, frequenza e criticità si scrivono come nel menu (es. “Gestionale”, “invia a”, “Una volta al giorno”, “Alta”). Più aree o tecnologie si separano con la virgola.',
+        'Tipologia, stato, direzione, frequenza e criticità si scrivono come nel menu (es. “ERP e gestionali”, “invia a”, “Una volta al giorno”, “Alta”). Più aree o tecnologie si separano con la virgola.',
       ],
     },
   ],

@@ -275,7 +275,7 @@ function cut(text: string, max: number): string {
                     x="28"
                     y="34"
                   >
-                    {{ icon(placed.app.type) }}
+                    {{ icon(placed.app.type ?? '') }}
                   </text>
                   <text class="name" x="54" y="22">{{ short(placed.app.name, 19) }}</text>
                   <text class="sub" x="54" y="38">{{ subtitle(placed.app) }}</text>
@@ -720,7 +720,7 @@ export class ArchitectureMap {
     return new Set(
       this.visibleApps()
         .filter((app) =>
-          [app.name, app.systemName, app.typeLabel, app.vendorName, app.hosts, app.siteName]
+          [app.name, app.typeLabel, app.vendorName, app.hosts, app.siteName]
             .filter(Boolean)
             .some((value) => String(value).toLowerCase().includes(text)),
         )
@@ -822,9 +822,9 @@ export class ArchitectureMap {
     return cut(text, max);
   }
 
-  /** Sotto il nome: il server se c'è, altrimenti sistema o tipo. */
+  /** Sotto il nome: il server se c'è, altrimenti la tipologia. */
   protected subtitle(app: AppNode): string {
-    return cut(app.hosts ?? app.systemName ?? app.typeLabel, 24);
+    return cut(app.hosts ?? app.typeLabel, 24);
   }
 
   protected tooltip(placed: PlacedNode): string {

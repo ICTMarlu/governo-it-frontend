@@ -27,7 +27,7 @@ export interface ReachedApp {
         </button>
       </header>
       <p class="meta">
-        {{ app.typeLabel }}{{ app.systemName ? ' · ' + app.systemName : '' }} ·
+        {{ app.typeLabel }} ·
         {{ app.lifecycleLabel }}
       </p>
       <dl>

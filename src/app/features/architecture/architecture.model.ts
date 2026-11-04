@@ -3,15 +3,16 @@ import { LAYERS } from './architecture.configs';
 /** Applicativo come arriva da /applications (solo i campi che servono alla mappa). */
 export interface AppNode {
   readonly id: number;
+  readonly systemId: number;
   readonly name: string;
-  readonly type: string;
+  /** Codice della tipologia (ERP, WEB, DATA…), null se manca. */
+  readonly type: string | null;
   readonly typeLabel: string;
   readonly layer: string;
   readonly layerLabel: string;
   readonly lifecycle: string;
   readonly lifecycleLabel: string;
   readonly deploymentLabel: string;
-  readonly systemName: string | null;
   readonly vendorName: string | null;
   readonly siteName: string | null;
   readonly hosts: string | null;
@@ -148,7 +149,7 @@ export interface MapLayout {
 
 /**
  * Un riquadro per livello (solo quelli con almeno un applicativo), tutti alti uguali; dentro,
- * gli applicativi per sistema e poi per nome, così quelli dello stesso sistema stanno vicini.
+ * gli applicativi per tipologia e poi per nome, così quelli della stessa tipologia stanno vicini.
  */
 export function layout(apps: readonly AppNode[]): MapLayout {
   const groups = LAYERS.map((layer) => ({
@@ -157,8 +158,7 @@ export function layout(apps: readonly AppNode[]): MapLayout {
       .filter((app) => app.layer === layer.value)
       .sort(
         (a, b) =>
-          (a.systemName ?? '~').localeCompare(b.systemName ?? '~', 'it') ||
-          a.name.localeCompare(b.name, 'it'),
+          a.typeLabel.localeCompare(b.typeLabel, 'it') || a.name.localeCompare(b.name, 'it'),
       ),
   })).filter((group) => group.apps.length > 0);
   const tallest = Math.max(1, ...groups.map((group) => group.apps.length));
@@ -241,19 +241,19 @@ export const LAYER_COLORS: Readonly<Record<string, string>> = {
   INFRASTRUCTURE: 'light-dark(#008300, #008300)',
 };
 
-/** Icona (Material Symbols) del tipo di applicativo. */
+/** Icona (Material Symbols) della tipologia (codici della lista Tipologie di sistema). */
 export const TYPE_ICONS: Readonly<Record<string, string>> = {
+  ERP: 'business_center',
+  HR: 'badge',
   STORE: 'storefront',
-  ONLINE: 'shopping_cart',
+  WEB: 'language',
   MOBILE: 'smartphone',
-  COLLABORATION: 'groups',
-  BUSINESS: 'business_center',
+  OFFICE: 'groups',
   INTEGRATION: 'sync_alt',
-  BATCH: 'schedule',
-  DATA: 'database',
-  ANALYTICS: 'monitoring',
+  DATA: 'monitoring',
   EXTERNAL: 'handshake',
-  INFRASTRUCTURE: 'dns',
+  INFRA: 'dns',
+  OTHER: 'apps',
 };
 
 /** Colore della criticità per il business (bordo dei riquadri, spessore delle frecce). */
