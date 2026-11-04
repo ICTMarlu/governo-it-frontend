@@ -223,6 +223,12 @@ const LOOKUP_DEFINITIONS: readonly LookupDefinition[] = [
     subtitle: 'Aree di appartenenza dei richiedenti.',
   },
   {
+    slug: 'integration-protocols',
+    title: 'Protocolli di integrazione',
+    singular: 'Protocollo',
+    subtitle: 'Come si parlano gli applicativi nella mappa di Architettura IT: REST, SFTP, EDI…',
+  },
+  {
     slug: 'team-roles',
     title: 'Ruoli nel team',
     singular: 'Ruolo',

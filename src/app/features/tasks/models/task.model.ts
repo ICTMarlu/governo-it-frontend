@@ -242,6 +242,13 @@ export const TASK_SOURCES: Readonly<
     icon: 'badge',
     link: (id) => ({ path: ['/resources', id] }),
   },
+  // Architettura IT (D-38): la scheda dell'applicativo nella mappa
+  APPLICATION: {
+    label: 'Applicativo',
+    plural: 'applicativi',
+    icon: 'hub',
+    link: (id) => ({ path: ['/architecture'], query: { app: id } }),
+  },
 };
 
 /** Record da cui nasce un task (solo alla creazione). */

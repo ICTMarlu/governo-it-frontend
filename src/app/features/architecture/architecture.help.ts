@@ -1,0 +1,40 @@
+import { HelpContent } from '../../shared/help/help.model';
+
+/** Guida della pagina Architettura IT (D-38). */
+export const ARCHITECTURE_HELP: HelpContent = {
+  title: 'Architettura IT',
+  intro:
+    'La mappa degli applicativi di Marlù e dei flussi di dati tra loro: chi parla con chi, cosa si passano e cosa si ferma se un sistema va giù.',
+  sections: [
+    {
+      title: 'Come si compila',
+      items: [
+        'Applicativi: uno per ogni cosa che il business usa (ERP, casse, e-commerce, WMS, BI, posta…) e per ogni partner esterno con cui si scambiano dati (corrieri, banche, marketplace).',
+        'Il tipo decide la colonna della mappa: canali e postazioni, gestionali, integrazioni, dati e analisi, partner esterni, infrastruttura.',
+        '"Gira su" collega l’applicativo alle tecnologie dell’inventario: se una tecnologia va fuori supporto o ha una vulnerabilità, l’avviso compare sull’applicativo e nella mappa.',
+        '"Chi lo usa" sono le aree aziendali: servono a capire chi chiamare se si ferma.',
+        'Connessioni: una riga per ogni flusso, letta da sinistra a destra. “ERP invia a WMS ordini e articoli, ogni pochi minuti, via SFTP”. “BI legge da ERP”. “E-commerce sincronizza con ERP”.',
+        'I protocolli si modificano in Anagrafiche › Liste › Protocolli di integrazione.',
+      ],
+    },
+    {
+      title: 'La mappa',
+      items: [
+        'Colonne per livello; le frecce seguono i dati. Le connessioni critiche sono più spesse, quelle a richiesta tratteggiate.',
+        'Clicca un applicativo: a destra trovi la scheda con i flussi in entrata e in uscita e l’elenco di cosa si ferma se lui si ferma.',
+        'Impatto: chi dipende da lui, anche indirettamente. Si dipende da chi ci invia i dati (invia a) e da chi andiamo a leggere (legge da); “sincronizza con” vale nei due sensi.',
+        'Profondità 1, 2 o tutta: quanti passaggi seguire. Con “Solo i collegati” la mappa mostra soltanto l’applicativo scelto e i suoi vicini.',
+        'Il bordo colorato è la criticità per il business; il triangolo segnala tecnologie da trattare (fine supporto, vulnerabilità).',
+      ],
+    },
+    {
+      title: 'Importare ed esportare',
+      items: [
+        'Esporta scarica due file CSV (Applicativi e Connessioni) che Excel apre direttamente: è anche il modello per compilare.',
+        'Importa: scegli uno o entrambi i file. Prima vedi l’anteprima (cosa verrà creato, aggiornato o scartato e perché), poi confermi.',
+        'Gli applicativi si riconoscono dal nome, le connessioni da partenza e arrivo. Una cella vuota lascia il valore com’è.',
+        'Tipo, stato, direzione, frequenza e criticità si scrivono come nel menu (es. “Gestionale”, “invia a”, “Una volta al giorno”, “Alta”). Più aree o tecnologie si separano con la virgola.',
+      ],
+    },
+  ],
+};

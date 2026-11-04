@@ -87,6 +87,13 @@ const NAV_ITEMS: readonly NavItem[] = [
   },
   { label: 'Direzione', icon: 'record_voice_over', route: '/management', modules: ['MANAGEMENT'] },
   {
+    label: 'Architettura IT',
+    short: 'Architettura',
+    icon: 'hub',
+    route: '/architecture',
+    modules: ['ARCHITECTURE'],
+  },
+  {
     label: 'Anagrafiche',
     icon: 'database',
     route: '/anagrafiche',

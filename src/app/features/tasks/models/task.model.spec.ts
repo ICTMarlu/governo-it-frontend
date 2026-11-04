@@ -117,6 +117,7 @@ describe('origine dei task (D-36)', () => {
       'VULNERABILITY',
       'TECHNOLOGY',
       'RESOURCE',
+      'APPLICATION',
     ]);
   });
 });

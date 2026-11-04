@@ -14,6 +14,7 @@ export type ModuleKey =
   | 'REQUESTERS'
   | 'MASTER_DATA'
   | 'TECHNOLOGY'
+  | 'ARCHITECTURE'
   | 'TELEPHONY'
   | 'USERS';
 
@@ -76,6 +77,13 @@ export const MODULES: readonly ModuleInfo[] = [
     icon: 'record_voice_over',
     group: 'Direzione',
     hint: 'Punti, azioni e riunioni di direzione',
+  },
+  {
+    key: 'ARCHITECTURE',
+    label: 'Architettura IT',
+    icon: 'hub',
+    group: 'Direzione',
+    hint: 'Mappa degli applicativi e dei flussi tra loro, impatto dei fermi',
   },
   {
     key: 'RESOURCES',
@@ -154,6 +162,9 @@ export function moduleOfEndpoint(endpoint: string): ModuleKey | null {
     case 'technologies':
     case 'vulnerabilities':
       return 'TECHNOLOGY';
+    case 'applications':
+    case 'app-connections':
+      return 'ARCHITECTURE';
     case 'mobile-lines':
     case 'tariff-plans':
     case 'operator-options':

@@ -137,6 +137,15 @@ export const routes: Routes = [
       crudRoute('smartphones', SMARTPHONES_CONFIG, BACK_TO_TELEPHONY),
       crudRoute('tablets', TABLETS_CONFIG, BACK_TO_TELEPHONY),
       {
+        // Architettura IT (D-38): mappa di applicativi e connessioni
+        path: 'architecture',
+        title: 'Architettura IT · Governo IT',
+        canActivate: [moduleGuard],
+        data: { module: 'ARCHITECTURE', fullWidth: true },
+        loadComponent: () =>
+          import('./features/architecture/architecture-page').then((m) => m.ArchitecturePage),
+      },
+      {
         path: 'technologies',
         title: 'Sistemi e tecnologie · Governo IT',
         canActivate: [moduleGuard],
