@@ -113,7 +113,10 @@ const GROUPS: readonly Group[] = [
         route: '/technologies',
         module: 'TECHNOLOGY',
       },
-      lookup('main-systems', 'Sistemi (elenco)', 'hub'),
+      // Anagrafica unica dei sistemi (D-39) e liste della mappa di Architettura IT (D-38)
+      lookup('main-systems', 'Applicativi e ambiti', 'hub'),
+      lookup('system-types', 'Tipologie di sistema', 'category'),
+      lookup('integration-protocols', 'Protocolli di integrazione', 'swap_horiz'),
     ],
   },
   {
@@ -123,7 +126,7 @@ const GROUPS: readonly Group[] = [
       lookup('work-types', 'Tipi di progetto', 'category'),
       lookup('project-statuses', 'Stati progetto', 'flag'),
       lookup('priority-levels', 'Priorità', 'priority_high'),
-      lookup('streams', 'Stream', 'stream'),
+      lookup('streams', 'Tipi di sviluppo', 'stream'),
       lookup('expense-types', 'Capex / Opex', 'payments'),
       lookup('task-statuses', 'Stati dei task', 'view_kanban'),
       lookup('management-states', 'Stati della direzione', 'account_balance'),
