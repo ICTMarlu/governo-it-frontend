@@ -71,6 +71,9 @@ export interface ProjectOverview {
 export const PROJECT_TYPE = 'PROJECT';
 const IN_PROGRESS = 'IN_PROGRESS';
 const PENDING = 'PENDING';
+const STANDBY = 'STANDBY';
+/** Fermi: non si pianificano (Pending in attesa, Stand By sospeso che riprenderà). */
+const PAUSED = new Set([PENDING, STANDBY]);
 const COMPLETED = 'COMPLETED';
 const NOT_STARTED = new Set(['TO_START', 'APPROVED']);
 
@@ -90,9 +93,9 @@ export function applyFilter(
   );
 }
 
-/** Aperto e lavorabile: né chiuso né in Pending (in attesa, non si pianifica). */
+/** Aperto e lavorabile: né chiuso né fermo (Pending o Stand By: non si pianifica). */
 export function isActive(p: OverviewProject): boolean {
-  return !p.closed && p.statusCode !== PENDING;
+  return !p.closed && !PAUSED.has(p.statusCode);
 }
 
 export function isPlanned(p: OverviewProject): boolean {
@@ -103,6 +106,8 @@ export interface OverviewSummary {
   readonly open: number;
   readonly inProgress: number;
   readonly pending: number;
+  /** Progetti in Stand By: sospesi, ripartiranno; fuori dagli aperti. */
+  readonly standby: number;
   readonly planned: number;
   readonly toPlan: number;
   readonly toPlanTop: number;
@@ -111,13 +116,14 @@ export interface OverviewSummary {
 }
 
 export function summary(projects: readonly OverviewProject[]): OverviewSummary {
-  const open = projects.filter((p) => !p.closed);
+  const open = projects.filter((p) => !p.closed && p.statusCode !== STANDBY);
   const toPlan = toPlanList(projects);
   return {
     open: open.length,
     inProgress: open.filter((p) => p.statusCode === IN_PROGRESS).length,
     // Pending può essere uno stato "finale" nella lista valori (come in Jira): si conta comunque
     pending: projects.filter((p) => p.statusCode === PENDING).length,
+    standby: projects.filter((p) => p.statusCode === STANDBY).length,
     planned: projects.filter((p) => isActive(p) && isPlanned(p)).length,
     toPlan: toPlan.length,
     toPlanTop: toPlan.filter((p) => p.priorityLevel === 1).length,
@@ -302,7 +308,7 @@ export interface Mismatches {
   /** To Start o Approved con giornate già questa settimana: lo stato va aggiornato. */
   readonly startedNotInProgress: readonly OverviewProject[];
   /**
-   * In Pending con giornate ancora nel piano (da qui in avanti). I chiusi davvero (Completed, Rejected,
+   * In Pending o Stand By con giornate ancora nel piano (da qui in avanti). I chiusi davvero (Completed, Rejected,
    * Aborted) non generano mai avvisi: contano solo come chiusure.
    */
   readonly pendingWithPlan: readonly OverviewProject[];
@@ -315,7 +321,7 @@ export function mismatches(projects: readonly OverviewProject[]): Mismatches {
       (p) => NOT_STARTED.has(p.statusCode) && p.daysThisWeek > 0,
     ),
     pendingWithPlan: projects.filter(
-      (p) => p.statusCode === PENDING && p.daysAhead + p.daysLater > 0,
+      (p) => PAUSED.has(p.statusCode) && p.daysAhead + p.daysLater > 0,
     ),
   };
 }
@@ -351,6 +357,7 @@ export function statusColor(status: OverviewStatus): string {
     case IN_PROGRESS:
       return 'var(--mat-sys-primary)';
     case PENDING:
+    case STANDBY:
       return 'var(--gi-warning)';
     case 'COMPLETED':
       return 'var(--gi-ok)';

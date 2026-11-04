@@ -145,6 +145,13 @@
       </a>
     </li>
     <li>
+      <a class="gi-kpi" routerLink="/projects/elenco" [queryParams]="listParams(standbyIds())">
+        <span class="gi-kpi__value">{{ s.standby }}</span>
+        <span class="gi-kpi__label">in Stand By</span>
+        <span class="gi-kpi__meta">sospesi: ripartiranno</span>
+      </a>
+    </li>
+    <li>
       <a class="gi-kpi" routerLink="/projects/elenco" [queryParams]="listParams(completedIds())">
         <span class="gi-kpi__value">{{ closures().items.length }}</span>
         <span class="gi-kpi__label">completati</span>
@@ -200,7 +207,7 @@
       </h2>
       <!-- Nota e legenda su una riga; sotto ogni barra lo stato dei da pianificare -->
       <p class="card__hint matrix__legend">
-        Aperti senza Pending, per priorità IT:
+        Aperti senza Pending e Stand By, per priorità IT:
         <span class="matrix__key matrix__key--planned" aria-hidden="true"></span> pianificati
         <span class="matrix__key matrix__key--missing" aria-hidden="true"></span> da pianificare ·
         In Progress da pianificare in rosso
@@ -371,7 +378,7 @@
           }
           @if (w.pendingWithPlan.length > 0) {
             <div class="wrong__group">
-              <h3 class="wrong__title">In Pending ma con giornate ancora nel piano</h3>
+              <h3 class="wrong__title">In Pending o Stand By ma con giornate ancora nel piano</h3>
               <ul class="wrong__list">
                 @for (p of w.pendingWithPlan; track p.id) {
                   <li>
@@ -394,8 +401,8 @@
         <span class="card__count">{{ toPlan().length }}</span>
       </h2>
       <p class="card__hint">
-        Progetti aperti (né chiusi né in Pending) senza giornate nel piano nelle prossime 4
-        settimane.
+        Progetti aperti (né chiusi, né in Pending, né in Stand By) senza giornate nel piano nelle
+        prossime 4 settimane.
       </p>
       @if (toPlan().length === 0) {
         <p class="muted">Tutti i progetti aperti hanno giornate nelle prossime 4 settimane.</p>

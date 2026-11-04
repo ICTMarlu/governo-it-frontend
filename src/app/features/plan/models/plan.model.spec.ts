@@ -39,6 +39,7 @@ describe('piano settimanale: valori e saturazione', () => {
     expect(isOpenStatus('IN_PROGRESS', false)).toBe(true);
     expect(isOpenStatus('TO_START', false)).toBe(true);
     expect(isOpenStatus('PENDING', false)).toBe(false);
+    expect(isOpenStatus('STANDBY', false)).toBe(false);
     expect(isOpenStatus('COMPLETED', true)).toBe(false);
   });
 

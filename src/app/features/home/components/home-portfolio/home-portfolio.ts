@@ -87,7 +87,7 @@ export class HomePortfolio {
       {
         icon: 'event_busy',
         tone: 'bad',
-        label: 'in Pending con giornate ancora nel piano (i chiusi non contano)',
+        label: 'in Pending o Stand By con giornate ancora nel piano (i chiusi non contano)',
         list: coherence?.closedWithPlan ?? [],
       },
     ];

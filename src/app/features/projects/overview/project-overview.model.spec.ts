@@ -24,6 +24,7 @@ const STATUSES: OverviewStatus[] = [
   { id: 3, code: 'IN_PROGRESS', label: 'In Progress', color: null, closed: false },
   { id: 4, code: 'PENDING', label: 'Pending', color: null, closed: false },
   { id: 5, code: 'COMPLETED', label: 'Completed', color: null, closed: true },
+  { id: 6, code: 'STANDBY', label: 'Stand By', color: null, closed: false },
 ];
 const PRIORITIES: OverviewPriority[] = [
   { level: 1, label: 'Importante', color: null },
@@ -99,6 +100,21 @@ describe('panoramica progetti', () => {
     expect(s.toPlan).toBe(2);
     expect(s.toPlanTop).toBe(1);
     expect(s.daysAhead).toBe(19);
+  });
+
+  it('Stand By è fermo: fuori da aperti e da pianificare, contato a parte, avviso solo se pianificato', () => {
+    const standby = [
+      project(20, { statusCode: 'STANDBY' }),
+      project(21, { statusCode: 'STANDBY', daysAhead: 2 }),
+    ];
+    const all = [...rows, ...standby];
+    const s = summary(all);
+    expect(s.standby).toBe(2);
+    expect(s.open).toBe(6);
+    expect(s.planned).toBe(3);
+    expect(s.toPlan).toBe(2);
+    expect(toPlanList(all).map((p) => p.id)).not.toContain(20);
+    expect(mismatches(all).pendingWithPlan.map((p) => p.id)).toEqual([21]);
   });
 
   it('conta per stato solo gli stati con progetti', () => {

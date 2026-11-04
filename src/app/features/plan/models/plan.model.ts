@@ -87,7 +87,7 @@ export interface CellsResult {
 }
 
 /** Stati esclusi per default oltre a quelli finali (Completed, Rejected, Aborted): non sono lavoro aperto. */
-export const NOT_OPEN_STATUSES: readonly string[] = ['PENDING'];
+export const NOT_OPEN_STATUSES: readonly string[] = ['PENDING', 'STANDBY'];
 
 /** Stato aperto: né finale né tra quelli esclusi (es. To Start, Approved, In Progress). */
 export function isOpenStatus(code: string | null, terminal: boolean): boolean {

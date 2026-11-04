@@ -23,6 +23,8 @@ import {
   ProjectOverview,
   applyFilter,
   byStatus,
+  isActive,
+  isPlanned,
   mismatchCount,
   mismatches,
   planHint,
@@ -54,8 +56,8 @@ const HELP: HelpContent = {
       title: 'Come si legge',
       items: [
         'Pianificato = ha giornate nel piano dalla settimana in corso alle 3 successive.',
-        'Da pianificare = aperto, non in Pending, senza giornate in queste 4 settimane; in cima le priorità più alte.',
-        'Pending e progetti chiusi non contano tra quelli da pianificare.',
+        'Da pianificare = aperto, non in Pending né in Stand By, senza giornate in queste 4 settimane; in cima le priorità più alte.',
+        'Pending, Stand By e progetti chiusi non contano tra quelli da pianificare. Stand By = progetto fermo che ripartirà: ha il suo riquadro, ma non è tra gli aperti.',
         'Ogni numero e ogni barra apre l’elenco con solo quei progetti.',
       ],
     },
@@ -186,7 +188,7 @@ export class ProjectsOverviewPage {
   /** Insiemi di id per aprire l'elenco filtrato. */
   protected readonly openIds = computed(() =>
     this.rows()
-      .filter((p) => !p.closed)
+      .filter((p) => !p.closed && p.statusCode !== 'STANDBY')
       .map((p) => p.id),
   );
   protected readonly inProgressIds = computed(() =>
@@ -196,13 +198,18 @@ export class ProjectsOverviewPage {
   );
   protected readonly plannedIds = computed(() =>
     this.rows()
-      .filter((p) => !p.closed && p.statusCode !== 'PENDING' && p.daysAhead > 0)
+      .filter((p) => isActive(p) && isPlanned(p))
       .map((p) => p.id),
   );
   protected readonly toPlanIds = computed(() => this.toPlan().map((p) => p.id));
   protected readonly pendingIds = computed(() =>
     this.rows()
       .filter((p) => p.statusCode === 'PENDING')
+      .map((p) => p.id),
+  );
+  protected readonly standbyIds = computed(() =>
+    this.rows()
+      .filter((p) => p.statusCode === 'STANDBY')
       .map((p) => p.id),
   );
   /** Di che casi è fatto il numero "stato e piano non tornano", in breve (singolare o plurale). */
@@ -221,7 +228,7 @@ export class ProjectsOverviewPage {
         'da avviare già pianificato',
         'da avviare già pianificati',
       ),
-      part(w.pendingWithPlan.length, 'in Pending pianificato', 'in Pending pianificati'),
+      part(w.pendingWithPlan.length, 'fermo pianificato', 'fermi pianificati'),
     ]
       .filter((text) => text)
       .join(' · ');

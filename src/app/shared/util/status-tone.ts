@@ -7,6 +7,7 @@ export type StatusTone = 'accent' | 'warn' | 'good' | 'none';
 const TONES: Readonly<Record<string, StatusTone>> = {
   IN_PROGRESS: 'accent',
   PENDING: 'warn',
+  STANDBY: 'warn',
   COMPLETED: 'good',
 };
 
