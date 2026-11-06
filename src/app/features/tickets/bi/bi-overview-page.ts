@@ -5,6 +5,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { HBarChart } from '../../../shared/charts/hbar-chart';
 import { PeriodChart } from '../../../shared/charts/period-chart';
 import { KpiDirective } from '../components/kpi.directive';
+import { BiAverageCard } from './bi-average-card';
+import { monthlyAverage } from './bi-averages';
 import { BiFilters } from './bi-filters';
 import { DrillDimension, areaOf, assigneeOf, countBy, monthly, overview } from './bi.model';
 import { BiStore } from './bi-store.service';
@@ -16,7 +18,14 @@ import { BiStore } from './bi-store.service';
  */
 @Component({
   selector: 'gov-bi-overview-page',
-  imports: [BiFilters, HBarChart, KpiDirective, MatProgressSpinnerModule, PeriodChart],
+  imports: [
+    BiAverageCard,
+    BiFilters,
+    HBarChart,
+    KpiDirective,
+    MatProgressSpinnerModule,
+    PeriodChart,
+  ],
   template: `
     <div class="bi-page">
       <gov-bi-filters />
@@ -153,6 +162,23 @@ import { BiStore } from './bi-store.service';
             />
           </section>
         </div>
+        <div class="bi-grid bi-grid--2">
+          <section class="bi-card">
+            <gov-bi-average-card
+              title="Ticket creati: media al mese"
+              [average]="averageCreated()"
+              [filtered]="filteredCreated()"
+            />
+          </section>
+          <section class="bi-card">
+            <gov-bi-average-card
+              title="Ticket risolti: media al mese"
+              [average]="averageResolved()"
+              [filtered]="filteredResolved()"
+              [goodWhenUp]="true"
+            />
+          </section>
+        </div>
       }
     </div>
   `,
@@ -164,6 +190,23 @@ export class BiOverviewPage {
   protected readonly numbers = computed(() => overview(this.store.createdInPeriod()));
   protected readonly months = computed(() =>
     monthly(this.store.scoped(), this.store.years(), new Date()),
+  );
+  /** Media dell'anno in corso su tutti i ticket: il totale generale, che i filtri non cambiano. */
+  protected readonly averageCreated = computed(() =>
+    monthlyAverage(this.store.tickets(), new Date(), 'created'),
+  );
+  protected readonly averageResolved = computed(() =>
+    monthlyAverage(this.store.tickets(), new Date(), 'resolved'),
+  );
+  /** Con area o assegnatario scelti, la stessa media sulla sola selezione; altrimenti nessuna riga in più. */
+  private readonly narrowed = computed(
+    () => this.store.areas() !== null || this.store.assignees() !== null,
+  );
+  protected readonly filteredCreated = computed(() =>
+    this.narrowed() ? monthlyAverage(this.store.scoped(), new Date(), 'created') : null,
+  );
+  protected readonly filteredResolved = computed(() =>
+    this.narrowed() ? monthlyAverage(this.store.scoped(), new Date(), 'resolved') : null,
   );
   protected readonly byArea = computed(() => countBy(this.store.createdInPeriod(), areaOf));
   protected readonly byAssignee = computed(() => countBy(this.store.createdInPeriod(), assigneeOf));

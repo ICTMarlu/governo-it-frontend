@@ -5,12 +5,16 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import {
   ExcelFilter,
+  ExcelFilterGroup,
   ExcelFilterOption,
+  ExcelFilterPreset,
 } from '../../../shared/components/excel-filter/excel-filter';
 import { SavedViews } from '../../../shared/views/saved-views';
 import { MONTHS } from './bi.model';
 import { BiStore } from './bi-store.service';
 import { TicketSyncService } from '../services/ticket-sync.service';
+
+const CURRENT_MONTH = 'current-month';
 
 /**
  * Filtri in alto delle pagine BI (come i filtri di Power BI): area ("Progetto Marlù"),
@@ -42,8 +46,11 @@ import { TicketSyncService } from '../services/ticket-sync.service';
       <gov-excel-filter
         label="Mese"
         [options]="monthOptions"
+        [groups]="monthGroups"
+        [presets]="monthPresets()"
         [selected]="selectedMonths()"
         (selectedChange)="setMonths($event)"
+        (presetApplied)="onMonthPreset($event)"
       />
       @if (filtered()) {
         <button
@@ -148,6 +155,22 @@ export class BiFilters {
     label,
   }));
 
+  /** Trimestri con i loro mesi: si spunta il trimestre intero o si espande per un mese solo. */
+  protected readonly monthGroups: readonly ExcelFilterGroup[] = [0, 1, 2, 3].map((quarter) => ({
+    label: `${quarter + 1}° trimestre`,
+    hint: `${MONTHS[quarter * 3]} – ${MONTHS[quarter * 3 + 2]}`,
+    values: [1, 2, 3].map((n) => String(quarter * 3 + n)),
+  }));
+
+  /** Scorciatoia: il mese di oggi (porta anche l'anno a quello corrente, altrimenti il mese non sarebbe quello di oggi). */
+  protected readonly monthPresets = computed<readonly ExcelFilterPreset[]>(() => [
+    {
+      key: CURRENT_MONTH,
+      label: `Mese corrente (${MONTHS[new Date().getMonth()]})`,
+      values: [String(new Date().getMonth() + 1)],
+    },
+  ]);
+
   protected readonly areaOptions = computed(() =>
     this.store.areaOptions().map((value) => ({ value, label: value })),
   );
@@ -187,6 +210,12 @@ export class BiFilters {
 
   protected setYears(values: readonly string[] | null): void {
     this.store.years.set(values === null ? null : values.map(Number));
+  }
+
+  protected onMonthPreset(preset: ExcelFilterPreset): void {
+    if (preset.key === CURRENT_MONTH) {
+      this.store.years.set([new Date().getFullYear()]);
+    }
   }
 
   protected setMonths(values: readonly string[] | null): void {

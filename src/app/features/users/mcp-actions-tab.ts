@@ -9,6 +9,8 @@ import { API_BASE_URL } from '../../core/config/api.config';
 import { errorMessage } from '../../shared/crud/crud-api.service';
 import { matchesTerms, searchTerms } from '../../shared/util/text-search';
 import { SearchField } from '../../shared/components/search-field/search-field';
+import { SortHead, ariaSortOf } from '../../shared/components/sort-head/sort-head';
+import { TableSort, nextSort, sortRows } from '../../shared/util/table-sort';
 
 type Outcome = 'OK' | 'ERROR';
 
@@ -66,7 +68,14 @@ const TOOL_LABELS: Readonly<Record<string, string>> = {
  */
 @Component({
   selector: 'gov-mcp-actions-tab',
-  imports: [SearchField, DatePipe, MatButtonToggleModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [
+    SearchField,
+    SortHead,
+    DatePipe,
+    MatButtonToggleModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+  ],
   template: `
     <p class="intro">
       Le modifiche fatte tramite Claude (connettore MCP), anche quelle non riuscite. Le letture e le
@@ -136,15 +145,35 @@ const TOOL_LABELS: Readonly<Record<string, string>> = {
         <table class="grid">
           <thead>
             <tr>
-              <th scope="col">Quando</th>
-              <th scope="col">Chi</th>
-              <th scope="col">Azione</th>
-              <th scope="col">Esito</th>
-              <th scope="col">Dettaglio</th>
+              <th scope="col" [attr.aria-sort]="ariaSort('at')">
+                <gov-sort-head key="at" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Quando</gov-sort-head
+                >
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('who')">
+                <gov-sort-head key="who" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Chi</gov-sort-head
+                >
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('tool')">
+                <gov-sort-head key="tool" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Azione</gov-sort-head
+                >
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('outcome')">
+                <gov-sort-head key="outcome" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Esito</gov-sort-head
+                >
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('detail')">
+                <gov-sort-head key="detail" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Dettaglio</gov-sort-head
+                >
+              </th>
             </tr>
           </thead>
           <tbody>
-            @for (row of visible(); track row.id) {
+            @for (row of sorted(); track row.id) {
               <tr>
                 <td class="nowrap">{{ row.at | date: 'dd/MM/yy HH:mm:ss' }}</td>
                 <td class="nowrap">
@@ -352,6 +381,35 @@ export class McpActionsTab {
         ]),
     );
   });
+
+  /** Ordine scelto con un clic sul titolo di colonna; null = ordine di partenza (dal più recente). */
+  protected readonly sort = signal<TableSort | null>(null);
+
+  protected sortBy(key: string): void {
+    this.sort.update((current) => nextSort(current, key, key === 'at'));
+  }
+
+  protected ariaSort(key: string): 'ascending' | 'descending' | 'none' {
+    const sort = this.sort();
+    return ariaSortOf(sort === null ? null : { key: sort.key, desc: sort.desc }, key);
+  }
+
+  protected readonly sorted = computed(() =>
+    sortRows(this.visible(), this.sort(), (row, key) => {
+      switch (key) {
+        case 'at':
+          return row.at;
+        case 'who':
+          return this.who(row);
+        case 'tool':
+          return this.label(row.tool);
+        case 'outcome':
+          return row.outcome;
+        default:
+          return row.message ?? row.parameters;
+      }
+    }),
+  );
 
   constructor() {
     // Il periodo si chiede al server; esito, utente, azione e ricerca filtrano quello che è già arrivato

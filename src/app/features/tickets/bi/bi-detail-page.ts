@@ -12,7 +12,6 @@ import {
   PERSON_TREND_DAYS,
   personTrendPeriod,
   DrillDimension,
-  ageDays,
   areaOf,
   assigneeOf,
   isAuthorized,
@@ -26,6 +25,15 @@ import { CONFIRM_IDLE_DAYS, isConfirmStatus } from '../models/ticket.model';
 import { BiStore } from './bi-store.service';
 import { reporterOf } from './service-flash.model';
 import { SearchField } from '../../../shared/components/search-field/search-field';
+import { SortHead, ariaSortOf } from '../../../shared/components/sort-head/sort-head';
+import {
+  TicketSort,
+  TicketSortKey,
+  nextTicketSort,
+  sortTickets,
+  ticketAge,
+  ticketIdleDays,
+} from './bi-ticket-sort';
 
 /** Quali ticket parte dalla pagina di origine: aperti, pending, creati nel periodo, chiusi di recente… */
 type Scope =
@@ -62,7 +70,6 @@ type Scope =
   | 'awaiting-approval'
   | 'authorized'
   | 'stalled';
-type SortKey = 'key' | 'priority' | 'due' | 'created' | 'age' | 'updated';
 
 const SCOPE_LABELS: Readonly<Record<Scope, string>> = {
   open: 'ticket aperti',
@@ -105,7 +112,6 @@ const SCOPE_LABELS: Readonly<Record<Scope, string>> = {
   stalled:
     'ticket assegnati (o riassegnati) e non presi in carico: nessun movimento di una persona da oltre 8 ore lavorative',
 };
-const PRIORITY_RANK = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
 
 /**
  * Dettaglio dei ticket dietro una barra dei grafici (Aperti, Pending, Panoramica): chiave con
@@ -114,7 +120,14 @@ const PRIORITY_RANK = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
  */
 @Component({
   selector: 'gov-bi-detail-page',
-  imports: [SearchField, DatePipe, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [
+    SearchField,
+    SortHead,
+    DatePipe,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+  ],
   template: `
     <div class="bi-page">
       <div class="head">
@@ -158,36 +171,85 @@ const PRIORITY_RANK = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
             <table class="table">
               <thead>
                 <tr>
-                  <th scope="col">
-                    <button type="button" class="sort" (click)="sortBy('key')">Ticket</button>
+                  <th scope="col" [attr.aria-sort]="ariaSort('key')">
+                    <gov-sort-head key="key" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Ticket</gov-sort-head
+                    >
                   </th>
-                  <th scope="col">Descrizione</th>
-                  <th scope="col">Richiedente</th>
-                  <th scope="col">Assegnatario</th>
-                  <th scope="col">Stato</th>
-                  <th scope="col">
-                    <button type="button" class="sort" (click)="sortBy('priority')">
-                      Priorità
-                    </button>
+                  <th scope="col" [attr.aria-sort]="ariaSort('summary')">
+                    <gov-sort-head key="summary" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Descrizione</gov-sort-head
+                    >
                   </th>
-                  <th scope="col">
-                    <button type="button" class="sort" (click)="sortBy('due')">Scadenza</button>
+                  <th scope="col" [attr.aria-sort]="ariaSort('reporter')">
+                    <gov-sort-head key="reporter" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Richiedente</gov-sort-head
+                    >
                   </th>
-                  <th scope="col">Impatto</th>
-                  <th scope="col">Progetto Marlù</th>
-                  <th scope="col">
-                    <button type="button" class="sort" (click)="sortBy('age')">Età</button>
+                  <th scope="col" [attr.aria-sort]="ariaSort('assignee')">
+                    <gov-sort-head key="assignee" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Assegnatario</gov-sort-head
+                    >
                   </th>
-                  <th scope="col">
-                    <button type="button" class="sort" (click)="sortBy('updated')">
-                      Ultimo agg.
-                    </button>
+                  <th scope="col" [attr.aria-sort]="ariaSort('status')">
+                    <gov-sort-head key="status" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Stato</gov-sort-head
+                    >
                   </th>
-                  <th scope="col">
-                    <button type="button" class="sort" (click)="sortBy('created')">Creato</button>
+                  <th scope="col" [attr.aria-sort]="ariaSort('priority')">
+                    <gov-sort-head key="priority" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Priorità</gov-sort-head
+                    >
                   </th>
-                  <th scope="col">Risolto</th>
-                  <th scope="col">Tipo richiesta</th>
+                  <th scope="col" [attr.aria-sort]="ariaSort('due')">
+                    <gov-sort-head key="due" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Scadenza</gov-sort-head
+                    >
+                  </th>
+                  <th scope="col" [attr.aria-sort]="ariaSort('impact')">
+                    <gov-sort-head key="impact" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Impatto</gov-sort-head
+                    >
+                  </th>
+                  <th scope="col" [attr.aria-sort]="ariaSort('area')">
+                    <gov-sort-head key="area" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Progetto Marlù</gov-sort-head
+                    >
+                  </th>
+                  <th scope="col" [attr.aria-sort]="ariaSort('age')">
+                    <gov-sort-head key="age" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Età</gov-sort-head
+                    >
+                  </th>
+                  <th scope="col" [attr.aria-sort]="ariaSort('updated')">
+                    <gov-sort-head key="updated" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Ultimo agg.</gov-sort-head
+                    >
+                  </th>
+                  <th
+                    scope="col"
+                    [attr.aria-sort]="ariaSort('idle')"
+                    title="Giorni dall'ultimo movimento di una persona (modifica o commento): le automazioni di Jira non contano. Solo per i ticket aperti."
+                  >
+                    <gov-sort-head key="idle" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Fermo da</gov-sort-head
+                    >
+                  </th>
+                  <th scope="col" [attr.aria-sort]="ariaSort('created')">
+                    <gov-sort-head key="created" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Creato</gov-sort-head
+                    >
+                  </th>
+                  <th scope="col" [attr.aria-sort]="ariaSort('resolved')">
+                    <gov-sort-head key="resolved" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Risolto</gov-sort-head
+                    >
+                  </th>
+                  <th scope="col" [attr.aria-sort]="ariaSort('requestType')">
+                    <gov-sort-head key="requestType" [sort]="sort()" (sorted)="sortBy($event)"
+                      >Tipo richiesta</gov-sort-head
+                    >
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -214,6 +276,7 @@ const PRIORITY_RANK = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
                     <td>{{ ticket.area ?? '' }}</td>
                     <td class="num">{{ age(ticket) }} gg</td>
                     <td>{{ ticket.updated | date: 'dd/MM/yy' }}</td>
+                    <td class="num">{{ idleLabel(ticket) }}</td>
                     <td>{{ ticket.created | date: 'dd/MM/yy' }}</td>
                     <td>{{ ticket.resolved ? (ticket.resolved | date: 'dd/MM/yy') : '' }}</td>
                     <td>{{ ticket.requestType ?? '' }}</td>
@@ -337,7 +400,7 @@ export class BiDetailPage {
 
   protected readonly search = signal('');
   // Di partenza i più nuovi in alto (numero progressivo del ticket, dal più alto), i più vecchi in fondo
-  protected readonly sort = signal<{ key: SortKey; desc: boolean }>({ key: 'key', desc: true });
+  protected readonly sort = signal<TicketSort>({ key: 'key', desc: true });
 
   protected readonly dimLabel = computed(() => {
     const dim = this.dim();
@@ -373,9 +436,8 @@ export class BiDetailPage {
   protected readonly rows = computed(() => {
     const now = new Date();
     const terms = searchTerms(this.search());
-    const { key, desc } = this.sort();
     const dim = this.dim();
-    return this.base(now)
+    const rows = this.base(now)
       .filter((t) => !dim || matchesDimension(t, dim, this.value(), now))
       .filter((t) => !this.resource() || String(t.resourceId) === this.resource())
       .filter((t) => !this.aging() || matchesDimension(t, 'aging', this.aging(), now))
@@ -389,11 +451,8 @@ export class BiDetailPage {
           t.reporter,
           t.requestType,
         ]),
-      )
-      .sort((a, b) => {
-        const result = compare(a, b, key, now);
-        return desc ? -result : result;
-      });
+      );
+    return sortTickets(rows, this.sort(), now);
   });
 
   constructor() {
@@ -545,12 +604,21 @@ export class BiDetailPage {
     this.location.back();
   }
 
-  protected sortBy(key: SortKey): void {
-    this.sort.update((current) => ({ key, desc: current.key === key ? !current.desc : true }));
+  protected sortBy(key: string): void {
+    this.sort.update((current) => nextTicketSort(current, key as TicketSortKey));
+  }
+
+  protected ariaSort(key: string): 'ascending' | 'descending' | 'none' {
+    return ariaSortOf(this.sort(), key);
   }
 
   protected age(ticket: BiTicket): number {
-    return ageDays(ticket, ticket.resolved ? new Date(ticket.resolved) : new Date());
+    return ticketAge(ticket);
+  }
+
+  protected idleLabel(ticket: BiTicket): string {
+    const days = ticketIdleDays(ticket);
+    return days === null ? '' : days === 0 ? 'oggi' : `${days} gg`;
   }
 
   protected overdue(ticket: BiTicket): boolean {
@@ -593,33 +661,4 @@ function sinceStart(iso: string | null, now: Date, days: number): boolean {
 function startOfToday(): Date {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
-function compare(a: BiTicket, b: BiTicket, key: SortKey, now: Date): number {
-  switch (key) {
-    case 'key':
-      return keyNumber(a) - keyNumber(b);
-    case 'priority':
-      return rank(a.priority) - rank(b.priority);
-    case 'due':
-      // Senza scadenza in fondo con l'ordine crescente
-      return (a.due ?? '9999').localeCompare(b.due ?? '9999');
-    case 'created':
-      return a.created.localeCompare(b.created);
-    case 'updated':
-      return a.updated.localeCompare(b.updated);
-    case 'age':
-      return ageDays(a, now) - ageDays(b, now);
-  }
-}
-
-/** Numero del ticket (MRLIT-2658 → 2658), per ordinare come Jira. */
-function keyNumber(ticket: BiTicket): number {
-  return Number(ticket.key.split('-').pop()) || 0;
-}
-
-/** Posizione della priorità (Highest = 0); senza priorità in fondo. */
-function rank(priority: string | null): number {
-  const index = PRIORITY_RANK.indexOf(priority ?? '');
-  return index === -1 ? PRIORITY_RANK.length : index;
 }

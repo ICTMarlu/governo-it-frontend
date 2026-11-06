@@ -62,8 +62,10 @@ export const GROUPING_LABELS: Readonly<Record<PlanGrouping, string>> = {
   system: 'Sistema',
 };
 
-/** Etichetta dei progetti senza sistema (es. AMS su più sistemi). */
-export const NO_SYSTEM_LABEL = 'Più sistemi o nessuno';
+/** Etichetta dei progetti senza sistema che non sono né ricorrenti né Admin. */
+export const NO_SYSTEM_LABEL = 'Senza sistema';
+export const RECURRING_LABEL = 'Ricorrenti';
+export const ADMIN_LABEL = 'Admin';
 
 /** Gruppo di righe dello stesso sistema, con i totali per settimana (mostrati da chiuso). */
 export interface GridSection {
@@ -102,7 +104,15 @@ export function weekTotalsOf(entries: readonly GridEntry[]): Record<string, numb
 
 /** Sistema della riga per raggruppare: senza sistema in fondo. */
 export function systemOf(row: PlanRow): string {
-  return row.mainSystemLabel ?? NO_SYSTEM_LABEL;
+  if (row.mainSystemLabel) {
+    return row.mainSystemLabel;
+  }
+  // Senza sistema il gruppo lo dà il tipo: Ricorrenti (AMS, Continuous), Admin, altrimenti Senza sistema
+  return isRecurring(row)
+    ? RECURRING_LABEL
+    : row.workTypeCode === 'ADMIN'
+      ? ADMIN_LABEL
+      : NO_SYSTEM_LABEL;
 }
 
 /**
@@ -110,6 +120,11 @@ export function systemOf(row: PlanRow): string {
  * parità in ordine alfabetico; i senza sistema in fondo.
  */
 export function compareSystems(a: PlanRow, b: PlanRow): number {
+  // Per tipo: ricorrenti (AMS e Continuous) in cima, i progetti in mezzo, Admin in fondo
+  const byType = typeRank(a) - typeRank(b);
+  if (byType !== 0) {
+    return byType;
+  }
   const x = a.mainSystemLabel;
   const y = b.mainSystemLabel;
   if (x === y) {
@@ -127,8 +142,15 @@ export function compareSystems(a: PlanRow, b: PlanRow): number {
   );
 }
 
-/** Sistema con i progetti ricorrenti (AMS e Continuous): sta sempre in cima al piano. */
-const PINNED_SYSTEM = /ricorrent/i;
+/** Progetto ricorrente: AMS o Continuous (lo dice il tipo di progetto, non il sistema). */
+export function isRecurring(row: PlanRow): boolean {
+  return row.workTypeCode === 'AMS' || row.workTypeCode === 'CONTINUOUS';
+}
+
+/** Posto del tipo nel piano: 0 ricorrenti (AMS, Continuous), 1 progetti e il resto, 2 Admin. */
+export function typeRank(row: PlanRow): number {
+  return isRecurring(row) ? 0 : row.workTypeCode === 'ADMIN' ? 2 : 1;
+}
 
 /** Ranking del progetto: chi non ce l'ha va dopo chi ce l'ha. */
 function rankOf(entry: GridEntry): number {
@@ -138,7 +160,7 @@ function rankOf(entry: GridEntry): number {
 /**
  * Righe (già ordinate per sistema) divise per sistema, con i totali per settimana. L'ordine lo
  * decide l'ordine ricevuto (ordinamento scelto, poi Ranking, poi alfabetico): i sistemi seguono il
- * loro progetto migliore (ranking più basso) e i ricorrenti (AMS) restano sempre in cima.
+ * loro progetto migliore (ranking più basso) ma per tipo: gruppi con ricorrenti (AMS, Continuous) in cima, poi i progetti, in fondo Admin.
  */
 export function buildSections(entries: readonly GridEntry[], keyPrefix: string): GridSection[] {
   const sections = new Map<string, GridEntry[]>();
@@ -149,11 +171,17 @@ export function buildSections(entries: readonly GridEntry[], keyPrefix: string):
   return [...sections.entries()]
     .map(([label, items], position) => {
       // L'ordine di arrivo vale già: ordinamento scelto, poi ranking, poi alfabetico
-      return { label, ordered: items, position, best: Math.min(...items.map(rankOf)) };
+      return {
+        label,
+        ordered: items,
+        position,
+        best: Math.min(...items.map(rankOf)),
+        type: Math.min(...items.map(({ gridRow }) => typeRank(gridRow.row))),
+      };
     })
     .sort(
       (a, b) =>
-        Number(PINNED_SYSTEM.test(b.label)) - Number(PINNED_SYSTEM.test(a.label)) ||
+        a.type - b.type ||
         (a.best === b.best ? 0 : a.best < b.best ? -1 : 1) ||
         a.position - b.position,
     )

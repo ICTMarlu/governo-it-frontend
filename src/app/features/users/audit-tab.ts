@@ -1,15 +1,17 @@
 import { DatePipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { LEVEL_LABELS, MODULES } from '../../core/auth/permissions';
 import { errorMessage } from '../../shared/crud/crud-api.service';
 import { AuditEntry, PermissionsService } from './permissions.service';
+import { SortHead, ariaSortOf } from '../../shared/components/sort-head/sort-head';
+import { TableSort, nextSort, sortRows } from '../../shared/util/table-sort';
 
 /** Storico delle modifiche ai permessi: chi ha cambiato cosa e quando, dalla più recente. */
 @Component({
   selector: 'gov-audit-tab',
-  imports: [DatePipe, MatProgressSpinnerModule],
+  imports: [DatePipe, MatProgressSpinnerModule, SortHead],
   template: `
     @if (loading()) {
       <p class="state" role="status">
@@ -24,15 +26,35 @@ import { AuditEntry, PermissionsService } from './permissions.service';
         <table class="grid">
           <thead>
             <tr>
-              <th scope="col">Quando</th>
-              <th scope="col">Chi</th>
-              <th scope="col">Su</th>
-              <th scope="col">Modulo</th>
-              <th scope="col">Cambio</th>
+              <th scope="col" [attr.aria-sort]="ariaSort('at')">
+                <gov-sort-head key="at" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Quando</gov-sort-head
+                >
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('by')">
+                <gov-sort-head key="by" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Chi</gov-sort-head
+                >
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('target')">
+                <gov-sort-head key="target" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Su</gov-sort-head
+                >
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('module')">
+                <gov-sort-head key="module" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Modulo</gov-sort-head
+                >
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('change')">
+                <gov-sort-head key="change" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Cambio</gov-sort-head
+                >
+              </th>
             </tr>
           </thead>
           <tbody>
-            @for (entry of entries(); track $index) {
+            @for (entry of sorted(); track $index) {
               <tr>
                 <td>{{ entry.at | date: 'dd/MM/yy HH:mm' }}</td>
                 <td>{{ entry.by ?? '—' }}</td>
@@ -95,6 +117,35 @@ export class AuditTab {
   protected readonly entries = signal<AuditEntry[]>([]);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
+
+  /** Ordine scelto con un clic sul titolo di colonna; null = ordine di partenza (dal più recente). */
+  protected readonly sort = signal<TableSort | null>(null);
+
+  protected sortBy(key: string): void {
+    this.sort.update((current) => nextSort(current, key, key === 'at'));
+  }
+
+  protected ariaSort(key: string): 'ascending' | 'descending' | 'none' {
+    const sort = this.sort();
+    return ariaSortOf(sort === null ? null : { key: sort.key, desc: sort.desc }, key);
+  }
+
+  protected readonly sorted = computed(() =>
+    sortRows(this.entries(), this.sort(), (entry, key) => {
+      switch (key) {
+        case 'at':
+          return entry.at;
+        case 'by':
+          return entry.by;
+        case 'target':
+          return entry.target;
+        case 'module':
+          return this.moduleLabel(entry.module);
+        default:
+          return entry.note ?? this.levelLabel(entry.to);
+      }
+    }),
+  );
 
   constructor() {
     this.service.audit(200).subscribe({

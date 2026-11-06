@@ -7,12 +7,20 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { matchesTerms, searchTerms } from '../../../shared/util/text-search';
 import { BiFilters } from './bi-filters';
-import { BiTicket, ageDays, areaOf, assigneeOf, isOpen } from './bi.model';
+import { BiTicket, areaOf, assigneeOf, isOpen } from './bi.model';
+import {
+  TicketSort,
+  TicketSortKey,
+  nextTicketSort,
+  sortTickets,
+  ticketAge,
+  ticketIdleDays,
+} from './bi-ticket-sort';
 import { BiStore } from './bi-store.service';
 import { SearchField } from '../../../shared/components/search-field/search-field';
+import { SortHead, ariaSortOf } from '../../../shared/components/sort-head/sort-head';
 
 type ListState = 'open' | 'pending' | 'done' | 'all';
-type SortKey = 'created' | 'age' | 'key';
 
 const PAGE_SIZE = 200;
 
@@ -24,6 +32,7 @@ const PAGE_SIZE = 200;
   selector: 'gov-bi-list-page',
   imports: [
     SearchField,
+    SortHead,
     BiFilters,
     DatePipe,
     MatButtonModule,
@@ -67,21 +76,64 @@ const PAGE_SIZE = 200;
           <table class="table">
             <thead>
               <tr>
-                <th scope="col">
-                  <button type="button" class="sort" (click)="sortBy('key')">Ticket</button>
+                <th scope="col" [attr.aria-sort]="ariaSort('key')">
+                  <gov-sort-head key="key" [sort]="sort()" (sorted)="sortBy($event)"
+                    >Ticket</gov-sort-head
+                  >
                 </th>
-                <th scope="col">Titolo</th>
-                <th scope="col">Stato</th>
-                <th scope="col">Progetto Marlù</th>
-                <th scope="col">Assegnatario</th>
-                <th scope="col">Richiedente</th>
-                <th scope="col">Priorità</th>
-                <th scope="col">
-                  <button type="button" class="sort" (click)="sortBy('created')">Creato</button>
+                <th scope="col" [attr.aria-sort]="ariaSort('summary')">
+                  <gov-sort-head key="summary" [sort]="sort()" (sorted)="sortBy($event)"
+                    >Titolo</gov-sort-head
+                  >
                 </th>
-                <th scope="col">Risolto</th>
-                <th scope="col">
-                  <button type="button" class="sort" (click)="sortBy('age')">Età</button>
+                <th scope="col" [attr.aria-sort]="ariaSort('status')">
+                  <gov-sort-head key="status" [sort]="sort()" (sorted)="sortBy($event)"
+                    >Stato</gov-sort-head
+                  >
+                </th>
+                <th scope="col" [attr.aria-sort]="ariaSort('area')">
+                  <gov-sort-head key="area" [sort]="sort()" (sorted)="sortBy($event)"
+                    >Progetto Marlù</gov-sort-head
+                  >
+                </th>
+                <th scope="col" [attr.aria-sort]="ariaSort('assignee')">
+                  <gov-sort-head key="assignee" [sort]="sort()" (sorted)="sortBy($event)"
+                    >Assegnatario</gov-sort-head
+                  >
+                </th>
+                <th scope="col" [attr.aria-sort]="ariaSort('reporter')">
+                  <gov-sort-head key="reporter" [sort]="sort()" (sorted)="sortBy($event)"
+                    >Richiedente</gov-sort-head
+                  >
+                </th>
+                <th scope="col" [attr.aria-sort]="ariaSort('priority')">
+                  <gov-sort-head key="priority" [sort]="sort()" (sorted)="sortBy($event)"
+                    >Priorità</gov-sort-head
+                  >
+                </th>
+                <th scope="col" [attr.aria-sort]="ariaSort('created')">
+                  <gov-sort-head key="created" [sort]="sort()" (sorted)="sortBy($event)"
+                    >Creato</gov-sort-head
+                  >
+                </th>
+                <th scope="col" [attr.aria-sort]="ariaSort('resolved')">
+                  <gov-sort-head key="resolved" [sort]="sort()" (sorted)="sortBy($event)"
+                    >Risolto</gov-sort-head
+                  >
+                </th>
+                <th scope="col" [attr.aria-sort]="ariaSort('age')">
+                  <gov-sort-head key="age" [sort]="sort()" (sorted)="sortBy($event)"
+                    >Età</gov-sort-head
+                  >
+                </th>
+                <th
+                  scope="col"
+                  [attr.aria-sort]="ariaSort('idle')"
+                  title="Giorni dall'ultimo movimento di una persona (modifica o commento): le automazioni di Jira non contano. Solo per i ticket aperti."
+                >
+                  <gov-sort-head key="idle" [sort]="sort()" (sorted)="sortBy($event)"
+                    >Fermo da</gov-sort-head
+                  >
                 </th>
               </tr>
             </thead>
@@ -106,6 +158,7 @@ const PAGE_SIZE = 200;
                   <td>{{ ticket.created | date: 'dd/MM/yy' }}</td>
                   <td>{{ ticket.resolved ? (ticket.resolved | date: 'dd/MM/yy') : '' }}</td>
                   <td class="num">{{ age(ticket) }} gg</td>
+                  <td class="num">{{ idleLabel(ticket) }}</td>
                 </tr>
               }
             </tbody>
@@ -190,7 +243,8 @@ export class BiListPage {
 
   protected readonly search = signal('');
   protected readonly state = signal<ListState>('open');
-  protected readonly sort = signal<{ key: SortKey; desc: boolean }>({ key: 'created', desc: true });
+  // Di partenza i più recenti in alto; ogni colonna si può ordinare con un clic sul titolo
+  protected readonly sort = signal<TicketSort>({ key: 'created', desc: true });
   protected readonly shown = signal(PAGE_SIZE);
 
   protected readonly jiraUrl = computed(() => {
@@ -201,9 +255,7 @@ export class BiListPage {
   protected readonly rows = computed(() => {
     const terms = searchTerms(this.search());
     const state = this.state();
-    const { key, desc } = this.sort();
-    const now = new Date();
-    return this.store
+    const rows = this.store
       .createdInPeriod()
       .filter(
         (t) =>
@@ -222,32 +274,28 @@ export class BiListPage {
           t.reporter,
           t.requestType,
         ]),
-      )
-      .sort((a, b) => {
-        const result =
-          key === 'key'
-            ? keyNumber(a) - keyNumber(b)
-            : key === 'age'
-              ? ageDays(a, now) - ageDays(b, now)
-              : a.created.localeCompare(b.created);
-        return desc ? -result : result;
-      });
+      );
+    return sortTickets(rows, this.sort());
   });
 
   constructor() {
     this.store.load();
   }
 
-  protected sortBy(key: SortKey): void {
-    this.sort.update((current) => ({ key, desc: current.key === key ? !current.desc : true }));
+  protected sortBy(key: string): void {
+    this.sort.update((current) => nextTicketSort(current, key as TicketSortKey));
+  }
+
+  protected ariaSort(key: string): 'ascending' | 'descending' | 'none' {
+    return ariaSortOf(this.sort(), key);
   }
 
   protected age(ticket: BiTicket): number {
-    return ageDays(ticket, ticket.resolved ? new Date(ticket.resolved) : new Date());
+    return ticketAge(ticket);
   }
-}
 
-/** Numero del ticket (MRLIT-2658 → 2658), per ordinare come Jira. */
-function keyNumber(ticket: BiTicket): number {
-  return Number(ticket.key.split('-').pop()) || 0;
+  protected idleLabel(ticket: BiTicket): string {
+    const days = ticketIdleDays(ticket);
+    return days === null ? '' : days === 0 ? 'oggi' : `${days} gg`;
+  }
 }

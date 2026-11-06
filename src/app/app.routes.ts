@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router, Routes } from '@angular/router';
 
 import { authGuard } from './core/auth/auth.guard';
 import { moduleGuard } from './core/auth/module.guard';
@@ -247,18 +248,25 @@ export const routes: Routes = [
               import('./features/tickets/bi/bi-bounces-page').then((m) => m.BiBouncesPage),
           },
           {
+            path: 'richiedenti',
+            title: 'Ticket · Richiedenti · Governo IT',
+            loadComponent: () =>
+              import('./features/tickets/bi/bi-requesters-page').then((m) => m.BiRequestersPage),
+          },
+          {
             path: 'aperti',
             title: 'Ticket aperti · Governo IT',
-            data: { mode: 'open' },
             loadComponent: () =>
               import('./features/tickets/bi/bi-open-page').then((m) => m.BiOpenPage),
           },
+          // Pending è una vista della pagina Aperti: i vecchi collegamenti arrivano lì
           {
             path: 'pending',
-            title: 'Ticket in Pending · Governo IT',
-            data: { mode: 'pending' },
-            loadComponent: () =>
-              import('./features/tickets/bi/bi-open-page').then((m) => m.BiOpenPage),
+            pathMatch: 'full',
+            redirectTo: () =>
+              inject(Router).createUrlTree(['/tickets/aperti'], {
+                queryParams: { vista: 'pending' },
+              }),
           },
           {
             path: 'dettaglio',

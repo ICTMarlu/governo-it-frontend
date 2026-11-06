@@ -575,7 +575,7 @@ export const PLAN_HELP: HelpContent = {
         '"Archiviate" mostra anche le righe archiviate.',
         'La freccia accanto al nome della persona apre e chiude le sue righe; resta visibile la riga con la saturazione.',
         '"Raggruppa" sceglie come dividere le righe: per Persona (come l’Excel), per Persona e sistema (dentro ogni persona un gruppo per sistema) o per Sistema (le righe di tutte le persone per sistema, con il nome della persona accanto al progetto; in fondo le righe Ferie delle persone mostrate e una riga di festività per ogni calendario nazionale delle loro sedi, es. "Festività · San Marino", con il numero di festività della settimana; il nome della festività compare passandoci sopra). La scelta resta salvata per il tuo utente.',
-        'Ogni gruppo per sistema ha la sua freccia: chiuso mostra una sola riga con il totale delle giornate per settimana. I progetti senza sistema (es. AMS su più sistemi) sono in "Più sistemi o nessuno".',
+        'Ogni gruppo per sistema ha la sua freccia: chiuso mostra una sola riga con il totale delle giornate per settimana. I progetti senza sistema stanno in gruppi che dipendono dal tipo: "Ricorrenti" (AMS e Continuous, sempre in cima), "Admin" (in fondo) e "Senza sistema" per gli altri. L’ordine dei gruppi è per tipo: prima i ricorrenti, poi i progetti, in fondo Admin.',
         'Sul telefono vedi una settimana alla volta, con una scheda per persona.',
       ],
     },
@@ -688,14 +688,15 @@ export const TICKETS_HELP: HelpContent = {
     {
       title: 'Pagine BI (come Power BI)',
       items: [
-        'Le linguette in alto portano alle pagine: Operativa (azioni consigliate e carico), Panoramica, Trend, Aperti, Pending ed Elenco.',
+        'Le linguette in alto portano alle pagine: Operativa (azioni consigliate e carico), Panoramica, Trend, Persone, Aperti (con Pending), Rimbalzi, Richiedenti ed Elenco.',
         'I filtri in alto valgono per tutte le pagine BI e restano passando dall’una all’altra: Progetto Marlù, Assegnatario, Anno e Mese di creazione. Clic su una barra di area o assegnatario filtra tutto su quel valore; un secondo clic lo toglie. Le combinazioni si salvano con "Vista".',
-        'Panoramica: ticket creati nel periodo, quanti sono ancora aperti (lavorabili + in attesa di risposta del cliente + Pending) e quanti risolti, con le percentuali che sommano 100: i lavorabili sono gli aperti che toccano a noi, senza i ticket in attesa del cliente e senza i Pending; creati e risolti per mese (i risolti nel mese di chiusura); ripartizione per area, assegnatario, stato e tipo di richiesta.',
+        'Panoramica: ticket creati nel periodo, quanti sono ancora aperti (lavorabili + in attesa di risposta del cliente + Pending) e quanti risolti, con le percentuali che sommano 100: i lavorabili sono gli aperti che toccano a noi, senza i ticket in attesa del cliente e senza i Pending; creati e risolti per mese (i risolti nel mese di chiusura); ripartizione per area, assegnatario, stato e tipo di richiesta. In fondo due riquadri con la media al mese dei ticket creati e di quelli risolti nell’anno in corso, sempre sul totale di tutti i ticket (mesi completi, il mese in corso resta fuori; i filtri non cambiano il numero grande: se scegli un’area o un assegnatario, sotto compare la stessa media sulla sola selezione) e il trend: la media degli ultimi 3 mesi completi confrontata con quella dei mesi precedenti dello stesso anno, per vedere se si cresce o si cala e di quanto (sotto l’1% è “stabile”; servono almeno 4 mesi completi; passando il mouse sul trend compare la spiegazione) (i sottotask, creati sotto un ticket padre, non hanno un tipo di richiesta del portale e compaiono come “Sottotask”: sono ticket come gli altri; quelli creati direttamente da Jira, senza portale né mail, mostrano il loro tipo di ticket, ad esempio “Richiesta Generale (da Jira)”). In attesa del cliente sono solo gli stati “In attesa di risposta dal cliente” e “User Acceptance test”: “Awaiting approval” aspetta l’approvazione del CTO o della direzione, quindi è un ticket nostro e resta tra i lavorabili.',
+        'Operativa: il box “ticket aperti” è cliccabile come gli altri: il clic sul numero apre l’elenco degli aperti (senza Pending), il clic su “da fare” o su “in corso” apre solo quelli.',
         'Trend: per settimana creati e risolti e, sotto, i lavorabili a fine settimana; "Includi i Pending" li conta o li esclude. Giorni di backlog, come la misura di Power BI = lavorabili di oggi ÷ risolti per giorno lavorativo nelle ultime 3 settimane complete (risolti ÷ 3 settimane ÷ 5 giorni; la settimana in corso non conta). Il risultato è in giorni lavorativi. Il Pending è lo stato di oggi (lo storico degli stati non si legge).',
         '"Considera chiusi i ticket in attesa del cliente" (Trend e Persone, stessa scelta): acceso, i ticket in attesa di risposta del cliente contano come chiusi dal giorno in cui sono entrati in quello stato: sommati ai risolti per settimana, ai chiusi al giorno e ai giorni di backlog, e tolti dai lavorabili. Spento (di partenza) restano aperti.',
-        'Aperti e Pending: i ticket aperti oggi (di qualunque periodo; contano area e assegnatario) per anzianità, area, priorità, assegnatario, richiedente e stato.',
-        'Elenco: i ticket creati nel periodo con ricerca dal vivo, stato (aperti, pending, risolti, tutti), ordinamento per chiave, data o età e link a Jira.',
-        'Elenco dei ticket che si apre da un numero, da un grafico o da un filtro: di partenza i più nuovi in alto (numero progressivo del ticket, dal più alto) e i più vecchi in fondo; clicca un’intestazione per cambiare l’ordine.',
+        'Aperti: i ticket aperti oggi (di qualunque periodo; contano area e assegnatario) per anzianità, area, priorità, assegnatario, richiedente e stato. L’interruttore Aperti / Pending accanto ai filtri passa agli stessi grafici sui soli ticket in Pending (in pausa): il numero e il suggerimento cambiano di conseguenza.',
+        'Elenco: i ticket creati nel periodo con ricerca dal vivo, stato (aperti, pending, risolti, tutti), ordinamento con un clic sul titolo di qualunque colonna (un secondo clic inverte; di partenza i più recenti in alto, ogni volta che riapri la pagina) e link a Jira. La colonna “Fermo da” dice da quanti giorni un ticket aperto non si muove: conta solo i movimenti di una persona (modifica o commento), non le automazioni di Jira.',
+        'Elenco dei ticket che si apre da un numero, da un grafico o da un filtro: di partenza i più nuovi in alto (numero progressivo del ticket, dal più alto) e i più vecchi in fondo; clicca il titolo di una colonna per ordinare per quella (un secondo clic inverte); i valori vuoti restano in fondo. “Fermo da” = giorni dall’ultimo movimento di una persona (le automazioni di Jira non contano), solo per i ticket aperti.',
         'Gli stati "Pending" sono nel parametro TICKET_PENDING_STATUSES (oggi Pending); lo storico letto da Jira è di 2 anni (JIRA_HISTORY_DAYS).',
       ],
     },
@@ -857,6 +858,39 @@ export const BOUNCES_HELP: HelpContent = {
         'Il box “chiusi senza mai passare dall’attesa del cliente” conta i ticket chiusi nel periodo (con i filtri scelti) che in tutta la loro storia non sono mai stati in “In attesa di risposta dal cliente”, e la quota sui ticket chiusi: serve a vedere quante richieste si chiudono senza aver mai chiesto nulla al cliente. Il box accanto, “chiusi dopo almeno un’attesa del cliente”, è il complemento: gli stessi ticket chiusi che invece sono passati almeno una volta dall’attesa prima di essere chiusi, con la quota (le due quote sommano 100). L’attesa si guarda sull’intera storia del ticket, anche prima del periodo o con un’altra persona.',
         'In fondo, i ticket riaperti più volte dopo la chiusura (dal più riaperto), con codice, titolo, chi li aveva e il richiedente, per andare a vedere cosa è successo. Le risposte del cliente in attesa non contano qui.',
         'La cronologia parte da quando i ticket sono stati sincronizzati con la cronologia completa: i passaggi precedenti ad allora ci sono solo se Jira li conserva.',
+      ],
+    },
+  ],
+};
+
+export const TICKET_REQUESTERS_HELP: HelpContent = {
+  title: 'Richiedenti: come si legge',
+  intro:
+    'I ticket visti dalla parte di chi li apre: scegli un richiedente (per esempio un responsabile acquisti o prodotto) e vedi quanti ticket ha aperto nel periodo, quanti ne abbiamo chiusi, chi li ha chiusi, quanto ci mettiamo, quante volte si riaprono e come vanno nel tempo. Serve a preparare un incontro con il cliente.',
+  sections: [
+    {
+      title: 'Elenco dei richiedenti',
+      items: [
+        'Una riga per richiedente (chi ha aperto la richiesta in Jira): ticket aperti nel periodo, chiusi, ancora aperti, % chiusi, giorni medi per chiudere e ticket riaperti dopo la chiusura. Ordine di partenza: da chi ha aperto più ticket; clic sull’intestazione per ordinare. Il campo di ricerca filtra per nome.',
+        'Clic su una riga per vedere il dettaglio del richiedente a destra e sotto. All’apertura è scelto il primo.',
+      ],
+    },
+    {
+      title: 'Numeri del richiedente',
+      items: [
+        'Ticket aperti = creati dal richiedente nel periodo scelto (anno e mese di creazione): clic per vedere l’elenco. Chiusi = tra quelli, i ticket oggi chiusi, con la quota sui ticket aperti. Ancora aperti comprende i Pending e quelli in attesa del cliente (indicati a parte).',
+        'Giorni per chiudere = giorni di calendario dalla creazione alla chiusura, sui ticket chiusi: media, mediana e quota chiusa entro 7 giorni. La mediana è meno sensibile ai pochi ticket rimasti aperti a lungo.',
+        'Riaperti dopo la chiusura = ticket chiusi e poi tornati aperti almeno una volta, letto dalla cronologia (la stessa della pagina Rimbalzi), con la quota sui chiusi e il numero totale di riaperture. Messi in attesa del cliente = ticket passati almeno una volta da “In attesa di risposta dal cliente”.',
+        'Qui si guardano i ticket creati nel periodo e come sono andati fino a oggi: i numeri possono differire da quelli della pagina Rimbalzi, che conta i passaggi nel periodo e li attribuisce a chi aveva il ticket.',
+      ],
+    },
+    {
+      title: 'Grafici ed elenco dei ticket',
+      items: [
+        'Ticket aperti e chiusi nel tempo, per mese o per settimana (ultime 26): i chiusi sono contati nel mese o nella settimana di chiusura; la linea è quanti restano aperti a fine periodo. Il grafico per mese segue gli anni scelti nel filtro e tutti i mesi, il per settimana le ultime 26 settimane.',
+        'Chi li ha chiusi = chi aveva il ticket alla chiusura secondo la cronologia, altrimenti l’assegnatario di oggi. Poi i ticket per Progetto Marlù e per tipo di richiesta.',
+        'In fondo, i ticket del richiedente dal più recente, con codice (apre Jira), titolo, stato, chi l’ha chiuso, giorni per chiudere e numero di riaperture.',
+        'Valgono i filtri in alto: Progetto Marlù e Assegnatario restringono i ticket considerati, Anno e Mese la data di creazione.',
       ],
     },
   ],

@@ -9,6 +9,8 @@ import { API_BASE_URL } from '../../core/config/api.config';
 import { errorMessage } from '../../shared/crud/crud-api.service';
 import { matchesTerms, searchTerms } from '../../shared/util/text-search';
 import { SearchField } from '../../shared/components/search-field/search-field';
+import { SortHead, ariaSortOf } from '../../shared/components/sort-head/sort-head';
+import { TableSort, nextSort, sortRows } from '../../shared/util/table-sort';
 
 type Kind = 'LOGIN' | 'LOGIN_FAILED' | 'CREATE' | 'DELETE';
 
@@ -50,7 +52,14 @@ const PERIODS: readonly { readonly days: number; readonly label: string }[] = [
  */
 @Component({
   selector: 'gov-activity-tab',
-  imports: [SearchField, DatePipe, MatButtonToggleModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [
+    SearchField,
+    SortHead,
+    DatePipe,
+    MatButtonToggleModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+  ],
   template: `
     <div class="bar">
       <mat-button-toggle-group
@@ -105,15 +114,35 @@ const PERIODS: readonly { readonly days: number; readonly label: string }[] = [
         <table class="grid">
           <thead>
             <tr>
-              <th scope="col">Quando</th>
-              <th scope="col">Chi</th>
-              <th scope="col">Cosa è successo</th>
-              <th scope="col">Dove</th>
-              <th scope="col">Dettaglio</th>
+              <th scope="col" [attr.aria-sort]="ariaSort('at')">
+                <gov-sort-head key="at" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Quando</gov-sort-head
+                >
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('who')">
+                <gov-sort-head key="who" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Chi</gov-sort-head
+                >
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('kind')">
+                <gov-sort-head key="kind" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Cosa è successo</gov-sort-head
+                >
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('where')">
+                <gov-sort-head key="where" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Dove</gov-sort-head
+                >
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('detail')">
+                <gov-sort-head key="detail" [sort]="sort()" (sorted)="sortBy($event)"
+                  >Dettaglio</gov-sort-head
+                >
+              </th>
             </tr>
           </thead>
           <tbody>
-            @for (row of visible(); track row.id) {
+            @for (row of sorted(); track row.id) {
               <tr [class]="'row row--' + row.kind.toLowerCase()">
                 <td class="nowrap">{{ row.at | date: 'dd/MM/yy HH:mm:ss' }}</td>
                 <td class="nowrap">
@@ -286,6 +315,35 @@ export class ActivityTab {
         ]),
     );
   });
+
+  /** Ordine scelto con un clic sul titolo di colonna; null = ordine di partenza (dal più recente). */
+  protected readonly sort = signal<TableSort | null>(null);
+
+  protected sortBy(key: string): void {
+    this.sort.update((current) => nextSort(current, key, key === 'at'));
+  }
+
+  protected ariaSort(key: string): 'ascending' | 'descending' | 'none' {
+    const sort = this.sort();
+    return ariaSortOf(sort === null ? null : { key: sort.key, desc: sort.desc }, key);
+  }
+
+  protected readonly sorted = computed(() =>
+    sortRows(this.visible(), this.sort(), (row, key) => {
+      switch (key) {
+        case 'at':
+          return row.at;
+        case 'who':
+          return this.who(row);
+        case 'kind':
+          return KIND_LABELS[row.kind].label;
+        case 'where':
+          return row.entityType;
+        default:
+          return row.description;
+      }
+    }),
+  );
 
   constructor() {
     // Il periodo si chiede al server; tipo, utente e ricerca filtrano quello che è già arrivato

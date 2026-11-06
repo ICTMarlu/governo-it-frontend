@@ -127,10 +127,14 @@ export class CrudSection {
       this.idFilter() !== null,
   );
 
-  /** Quanti aperti e chiusi ci sono (per i numeri sul filtro), con la ricerca e i filtri esclusi. */
+  /**
+   * Quanti aperti e chiusi ci sono (per i numeri sul filtro), con ricerca e filtri applicati: cambiano
+   * scegliendo una persona o uno stato, così la somma torna con le righe dell'elenco; solo Aperti/Chiusi/Tutti
+   * non li restringe.
+   */
   protected readonly openCounts = computed(() => {
     const closedWhen = this.config().closedWhen;
-    const rows = this.rows().filter((row) => row['active'] !== false || this.showInactive());
+    const rows = this.filteredRows();
     const closed = closedWhen ? rows.filter((row) => closedWhen(row)).length : 0;
     return { open: rows.length - closed, closed, all: rows.length };
   });
@@ -171,17 +175,15 @@ export class CrudSection {
     this.rows().some((row) => row['active'] === false),
   );
 
-  protected readonly visibleRows = computed(() => {
+  /** Righe con ricerca, filtri rapidi, disattivati e righe da indirizzo applicati; Aperti/Chiusi/Tutti no. */
+  private readonly filteredRows = computed(() => {
     const config = this.config();
     const text = this.search().trim().toLowerCase();
     const activeFilters = Object.entries(this.filters()).filter(([, values]) => values.length > 0);
-    const closedWhen = config.closedWhen;
-    const openState = closedWhen ? this.openState() : 'all';
-    const rows = this.rows().filter(
+    return this.rows().filter(
       (row) =>
         (this.showInactive() || row['active'] !== false) &&
         (this.idFilter() === null || this.idFilter()!.has(row.id!)) &&
-        (openState === 'all' || closedWhen!(row) === (openState === 'closed')) &&
         (!text ||
           config.searchKeys.some((key) =>
             valuesOf(readPath(row, key)).some((value) => value.toLowerCase().includes(text)),
@@ -190,6 +192,16 @@ export class CrudSection {
           valuesOf(readPath(row, key)).some((value) => selected.includes(value)),
         ),
     );
+  });
+
+  protected readonly visibleRows = computed(() => {
+    const config = this.config();
+    const closedWhen = config.closedWhen;
+    const openState = closedWhen ? this.openState() : 'all';
+    const rows =
+      openState === 'all'
+        ? this.filteredRows()
+        : this.filteredRows().filter((row) => closedWhen!(row) === (openState === 'closed'));
     return config.sort ? [...rows].sort(config.sort) : rows;
   });
 

@@ -407,7 +407,17 @@ th[aria-sort='descending'] .sort-head {
 .wrong {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-  gap: var(--gi-space-4);
+  gap: var(--gi-space-1) var(--gi-space-4);
+
+  // Titolo e lista di ogni gruppo sulle righe della griglia: se un titolo va a capo, gli elenchi
+  // dei gruppi accanto partono comunque alla stessa altezza
+  &__group {
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    gap: 0;
+    min-width: 0;
+  }
 
   &__title {
     margin: 0 0 var(--gi-space-2);

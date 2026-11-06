@@ -92,12 +92,36 @@
 
   <!-- Numeri principali -->
   <ul class="gi-kpis" aria-label="Numeri principali">
-    <li *govKpi="'ops.open'" class="gi-kpi">
+    <li
+      *govKpi="'ops.open'"
+      class="gi-kpi gi-kpi--link"
+      role="link"
+      tabindex="0"
+      title="Vedi i ticket aperti"
+      (click)="openPriority('all-open')"
+      (keydown.enter)="openPriority('all-open')"
+    >
       <span class="gi-kpi__value">{{ data.kpis.open }}</span>
       <span class="gi-kpi__label">ticket aperti</span>
-      <span class="gi-kpi__meta"
-        >{{ data.kpis.toDo }} da fare · {{ data.kpis.inProgress }} in corso</span
-      >
+      <span class="gi-kpi__meta">
+        <button
+          type="button"
+          class="gi-kpi__link"
+          [disabled]="data.kpis.toDo === 0"
+          (click)="$event.stopPropagation(); openPriority('all-todo')"
+        >
+          {{ data.kpis.toDo }} da fare
+        </button>
+        ·
+        <button
+          type="button"
+          class="gi-kpi__link"
+          [disabled]="data.kpis.inProgress === 0"
+          (click)="$event.stopPropagation(); openPriority('all-progress')"
+        >
+          {{ data.kpis.inProgress }} in corso
+        </button>
+      </span>
     </li>
     <li *govKpi="'ops.flow7'" class="gi-kpi gi-kpi--link">
       <a

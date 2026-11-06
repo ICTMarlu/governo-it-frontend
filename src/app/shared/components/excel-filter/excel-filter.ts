@@ -14,9 +14,20 @@ export interface ExcelFilterOption {
 
 /** Scorciatoia nel menu del filtro (es. "Solo aperti"). */
 export interface ExcelFilterPreset {
+  /** Identificativo per chi ascolta {@code presetApplied} (es. per cambiare anche un altro filtro). */
+  readonly key?: string;
   readonly label: string;
   /** Valori selezionati dal preset; null = nessun filtro. */
   readonly values: readonly string[] | null;
+}
+
+/** Gruppo di voci che si spunta in blocco ed espande (es. un trimestre con i suoi tre mesi). */
+export interface ExcelFilterGroup {
+  readonly label: string;
+  /** Dettaglio accanto al nome (es. "gen – mar"). */
+  readonly hint?: string;
+  /** Valori delle voci del gruppo. */
+  readonly values: readonly string[];
 }
 
 /** Direzione dell'ordinamento chiesto dal menu del filtro. */
@@ -88,20 +99,64 @@ export type ExcelSortDirection = 'asc' | 'desc';
           <button mat-button type="button" (click)="selectVisible(false)">Togli visibili</button>
         </div>
         @for (preset of presets(); track preset.label) {
-          <button mat-button type="button" class="panel__preset" (click)="apply(preset.values)">
+          <button mat-button type="button" class="panel__preset" (click)="applyPreset(preset)">
             {{ preset.label }}
           </button>
         }
         <div class="panel__list">
-          @for (option of visibleOptions(); track option.value) {
-            <mat-checkbox
-              [checked]="isChecked(option.value)"
-              (change)="toggle(option.value, $event.checked)"
-            >
-              {{ option.label }}
-            </mat-checkbox>
-          } @empty {
-            <p class="panel__empty">Nessuna voce</p>
+          @if (groupRows().length > 0 && query().trim() === '') {
+            <!-- Albero: il gruppo si spunta intero (a metà se ne ha solo alcune) o si espande per le singole voci -->
+            @for (group of groupRows(); track group.label) {
+              <div class="group">
+                <button
+                  mat-icon-button
+                  type="button"
+                  class="group__toggle"
+                  [attr.aria-expanded]="isExpanded(group.label)"
+                  [attr.aria-label]="
+                    (isExpanded(group.label) ? 'Comprimi ' : 'Espandi ') + group.label
+                  "
+                  (click)="toggleExpanded(group.label)"
+                >
+                  <mat-icon aria-hidden="true">{{
+                    isExpanded(group.label) ? 'expand_more' : 'chevron_right'
+                  }}</mat-icon>
+                </button>
+                <mat-checkbox
+                  class="group__check"
+                  [checked]="group.all"
+                  [indeterminate]="group.some && !group.all"
+                  (change)="toggleGroup(group.values, $event.checked)"
+                >
+                  {{ group.label }}
+                  @if (group.hint) {
+                    <span class="group__hint">{{ group.hint }}</span>
+                  }
+                </mat-checkbox>
+              </div>
+              @if (isExpanded(group.label)) {
+                @for (option of group.options; track option.value) {
+                  <mat-checkbox
+                    class="group__item"
+                    [checked]="isChecked(option.value)"
+                    (change)="toggle(option.value, $event.checked)"
+                  >
+                    {{ option.label }}
+                  </mat-checkbox>
+                }
+              }
+            }
+          } @else {
+            @for (option of visibleOptions(); track option.value) {
+              <mat-checkbox
+                [checked]="isChecked(option.value)"
+                (change)="toggle(option.value, $event.checked)"
+              >
+                {{ option.label }}
+              </mat-checkbox>
+            } @empty {
+              <p class="panel__empty">Nessuna voce</p>
+            }
           }
         </div>
         <div class="panel__footer">
@@ -245,6 +300,33 @@ export type ExcelSortDirection = 'asc' | 'desc';
       border-block: 1px solid var(--mat-sys-outline-variant);
     }
 
+    .group {
+      display: flex;
+      align-items: center;
+    }
+
+    .group__toggle {
+      --mat-icon-button-state-layer-size: 32px;
+      width: 32px;
+      height: 32px;
+      padding: 4px;
+    }
+
+    .group__check {
+      flex: 1 1 auto;
+    }
+
+    .group__hint {
+      margin-inline-start: 0.375rem;
+      color: var(--mat-sys-on-surface-variant);
+      font: var(--mat-sys-body-small);
+    }
+
+    // Voci dentro il gruppo, rientrate sotto la sua casella
+    .group__item {
+      margin-inline-start: 2.5rem;
+    }
+
     .panel__empty,
     .panel__count {
       margin: 0.5rem 0;
@@ -259,6 +341,8 @@ export class ExcelFilter {
   /** Valori selezionati; null = nessun filtro. */
   readonly selected = input<readonly string[] | null>(null);
   readonly presets = input<readonly ExcelFilterPreset[]>([]);
+  /** Voci raggruppate ad albero (es. trimestri e mesi); senza ricerca sostituiscono l'elenco semplice. */
+  readonly groups = input<readonly ExcelFilterGroup[]>([]);
   /** Solo l'icona (per le intestazioni di colonna). */
   readonly compact = input(false);
   /** Testo del pulsante al posto del riepilogo automatico (es. "Aperti"). */
@@ -280,6 +364,8 @@ export class ExcelFilter {
   readonly sortDescLabel = input('Ordina dalla Z alla A');
 
   readonly selectedChange = output<readonly string[] | null>();
+  /** Scorciatoia scelta nel menu (oltre a {@code selectedChange}). */
+  readonly presetApplied = output<ExcelFilterPreset>();
   /** Ordinamento scelto; null = toglie l'ordinamento della colonna (secondo clic sulla voce attiva). */
   readonly sortChange = output<ExcelSortDirection | null>();
 
@@ -291,6 +377,27 @@ export class ExcelFilter {
   ]);
 
   protected readonly query = signal('');
+  /** Gruppi aperti (per etichetta). */
+  private readonly expanded = signal<ReadonlySet<string>>(new Set());
+
+  /** Gruppi con le loro voci e lo stato della casella: tutte, alcune o nessuna spuntata. */
+  protected readonly groupRows = computed(() => {
+    const byValue = new Map(this.options().map((option) => [option.value, option]));
+    return this.groups().map((group) => {
+      const options = group.values
+        .map((value) => byValue.get(value))
+        .filter((option): option is ExcelFilterOption => option !== undefined);
+      const count = options.filter((option) => this.checked().has(option.value)).length;
+      return {
+        label: group.label,
+        hint: group.hint,
+        values: options.map((option) => option.value),
+        options,
+        all: options.length > 0 && count === options.length,
+        some: count > 0,
+      };
+    });
+  });
 
   protected readonly active = computed(() => this.filtered() ?? this.selected() !== null);
 
@@ -329,8 +436,41 @@ export class ExcelFilter {
     return this.checked().has(value);
   }
 
+  protected isExpanded(label: string): boolean {
+    return this.expanded().has(label);
+  }
+
+  protected toggleExpanded(label: string): void {
+    const next = new Set(this.expanded());
+    if (!next.delete(label)) {
+      next.add(label);
+    }
+    this.expanded.set(next);
+  }
+
+  /** Spunta o toglie tutte le voci del gruppo. */
+  protected toggleGroup(values: readonly string[], checked: boolean): void {
+    const next = new Set(this.checked());
+    for (const value of values) {
+      if (checked) {
+        next.add(value);
+      } else {
+        next.delete(value);
+      }
+    }
+    this.emit(next);
+  }
+
   protected onOpen(searchBox: HTMLInputElement): void {
     this.query.set('');
+    // Si aprono i gruppi con una scelta a metà: si vede subito quali voci ci sono dentro
+    this.expanded.set(
+      new Set(
+        this.groupRows()
+          .filter((group) => group.some && !group.all)
+          .map((g) => g.label),
+      ),
+    );
     setTimeout(() => searchBox.focus());
   }
 
@@ -365,6 +505,13 @@ export class ExcelFilter {
 
   protected apply(values: readonly string[] | null): void {
     this.selectedChange.emit(values === null ? null : [...values]);
+  }
+
+  /** Scorciatoia: applica i valori, avvisa chi ascolta e chiude il menu (è una scelta unica). */
+  protected applyPreset(preset: ExcelFilterPreset): void {
+    this.apply(preset.values);
+    this.presetApplied.emit(preset);
+    this.trigger().closeMenu();
   }
 
   /** Tutte spuntate = nessun filtro. */

@@ -141,11 +141,19 @@ describe('BiDetailPage — ordine di partenza', () => {
     const fixture = TestBed.createComponent(BiDetailPage);
     fixture.componentRef.setInput('scope', 'all-open');
     fixture.detectChanges();
-    const headers = [...fixture.nativeElement.querySelectorAll('thead th')].map((th) =>
-      (th as HTMLElement).textContent?.trim(),
-    );
+    // Il testo della colonna senza l'icona della freccia di ordinamento
+    const headers = [...fixture.nativeElement.querySelectorAll('thead th')].map((th) => {
+      const copy = (th as HTMLElement).cloneNode(true) as HTMLElement;
+      copy.querySelectorAll('mat-icon').forEach((icon) => icon.remove());
+      return copy.textContent?.trim();
+    });
     const area = headers.indexOf('Progetto Marlù');
-    expect(headers.slice(area, area + 3)).toEqual(['Progetto Marlù', 'Età', 'Ultimo agg.']);
+    expect(headers.slice(area, area + 4)).toEqual([
+      'Progetto Marlù',
+      'Età',
+      'Ultimo agg.',
+      'Fermo da',
+    ]);
     expect(headers.at(-1)).toBe('Tipo richiesta');
   });
 

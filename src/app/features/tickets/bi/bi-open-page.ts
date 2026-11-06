@@ -1,5 +1,6 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
@@ -19,16 +20,31 @@ import { BiStore } from './bi-store.service';
 
 /**
  * Ticket aperti oggi (come le pagine Open Ticket e Pending Ticket di Power BI): quanti, da
- * quanto (fasce di anzianità), per area, priorità, assegnatario e richiedente. Con
- * {@code mode} = "pending" solo quelli in Pending. Valgono area e assegnatario; anno e mesi no
+ * quanto (fasce di anzianità), per area, priorità, assegnatario e richiedente. Un interruttore
+ * passa dalla vista Aperti a quella Pending (solo i ticket in Pending). Valgono area e assegnatario; anno e mesi no
  * (conta quanto è aperto oggi, di qualunque periodo).
  */
 @Component({
   selector: 'gov-bi-open-page',
-  imports: [BiFilters, HBarChart, MatProgressSpinnerModule, MatTooltipModule],
+  imports: [
+    BiFilters,
+    HBarChart,
+    MatButtonToggleModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+  ],
   template: `
     <div class="bi-page">
       <gov-bi-filters>
+        <mat-button-toggle-group
+          aria-label="Vista"
+          hideSingleSelectionIndicator
+          [value]="view()"
+          (change)="setView($event.value)"
+        >
+          <mat-button-toggle value="open">Aperti</mat-button-toggle>
+          <mat-button-toggle value="pending">Pending</mat-button-toggle>
+        </mat-button-toggle-group>
         <!-- Il numero sta nella barra dei filtri, dopo il Mese: si clicca per l'elenco di dettaglio -->
         @if (store.data()) {
           <button
@@ -161,10 +177,12 @@ export class BiOpenPage {
   protected readonly store = inject(BiStore);
   private readonly router = inject(Router);
 
-  /** Dalla rotta: "open" (tutti gli aperti) o "pending". */
-  readonly mode = input<'open' | 'pending'>('open');
+  /** Vista scelta con l'interruttore; si parte da Pending con il collegamento ?vista=pending. */
+  protected readonly view = signal<'open' | 'pending'>(
+    inject(ActivatedRoute).snapshot.queryParamMap.get('vista') === 'pending' ? 'pending' : 'open',
+  );
 
-  protected readonly pendingOnly = computed(() => this.mode() === 'pending');
+  protected readonly pendingOnly = computed(() => this.view() === 'pending');
 
   /** Cosa conta il numero (suggerimento sul pulsante). */
   protected readonly note = computed(
@@ -209,6 +227,12 @@ export class BiOpenPage {
 
   constructor() {
     this.store.load();
+  }
+
+  /** Cambia vista: la fascia di anzianità scelta non vale più. */
+  protected setView(view: 'open' | 'pending'): void {
+    this.view.set(view);
+    this.agingFilter.set(null);
   }
 
   /** Clic su una fascia: filtra gli altri riquadri; di nuovo sulla stessa la toglie, su un'altra la cambia. */

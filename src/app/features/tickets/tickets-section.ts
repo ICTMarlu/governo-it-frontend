@@ -103,8 +103,8 @@ export class TicketsSection {
     { link: '/tickets/trend', label: 'Trend', icon: 'show_chart', exact: false },
     { link: '/tickets/persone', label: 'Persone', icon: 'person_search', exact: false },
     { link: '/tickets/aperti', label: 'Aperti', icon: 'inbox', exact: false },
-    { link: '/tickets/pending', label: 'Pending', icon: 'pause_circle', exact: false },
     { link: '/tickets/rimbalzi', label: 'Rimbalzi', icon: 'sync_problem', exact: false },
+    { link: '/tickets/richiedenti', label: 'Richiedenti', icon: 'groups', exact: false },
     { link: '/tickets/elenco', label: 'Elenco', icon: 'table_rows', exact: false },
   ];
 
