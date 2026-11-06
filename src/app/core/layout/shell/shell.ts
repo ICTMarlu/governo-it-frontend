@@ -182,6 +182,7 @@ export class Shell {
   );
 
   protected readonly currentUser = this.authService.currentUser;
+  protected readonly microsoftSession = this.authService.microsoftSession;
   protected readonly isDesktop = toSignal(
     inject(BreakpointObserver)
       .observe(DESKTOP_QUERY)
@@ -281,7 +282,13 @@ export class Shell {
   }
 
   protected logout(): void {
-    this.authService.logout();
-    void this.router.navigate(['/login']);
+    this.authService.signOut().subscribe((target) => {
+      if (target.startsWith('/')) {
+        void this.router.navigateByUrl(target);
+      } else {
+        // Logout di Microsoft: si lascia l'app, poi Microsoft riporta alla pagina di login
+        window.location.assign(target);
+      }
+    });
   }
 }

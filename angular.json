@@ -64,7 +64,9 @@
           "options": {
             "proxyConfig": "proxy.conf.json",
             "host": "0.0.0.0",
-            "allowedHosts": ["ggagliardi-nb", "GGAGLIARDI-NB", "localhost"]
+            "port": 4202,
+            "ssl": true,
+            "allowedHosts": ["srvtest-webapp01", "SRVTEST-WEBAPP01", "localhost"]
           },
           "configurations": {
             "production": {

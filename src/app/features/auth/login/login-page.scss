@@ -26,8 +26,43 @@
   margin-block-start: 1rem;
 }
 
+.login__microsoft {
+  width: 100%;
+  min-height: 48px;
+  margin-block-start: 1rem;
+
+  mat-progress-spinner,
+  .login__microsoft-logo {
+    display: inline-block;
+    margin-inline-end: 0.5rem;
+    vertical-align: middle;
+  }
+}
+
+.login__microsoft-logo {
+  width: 20px;
+  height: 20px;
+}
+
+// "oppure con utente e password": linea sottile con il testo al centro
+.login__separator {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-block-start: 1px solid var(--mat-sys-outline-variant);
+  }
+}
+
 .login__error {
-  margin: 0;
+  margin: 1rem 0 0;
   padding: 0.75rem;
   border-radius: var(--gi-radius-sm);
   background: var(--mat-sys-error-container);

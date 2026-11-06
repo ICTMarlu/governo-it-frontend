@@ -165,10 +165,13 @@
         <span class="account-head__role">{{ user.roleLabel }}</span>
       </div>
     }
-    <button mat-menu-item type="button" (click)="changePassword()">
-      <mat-icon aria-hidden="true">key</mat-icon>
-      <span>Cambia password</span>
-    </button>
+    <!-- Con l'account Microsoft la password la gestisce Microsoft, non l'app -->
+    @if (!microsoftSession()) {
+      <button mat-menu-item type="button" (click)="changePassword()">
+        <mat-icon aria-hidden="true">key</mat-icon>
+        <span>Cambia password</span>
+      </button>
+    }
     <button mat-menu-item type="button" (click)="mcpTokens()">
       <mat-icon aria-hidden="true">smart_toy</mat-icon>
       <span>Accesso da Claude</span>
