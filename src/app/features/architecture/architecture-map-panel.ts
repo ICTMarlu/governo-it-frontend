@@ -112,7 +112,17 @@ export interface ReachedApp {
         </button>
       }
     } @else {
-      <h2>Come si legge</h2>
+      <header>
+        <h2>Come si legge</h2>
+        <button
+          mat-icon-button
+          type="button"
+          aria-label="Chiudi la legenda"
+          (click)="closed.emit()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </header>
       <p class="muted">
         Clicca un applicativo per vedere cosa si ferma se lui si ferma e da cosa dipende.
       </p>
@@ -130,6 +140,7 @@ export interface ReachedApp {
         <li><span class="line line--push"></span>invia a</li>
         <li><span class="line line--pull"></span>legge da</li>
         <li><span class="line line--sync"></span>sincronizza con</li>
+        <li><span class="line line--mixed"></span>"3 flussi": più flussi tra gli stessi due</li>
         <li><span class="line line--thick"></span>più spessa = flusso più critico</li>
       </ul>
       <h3>Riquadri</h3>
@@ -272,6 +283,9 @@ export interface ReachedApp {
     .line--sync {
       border-color: var(--mat-sys-outline);
       border-top-style: dotted;
+    }
+    .line--mixed {
+      border-color: var(--mat-sys-outline);
     }
     .line--thick {
       border-top-width: 4px;

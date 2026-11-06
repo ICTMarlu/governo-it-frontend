@@ -137,13 +137,45 @@ export const routes: Routes = [
       crudRoute('smartphones', SMARTPHONES_CONFIG, BACK_TO_TELEPHONY),
       crudRoute('tablets', TABLETS_CONFIG, BACK_TO_TELEPHONY),
       {
-        // Architettura IT (D-38): mappa di applicativi e connessioni
+        // Architettura IT (D-38): la mappa ha una pagina tutta per sé, a tutto schermo
         path: 'architecture',
         title: 'Architettura IT · Governo IT',
         canActivate: [moduleGuard],
         data: { module: 'ARCHITECTURE', fullWidth: true },
         loadComponent: () =>
-          import('./features/architecture/architecture-page').then((m) => m.ArchitecturePage),
+          import('./features/architecture/architecture-map-page').then(
+            (m) => m.ArchitectureMapPage,
+          ),
+      },
+      {
+        path: 'architecture/applicativi',
+        title: 'Applicativi · Architettura IT · Governo IT',
+        canActivate: [moduleGuard],
+        data: { module: 'ARCHITECTURE', kind: 'applications' },
+        loadComponent: () =>
+          import('./features/architecture/architecture-list-page').then(
+            (m) => m.ArchitectureListPage,
+          ),
+      },
+      {
+        path: 'architecture/connessioni',
+        title: 'Connessioni · Architettura IT · Governo IT',
+        canActivate: [moduleGuard],
+        data: { module: 'ARCHITECTURE', kind: 'connections' },
+        loadComponent: () =>
+          import('./features/architecture/architecture-list-page').then(
+            (m) => m.ArchitectureListPage,
+          ),
+      },
+      {
+        path: 'architecture/panoramica',
+        title: 'Panoramica · Architettura IT · Governo IT',
+        canActivate: [moduleGuard],
+        data: { module: 'ARCHITECTURE' },
+        loadComponent: () =>
+          import('./features/architecture/architecture-overview-page').then(
+            (m) => m.ArchitectureOverviewPage,
+          ),
       },
       {
         path: 'technologies',

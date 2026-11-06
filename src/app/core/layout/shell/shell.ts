@@ -91,6 +91,32 @@ const NAV_ITEMS: readonly NavItem[] = [
     short: 'Architettura',
     icon: 'hub',
     route: '/architecture',
+    homeLabel: 'Mappa',
+    homeIcon: 'hub',
+    // La mappa ha una pagina tutta per sé; elenchi e numeri nelle altre voci
+    children: [
+      {
+        label: 'Applicativi',
+        hint: 'Gli applicativi della mappa: nuovi, modifiche, import ed export',
+        icon: 'apps',
+        route: '/architecture/applicativi',
+        module: 'ARCHITECTURE',
+      },
+      {
+        label: 'Connessioni',
+        hint: 'I flussi di dati tra gli applicativi',
+        icon: 'swap_horiz',
+        route: '/architecture/connessioni',
+        module: 'ARCHITECTURE',
+      },
+      {
+        label: 'Panoramica',
+        hint: 'I numeri della mappa e cosa sistemare',
+        icon: 'insights',
+        route: '/architecture/panoramica',
+        module: 'ARCHITECTURE',
+      },
+    ],
     modules: ['ARCHITECTURE'],
   },
   {

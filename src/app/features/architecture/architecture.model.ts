@@ -114,19 +114,30 @@ export function reach(
 /** Dimensioni della mappa (in unità SVG). */
 export const NODE_W = 216;
 export const NODE_H = 50;
+/** Altezza dei riquadri compatti (solo icona e nome). */
+export const NODE_H_COMPACT = 34;
 /** Margine interno del riquadro di un livello. */
 const LANE_PAD = 18;
 /** Spazio tra i livelli: ci stanno le scritte sulle frecce. */
 const COL_GAP = 140;
+/** Spazio tra le colonne dentro lo stesso livello. */
+const INNER_GAP = 28;
 const ROW_GAP = 14;
 /** Titolo e conteggio in testa al riquadro del livello. */
 const HEADER_H = 62;
+/** Sottotitolo della tipologia dentro il livello. */
+const GROUP_H = 22;
 const PAD = 24;
+/** Oltre questi applicativi un livello si allarga di una colonna (fino a {@link MAX_COLS}). */
+export const MAX_ROWS = 10;
+const MAX_COLS = 3;
 
 export interface PlacedNode {
   readonly app: AppNode;
   readonly x: number;
   readonly y: number;
+  /** Altezza del riquadro (normale o compatto). */
+  readonly h: number;
 }
 
 /** Riquadro di un livello: posizione, misure, titolo e quanti applicativi contiene. */
@@ -140,51 +151,100 @@ export interface MapColumn {
   readonly count: number;
 }
 
+/** Sottotitolo di una tipologia dentro un livello. */
+export interface MapGroupLabel {
+  readonly label: string;
+  readonly x: number;
+  readonly y: number;
+}
+
 export interface MapLayout {
   readonly nodes: readonly PlacedNode[];
   readonly columns: readonly MapColumn[];
+  readonly groups: readonly MapGroupLabel[];
   readonly width: number;
   readonly height: number;
 }
 
+type LaneItem = { readonly head: string } | { readonly app: AppNode };
+
 /**
  * Un riquadro per livello (solo quelli con almeno un applicativo), tutti alti uguali; dentro,
- * gli applicativi per tipologia e poi per nome, così quelli della stessa tipologia stanno vicini.
+ * gli applicativi per tipologia e poi per nome, con il nome della tipologia sopra ogni gruppo
+ * quando nel livello ce n'è più d'una. Oltre {@link MAX_ROWS} applicativi il livello si divide
+ * in più colonne invece di diventare altissimo.
  */
-export function layout(apps: readonly AppNode[]): MapLayout {
-  const groups = LAYERS.map((layer) => ({
-    layer,
-    apps: apps
+export function layout(apps: readonly AppNode[], compact = false): MapLayout {
+  const nodeH = compact ? NODE_H_COMPACT : NODE_H;
+  const step = nodeH + ROW_GAP;
+  const size = (item: LaneItem) => ('head' in item ? GROUP_H : step);
+  const lanes = LAYERS.map((layer) => {
+    const sorted = apps
       .filter((app) => app.layer === layer.value)
       .sort(
         (a, b) =>
           a.typeLabel.localeCompare(b.typeLabel, 'it') || a.name.localeCompare(b.name, 'it'),
-      ),
-  })).filter((group) => group.apps.length > 0);
-  const tallest = Math.max(1, ...groups.map((group) => group.apps.length));
-  const laneW = NODE_W + LANE_PAD * 2;
-  const laneH = HEADER_H + tallest * (NODE_H + ROW_GAP) - ROW_GAP + LANE_PAD;
+      );
+    const types = new Set(sorted.map((app) => app.typeLabel));
+    const items: LaneItem[] = [];
+    sorted.forEach((app, index) => {
+      if (types.size > 1 && (index === 0 || sorted[index - 1].typeLabel !== app.typeLabel)) {
+        items.push({ head: app.typeLabel });
+      }
+      items.push({ app });
+    });
+    const cols = Math.min(MAX_COLS, Math.max(1, Math.ceil(sorted.length / MAX_ROWS)));
+    const target = items.reduce((sum, item) => sum + size(item), 0) / cols;
+    // Riempie le colonne una dopo l'altra; un titolo non resta mai da solo in fondo
+    const placed: { item: LaneItem; col: number; y: number }[] = [];
+    let col = 0;
+    let y = 0;
+    for (const item of items) {
+      const needed = 'head' in item ? GROUP_H + step : step;
+      if (col < cols - 1 && y > 0 && y + needed > target + step / 2) {
+        col++;
+        y = 0;
+      }
+      placed.push({ item, col, y });
+      y += size(item);
+    }
+    const height = Math.max(0, ...placed.map((p) => p.y + size(p.item)));
+    return { layer, count: sorted.length, cols, placed, height };
+  }).filter((lane) => lane.count > 0);
+
+  const innerH = Math.max(step, ...lanes.map((lane) => lane.height)) - ROW_GAP;
+  const laneH = HEADER_H + innerH + LANE_PAD;
   const columns: MapColumn[] = [];
   const nodes: PlacedNode[] = [];
-  groups.forEach((group, index) => {
-    const x = PAD + index * (laneW + COL_GAP);
+  const groups: MapGroupLabel[] = [];
+  let x = PAD;
+  for (const lane of lanes) {
+    const width = LANE_PAD * 2 + lane.cols * NODE_W + (lane.cols - 1) * INNER_GAP;
     columns.push({
-      layer: String(group.layer.value),
-      label: group.layer.label,
+      layer: String(lane.layer.value),
+      label: lane.layer.label,
       x,
       y: PAD,
-      width: laneW,
+      width,
       height: laneH,
-      count: group.apps.length,
+      count: lane.count,
     });
-    group.apps.forEach((app, row) => {
-      nodes.push({ app, x: x + LANE_PAD, y: PAD + HEADER_H + row * (NODE_H + ROW_GAP) });
-    });
-  });
+    for (const { item, col, y } of lane.placed) {
+      const nx = x + LANE_PAD + col * (NODE_W + INNER_GAP);
+      const ny = PAD + HEADER_H + y;
+      if ('head' in item) {
+        groups.push({ label: item.head, x: nx + 2, y: ny + 14 });
+      } else {
+        nodes.push({ app: item.app, x: nx, y: ny, h: nodeH });
+      }
+    }
+    x += width + COL_GAP;
+  }
   return {
     nodes,
     columns,
-    width: Math.max(PAD * 2 + groups.length * (laneW + COL_GAP) - COL_GAP, 320),
+    groups,
+    width: Math.max(x - COL_GAP + PAD, 320),
     height: PAD * 2 + laneH,
   };
 }
@@ -202,12 +262,12 @@ function middle(p0: number, p1: number, p2: number, p3: number): number {
 }
 
 /**
- * Dal lato destro del riquadro di sinistra al lato sinistro di quello di destra; nello stesso
- * livello esce a destra e rientra con un arco.
+ * Dal lato destro del riquadro di sinistra al lato sinistro di quello di destra; nella stessa
+ * colonna esce a destra e rientra con un arco.
  */
 export function linkPath(from: PlacedNode, to: PlacedNode): LinkGeometry {
-  const fy = from.y + NODE_H / 2;
-  const ty = to.y + NODE_H / 2;
+  const fy = from.y + from.h / 2;
+  const ty = to.y + to.h / 2;
   if (from.x === to.x) {
     const x = from.x + NODE_W;
     const bulge = 40 + Math.min(Math.abs(ty - fy) / 4, 60);
@@ -226,6 +286,51 @@ export function linkPath(from: PlacedNode, to: PlacedNode): LinkGeometry {
     mx: middle(fx, mid, mid, tx),
     my: middle(fy, fy, ty, ty),
   };
+}
+
+/**
+ * Flussi tra la stessa coppia di applicativi, disegnati come una sola freccia. {@code from} e
+ * {@code to} seguono il primo flusso; {@code forward} e {@code backward} dicono se i dati vanno
+ * da {@code from} a {@code to}, al contrario o in entrambi i sensi.
+ */
+export interface LinkBundle {
+  readonly key: string;
+  readonly from: number;
+  readonly to: number;
+  readonly links: readonly AppLink[];
+  readonly forward: boolean;
+  readonly backward: boolean;
+  /** Direzione comune a tutti i flussi, o MIXED se sono diverse. */
+  readonly direction: AppLink['direction'] | 'MIXED';
+}
+
+export function bundle(links: readonly AppLink[]): LinkBundle[] {
+  const byPair = new Map<string, AppLink[]>();
+  for (const link of links) {
+    const key = [link.sourceId, link.targetId].sort((a, b) => a - b).join('-');
+    byPair.set(key, [...(byPair.get(key) ?? []), link]);
+  }
+  return [...byPair.entries()].map(([key, group]) => {
+    const from = group[0].sourceId;
+    const to = group[0].targetId;
+    let forward = false;
+    let backward = false;
+    for (const link of group) {
+      // I dati vanno dalla partenza all'arrivo con "invia a", al contrario con "legge da"
+      const same = link.sourceId === from;
+      if (link.direction !== 'PULL') {
+        forward ||= same;
+        backward ||= !same;
+      }
+      if (link.direction !== 'PUSH') {
+        backward ||= same;
+        forward ||= !same;
+      }
+    }
+    const directions = new Set(group.map((link) => link.direction));
+    const direction = directions.size === 1 ? group[0].direction : 'MIXED';
+    return { key, from, to, links: group, forward, backward, direction };
+  });
 }
 
 /**

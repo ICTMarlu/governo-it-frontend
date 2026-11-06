@@ -1,0 +1,166 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  --arch-push: light-dark(#12865d, #34c08f);
+  --arch-pull: light-dark(#6250d6, #9085e9);
+}
+
+:host:fullscreen {
+  padding: var(--gi-space-2) var(--gi-space-3);
+  background: var(--mat-sys-surface);
+}
+
+// Una riga sola: su schermi stretti scorre di lato, senza barra
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--gi-space-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-block: 0 var(--gi-space-2);
+}
+
+.bar > * {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.search {
+  flex: 0 1 20rem;
+  min-width: 10rem;
+  height: var(--gi-control-h, 36px);
+  padding-inline: 10px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--gi-radius-md);
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: inherit;
+}
+
+.hits,
+.status {
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.spacer {
+  flex: 1 1 0;
+}
+
+.menu-title {
+  margin: 8px 16px 2px;
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 420px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--gi-radius-lg);
+  overflow: hidden;
+  outline: none;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  // Sfondo a puntini
+  background-color: var(--mat-sys-surface-container-lowest);
+  background-image: radial-gradient(var(--mat-sys-outline-variant) 1px, transparent 1.2px);
+  background-size: 18px 18px;
+}
+
+.stage--drag {
+  cursor: grabbing;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.tools {
+  position: absolute;
+  top: 12px;
+  left: 10px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--gi-radius-md);
+  background: var(--mat-sys-surface);
+  overflow: hidden;
+  cursor: default;
+}
+
+.tools button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  cursor: pointer;
+}
+
+.tools button:last-child {
+  border-bottom: 0;
+}
+
+.tools button:hover,
+.tools .on {
+  color: var(--mat-sys-primary);
+  background: var(--mat-sys-surface-container);
+}
+
+.tools mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--gi-space-2);
+  color: var(--mat-sys-on-surface-variant);
+  cursor: default;
+}
+
+// La scheda sta sopra la mappa, a destra: senza scelta la mappa ha tutta la larghezza
+.panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  width: min(340px, calc(100% - 24px));
+  box-shadow: var(--mat-sys-level3);
+  cursor: default;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--gi-space-2);
+  padding-block: 6px 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.hint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 767.98px) {
+  .hint {
+    display: none;
+  }
+}

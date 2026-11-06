@@ -1,0 +1,308 @@
+<div class="bar" role="toolbar" aria-label="Comandi della mappa">
+  <input
+    class="search"
+    type="search"
+    placeholder="Cerca applicativo, server, area…"
+    aria-label="Cerca un applicativo nella mappa"
+    [value]="query()"
+    (input)="query.set($any($event.target).value)"
+    (keydown.enter)="selectFirstMatch()"
+  />
+  @if (query().trim()) {
+    <span class="hits">{{ matches().size }} trovati</span>
+  }
+
+  <button mat-stroked-button type="button" [matMenuTriggerFor]="filterMenu">
+    <mat-icon aria-hidden="true">filter_list</mat-icon>
+    Filtri{{ activeFilters() ? ' (' + activeFilters() + ')' : '' }}
+  </button>
+  <mat-menu #filterMenu="matMenu" class="arch-menu">
+    <p class="menu-title">Tipologia</p>
+    @for (option of typeOptions(); track option.value) {
+      <button
+        mat-menu-item
+        role="menuitemcheckbox"
+        [attr.aria-checked]="has('types', option.value)"
+        (click)="toggle($event, 'types', option.value)"
+      >
+        <mat-icon aria-hidden="true">{{
+          has('types', option.value) ? 'check_box' : 'check_box_outline_blank'
+        }}</mat-icon>
+        {{ option.label }}
+      </button>
+    }
+    <mat-divider />
+    <p class="menu-title">Livello</p>
+    @for (option of layerOptions; track option.value) {
+      <button
+        mat-menu-item
+        role="menuitemcheckbox"
+        [attr.aria-checked]="has('layers', option.value)"
+        (click)="toggle($event, 'layers', option.value)"
+      >
+        <mat-icon aria-hidden="true">{{
+          has('layers', option.value) ? 'check_box' : 'check_box_outline_blank'
+        }}</mat-icon>
+        {{ option.label }}
+      </button>
+    }
+    <mat-divider />
+    <p class="menu-title">Criticità</p>
+    @for (option of critOptions; track option.value) {
+      <button
+        mat-menu-item
+        role="menuitemcheckbox"
+        [attr.aria-checked]="has('crits', option.value)"
+        (click)="toggle($event, 'crits', option.value)"
+      >
+        <mat-icon aria-hidden="true">{{
+          has('crits', option.value) ? 'check_box' : 'check_box_outline_blank'
+        }}</mat-icon>
+        {{ option.label }}
+      </button>
+    }
+    @if (areaOptions().length) {
+      <mat-divider />
+      <p class="menu-title">Chi lo usa</p>
+      @for (option of areaOptions(); track option.value) {
+        <button
+          mat-menu-item
+          role="menuitemcheckbox"
+          [attr.aria-checked]="has('areas', option.value)"
+          (click)="toggle($event, 'areas', option.value)"
+        >
+          <mat-icon aria-hidden="true">{{
+            has('areas', option.value) ? 'check_box' : 'check_box_outline_blank'
+          }}</mat-icon>
+          {{ option.label }}
+        </button>
+      }
+    }
+    @if (activeFilters()) {
+      <mat-divider />
+      <button mat-menu-item (click)="clearFilters()">
+        <mat-icon aria-hidden="true">filter_list_off</mat-icon>
+        Togli tutti i filtri
+      </button>
+    }
+  </mat-menu>
+
+  <button mat-stroked-button type="button" [matMenuTriggerFor]="viewMenu">
+    <mat-icon aria-hidden="true">tune</mat-icon>
+    Visualizza
+  </button>
+  <mat-menu #viewMenu="matMenu" class="arch-menu">
+    <p class="menu-title">Impatto e dipendenze</p>
+    @for (option of depths; track option.label) {
+      <button
+        mat-menu-item
+        role="menuitemradio"
+        [attr.aria-checked]="depth() === option.value"
+        (click)="setDepth($event, option.value)"
+      >
+        <mat-icon aria-hidden="true">{{
+          depth() === option.value ? 'radio_button_checked' : 'radio_button_unchecked'
+        }}</mat-icon>
+        {{ option.label }}
+      </button>
+    }
+    <mat-divider />
+    <button
+      mat-menu-item
+      role="menuitemcheckbox"
+      [attr.aria-checked]="onlyLinked()"
+      (click)="toggleOnlyLinked($event)"
+    >
+      <mat-icon aria-hidden="true">{{
+        onlyLinked() ? 'check_box' : 'check_box_outline_blank'
+      }}</mat-icon>
+      Solo i collegati all'applicativo scelto
+    </button>
+    <button
+      mat-menu-item
+      role="menuitemcheckbox"
+      [attr.aria-checked]="labelsOn()"
+      (click)="toggleLabels($event)"
+    >
+      <mat-icon aria-hidden="true">{{
+        labelsOn() ? 'check_box' : 'check_box_outline_blank'
+      }}</mat-icon>
+      Scritte sulle frecce
+    </button>
+    <button
+      mat-menu-item
+      role="menuitemcheckbox"
+      [attr.aria-checked]="compact()"
+      (click)="toggleCompact($event)"
+    >
+      <mat-icon aria-hidden="true">{{
+        compact() ? 'check_box' : 'check_box_outline_blank'
+      }}</mat-icon>
+      Riquadri compatti
+    </button>
+    <button
+      mat-menu-item
+      role="menuitemcheckbox"
+      [attr.aria-checked]="showRetired()"
+      (click)="toggleRetired($event)"
+    >
+      <mat-icon aria-hidden="true">{{
+        showRetired() ? 'check_box' : 'check_box_outline_blank'
+      }}</mat-icon>
+      Anche i dismessi
+    </button>
+  </mat-menu>
+
+  <span class="spacer"></span>
+
+  @if (editable()) {
+    <button mat-stroked-button type="button" [matMenuTriggerFor]="addMenu">
+      <mat-icon aria-hidden="true">add</mat-icon>
+      Aggiungi
+    </button>
+    <mat-menu #addMenu="matMenu">
+      <button mat-menu-item (click)="create.emit('app')">
+        <mat-icon aria-hidden="true">apps</mat-icon>
+        Nuovo applicativo
+      </button>
+      <button mat-menu-item (click)="create.emit('link')">
+        <mat-icon aria-hidden="true">swap_horiz</mat-icon>
+        Nuova connessione
+      </button>
+    </mat-menu>
+  }
+  <button
+    mat-stroked-button
+    type="button"
+    [matMenuTriggerFor]="imageMenu"
+    [disabled]="map().nodes.length === 0"
+  >
+    <mat-icon aria-hidden="true">image</mat-icon>
+    Immagine
+  </button>
+  <mat-menu #imageMenu="matMenu">
+    <button mat-menu-item (click)="exportImage('png')">
+      <mat-icon aria-hidden="true">photo</mat-icon>
+      PNG, per presentazioni
+    </button>
+    <button mat-menu-item (click)="exportImage('svg')">
+      <mat-icon aria-hidden="true">draw</mat-icon>
+      SVG, ingrandibile senza perdere qualità
+    </button>
+  </mat-menu>
+</div>
+
+<div
+  #stage
+  class="stage"
+  [class.stage--drag]="dragging()"
+  tabindex="-1"
+  (wheel)="onWheel($event)"
+  (pointerdown)="onPointerDown($event)"
+  (pointermove)="onPointerMove($event)"
+  (pointerup)="onPointerUp($event)"
+  (pointercancel)="onPointerUp($event)"
+  (keydown.escape)="clear()"
+>
+  <div class="tools" role="toolbar" aria-label="Zoom e vista">
+    <button
+      type="button"
+      matTooltip="Ingrandisci"
+      matTooltipPosition="right"
+      (click)="zoomBy(1.25)"
+    >
+      <mat-icon>add</mat-icon>
+    </button>
+    <button
+      type="button"
+      matTooltip="Rimpicciolisci"
+      matTooltipPosition="right"
+      (click)="zoomBy(0.8)"
+    >
+      <mat-icon>remove</mat-icon>
+    </button>
+    <button
+      type="button"
+      matTooltip="Tutta la mappa in vista"
+      matTooltipPosition="right"
+      (click)="fit()"
+    >
+      <mat-icon>fit_screen</mat-icon>
+    </button>
+    <button
+      type="button"
+      [matTooltip]="fullscreen() ? 'Esci da schermo intero' : 'Schermo intero'"
+      matTooltipPosition="right"
+      (click)="toggleFullscreen()"
+    >
+      <mat-icon>{{ fullscreen() ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+    </button>
+    <button
+      type="button"
+      [class.on]="legendOpen()"
+      matTooltip="Come si legge la mappa"
+      matTooltipPosition="right"
+      (click)="legendOpen.set(!legendOpen()); selectedId.set(null)"
+    >
+      <mat-icon>help</mat-icon>
+    </button>
+  </div>
+
+  @if (map().nodes.length > 0) {
+    <gov-architecture-map-canvas
+      class="canvas"
+      [layout]="map()"
+      [links]="links()"
+      [states]="states()"
+      [matches]="matches()"
+      [degree]="degree()"
+      [compact]="compact()"
+      [transform]="transform()"
+      (picked)="select($event)"
+      (centered)="onCentered($event)"
+      (click)="clear()"
+    />
+  } @else if (loaded()) {
+    <div class="empty">
+      @if (apps().length === 0) {
+        <p>
+          Nessun applicativo ancora. Aggiungili da Architettura › Applicativi o importa il file.
+        </p>
+      } @else {
+        <p>Nessun applicativo con questi filtri.</p>
+        <button mat-stroked-button type="button" (click)="clearFilters()">Togli i filtri</button>
+      }
+    </div>
+  }
+
+  @if (panelOpen()) {
+    <gov-architecture-map-panel
+      class="panel"
+      aria-live="polite"
+      [app]="selected()"
+      [impacted]="impactedList()"
+      [upstream]="upstreamList()"
+      [flows]="flows()"
+      [editable]="editable()"
+      [totals]="{ apps: map().nodes.length, links: shownLinks() }"
+      [mostConnected]="mostConnected()"
+      (picked)="pickFromPanel($event)"
+      (edited)="edit.emit($event)"
+      (closed)="clear()"
+    />
+  }
+</div>
+
+<div class="status">
+  <span class="hint"
+    >Clic: dettagli e impatto · doppio clic: centra · rotella: zoom · trascina: sposta · Esc:
+    chiudi</span
+  >
+  <span class="spacer"></span>
+  <span class="counts">
+    {{ map().nodes.length }}/{{ apps().length }} applicativi · {{ shownLinks() }}/{{
+      connections().length
+    }}
+    connessioni · zoom {{ (zoom() * 100).toFixed(0) }}%
+  </span>
+</div>

@@ -3,6 +3,7 @@ import {
   AppNode,
   NODE_H,
   NODE_W,
+  bundle,
   dependencies,
   layout,
   linkPath,
@@ -135,5 +136,55 @@ describe('architettura IT: disposizione della mappa', () => {
       expect(node.x + NODE_W).toBeLessThan(lane.x + lane.width);
       expect(node.y + NODE_H).toBeLessThanOrEqual(lane.y + lane.height);
     }
+  });
+
+  it('un livello con molti applicativi si divide in più colonne, senza sovrapposizioni', () => {
+    const many = Array.from({ length: 25 }, (_, i) =>
+      app(i + 1, 'CORE', `App ${String(i).padStart(2, '0')}`, i < 12 ? 'ERP' : 'HR'),
+    );
+    const map = layout(many);
+    const xs = new Set(map.nodes.map((node) => node.x));
+    expect(xs.size).toBe(3);
+    const lane = map.columns[0];
+    for (const node of map.nodes) {
+      expect(node.x + NODE_W).toBeLessThan(lane.x + lane.width);
+      expect(node.y + node.h).toBeLessThanOrEqual(lane.y + lane.height);
+    }
+    const spots = new Set(map.nodes.map((node) => `${node.x},${node.y}`));
+    expect(spots.size).toBe(25);
+    // Due tipologie nello stesso livello: un sottotitolo per ognuna
+    expect(map.groups.map((group) => group.label)).toEqual(['ERP', 'HR']);
+  });
+
+  it('con una sola tipologia nel livello non ci sono sottotitoli; i riquadri compatti sono più bassi', () => {
+    const map = layout([app(1, 'CORE', 'ERP'), app(2, 'CORE', 'WMS')], true);
+    expect(map.groups).toEqual([]);
+    expect(map.nodes[0].h).toBeLessThan(NODE_H);
+  });
+});
+
+describe('architettura IT: frecce raggruppate', () => {
+  it('più flussi tra gli stessi due applicativi diventano una freccia sola', () => {
+    const bundles = bundle([
+      link(1, 1, 2, 'PUSH'),
+      link(2, 2, 1, 'PUSH'),
+      link(3, 1, 3, 'PULL'),
+      link(4, 1, 3, 'PULL'),
+    ]);
+    expect(bundles.length).toBe(2);
+    const erpWms = bundles.find((item) => item.key === '1-2')!;
+    expect(erpWms.links.length).toBe(2);
+    expect(erpWms.forward && erpWms.backward).toBe(true);
+    expect(erpWms.direction).toBe('PUSH');
+    const read = bundles.find((item) => item.key === '1-3')!;
+    // "1 legge da 3": i dati vanno da 3 a 1
+    expect(read.forward).toBe(false);
+    expect(read.backward).toBe(true);
+  });
+
+  it('direzioni diverse sulla stessa coppia: freccia mista nei due sensi', () => {
+    const [only] = bundle([link(1, 1, 2, 'PUSH'), link(2, 1, 2, 'SYNC')]);
+    expect(only.direction).toBe('MIXED');
+    expect(only.forward && only.backward).toBe(true);
   });
 });
